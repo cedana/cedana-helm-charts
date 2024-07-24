@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cedana-daemon-grpc-service
+spec:
+  selector:
+    app: binary-app
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 31000
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cedana-daemon
+spec:
+  selector:
+    matchLabels:
+      app: binary-app
+  template:
+    metadata:
+      labels:
+        app: binary-app
+    spec:
+      hostPID: true
+      hostNetwork: true
+      hostIPC: true
+      containers:
+        - name: binary-container
+          image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            # TODO(swarnimarun): check if this would ever be useful
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: host-volume
+              mountPath: /host
+              readOnly: false
+          command: ["/bin/sh", "-c"]
+          args: ["cedana k8s-helper --setup-host true && sleep infinity"]
+          livenessProbe:
+            grpc:
+              port: 8080
+            initialDelaySeconds: 200
+            periodSeconds: 20
+          startupProbe:
+            grpc:
+              port: 8080
+            initialDelaySeconds: 100 
+            periodSeconds: 20
+          readinessProbe:
+            grpc:
+              port: 8080
+            initialDelaySeconds: 100
+            periodSeconds: 20
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "cedana k8s-helper destroy"]
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: host-volume
+          hostPath:
+            path: /
