@@ -62,12 +62,12 @@ spec:
             preStop:
               exec:
                 command: ["/bin/sh", "-c", "cedana k8s-helper destroy"]
-      env:
-        - name: SIGNOZ_ACCESS_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: cedana-secrets
-              key: signoz-api-key
+          env:
+            - name: SIGNOZ_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cedana-secrets
+                  key: signoz-api-key
       volumes:
         - name: varlog
           hostPath:
