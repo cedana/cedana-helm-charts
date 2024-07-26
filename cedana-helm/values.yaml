@@ -1,3 +1,6 @@
+cedanaConfig:
+  signozApiKey: randomkey
+
 daemonHelper:
   image:
     repository: cedana/cedana-helper
