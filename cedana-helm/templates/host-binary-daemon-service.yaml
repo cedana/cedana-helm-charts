@@ -31,7 +31,7 @@ spec:
       hostIPC: true
       containers:
         - name: binary-container
-          image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
+          image: "{{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}"
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
@@ -51,7 +51,7 @@ spec:
           startupProbe:
             grpc:
               port: 8080
-            initialDelaySeconds: 100 
+            initialDelaySeconds: 100
             periodSeconds: 20
           readinessProbe:
             grpc:
@@ -62,6 +62,12 @@ spec:
             preStop:
               exec:
                 command: ["/bin/sh", "-c", "cedana k8s-helper destroy"]
+      env:
+        - name: SIGNOZ_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cedana-secrets
+              key: signoz-api-key
       volumes:
         - name: varlog
           hostPath:
