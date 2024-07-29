@@ -32,7 +32,7 @@ spec:
       containers:
         - name: binary-container
           image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
           securityContext:
             privileged: true
             # TODO(swarnimarun): check if this would ever be useful
