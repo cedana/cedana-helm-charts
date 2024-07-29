@@ -31,8 +31,8 @@ spec:
       hostIPC: true
       containers:
         - name: binary-container
-          image: "{{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}"
-          imagePullPolicy: IfNotPresent
+          image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
+          imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
           securityContext:
             privileged: true
             # TODO(swarnimarun): check if this would ever be useful

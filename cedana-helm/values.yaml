@@ -5,6 +5,7 @@ daemonHelper:
   image:
     repository: cedana/cedana-helper
     tag: latest
+    imagePullPolicy: IfNotPresent
 
 controllerManager:
   manager:
@@ -20,6 +21,7 @@ controllerManager:
     image:
       repository: cedana/cedana-controller
       tag: latest
+      imagePullPolicy: IfNotPresent
     resources:
       limits:
         cpu: 500m
