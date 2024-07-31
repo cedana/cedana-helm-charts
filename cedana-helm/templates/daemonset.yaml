@@ -28,6 +28,10 @@ spec:
               readOnly: false
           command: ["/bin/sh", "-c"]
           args: ["cedana k8s-helper --setup-host true && sleep infinity"]
+          ports:
+            - name: grpc
+              containerPort: 8080
+              protocol: TCP
           livenessProbe:
             grpc:
               port: 8080
