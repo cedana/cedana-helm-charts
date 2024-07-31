@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "cedana-operator-chart.fullname" . }}-metrics-reader
+  name: {{ include "cedana-helm.fullname" . }}-metrics-reader
   labels:
     app.kubernetes.io/component: kube-rbac-proxy
     app.kubernetes.io/created-by: cedana-operator
     app.kubernetes.io/part-of: cedana-operator
-  {{- include "cedana-operator-chart.labels" . | nindent 4 }}
+  {{- include "cedana-helm.labels" . | nindent 4 }}
 rules:
 - nonResourceURLs:
   - /metrics

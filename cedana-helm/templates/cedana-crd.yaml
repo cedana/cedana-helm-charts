@@ -5,7 +5,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
   labels:
-  {{- include "cedana-operator-chart.labels" . | nindent 4 }}
+  {{- include "cedana-helm.labels" . | nindent 4 }}
 spec:
   group: core.cedana.ai
   names:
