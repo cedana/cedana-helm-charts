@@ -60,5 +60,5 @@ roleRef:
   name: '{{ include "cedana-helm.fullname" . }}-manager-role'
 subjects:
 - kind: ServiceAccount
-  name: '{{ include "cedana-helm.fullname" . }}-controller-manager'
+  name: '{{ include "cedana-helm.serviceAccountName" . }}'
   namespace: '{{ .Release.Namespace }}'

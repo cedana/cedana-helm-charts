@@ -78,5 +78,5 @@ spec:
           | nindent 10 }}
       securityContext:
         runAsNonRoot: true
-      serviceAccountName: {{ include "cedana-helm.fullname" . }}-controller-manager
+      serviceAccountName: {{ include "cedana-helm.serviceAccountName" . }}
       terminationGracePeriodSeconds: 10
