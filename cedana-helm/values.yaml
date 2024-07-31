@@ -40,6 +40,14 @@ controllerManager:
       requests:
         cpu: 10m
         memory: 64Mi
+  rbac:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
   serviceAccount:
     annotations: {}
 
