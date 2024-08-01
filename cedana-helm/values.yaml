@@ -7,8 +7,8 @@ daemonHelper:
     tag: latest
     imagePullPolicy: IfNotPresent
   updateStrategy:
-    maxSurge: 100%
-    maxUnavailable: 0
+    maxSurge: 25%
+    maxUnavailable: 25%
 
 serviceAccount:
   # Specifies whether a service account should be created
