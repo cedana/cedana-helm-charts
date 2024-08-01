@@ -17,12 +17,15 @@ spec:
     {{- include "cedana-helm.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      {{- with .Values.controllerManager.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         app: cedana-operator-controller-manager
         control-plane: controller-manager
       {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
-      annotations:
-        kubectl.kubernetes.io/default-container: manager
     spec:
       containers:
       - args:

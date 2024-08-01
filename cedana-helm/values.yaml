@@ -19,6 +19,7 @@ serviceAccount:
   name: "cedana-controller-manager"
 
 controllerManager:
+  podAnnotations: {}
   manager:
     args:
       - --health-probe-bind-address=:8081
