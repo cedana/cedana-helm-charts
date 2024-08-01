@@ -18,6 +18,11 @@ kind: DaemonSet
 metadata:
   name: cedana-daemon
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.daemonHelper.updateStrategy.maxSurge }}
+      maxUnavailable: {{ .Values.daemonHelper.updateStrategy.maxUnavailable }}
   selector:
     matchLabels:
       app: binary-app

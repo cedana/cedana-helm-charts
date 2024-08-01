@@ -6,6 +6,9 @@ daemonHelper:
     repository: cedana/cedana-helper
     tag: latest
     imagePullPolicy: IfNotPresent
+  updateStrategy:
+    maxSurge: 100%
+    maxUnavailable: 0
 
 serviceAccount:
   # Specifies whether a service account should be created
