@@ -4,8 +4,8 @@ metadata:
   name: {{ include "cedana-helm.fullname" . }}-controller-manager
   labels:
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: cedana-operator
-    app.kubernetes.io/part-of: cedana-operator
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
     control-plane: controller-manager
   {{- include "cedana-helm.labels" . | nindent 4 }}
 spec:
@@ -23,7 +23,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        app: cedana-operator-controller-manager
+        app: cedana-manager
         control-plane: controller-manager
       {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
     spec:
