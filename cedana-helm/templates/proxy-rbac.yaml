@@ -38,3 +38,4 @@ subjects:
 - kind: ServiceAccount
   name: '{{ include "cedana-helm.serviceAccountName" . }}'
   namespace: '{{ .Release.Namespace }}'
+
