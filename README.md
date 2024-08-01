@@ -36,7 +36,9 @@ List containers we can attempt to checkpoint/restore,
 
 ```bash
 # list containers in default namespace
-# requires provide: $RUNC_ROOT
+# requires: $RUNC_ROOT for the runtime
+# For k8s & containerd: export ROOT=/run/containerd/runc/k8s.io
+# For default k3s:      export ROOT=/host/run/containerd/runc/k8s.io
 curl -X GET localhost:1324/list/default -D "{\"root\": \"$RUNC_ROOT\"}"
 ```
 
