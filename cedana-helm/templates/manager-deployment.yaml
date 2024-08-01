@@ -9,8 +9,10 @@ metadata:
     control-plane: controller-manager
   {{- include "cedana-helm.labels" . | nindent 4 }}
 spec:
-  # fixed at 1 replica per cluster
-  replicas: 1
+  {{- if not .Values.controllerManager.autoscaling.enabled }}
+  replicas: {{ .Values.controllerManager.autoscaling.replicaCount }}
+  revisionHistoryLimit: {{ .Values.controllerManager.autoscaling.deploymentRevisionHistoryLimit | default 10 }}
+  {{- end }}
   selector:
     matchLabels:
       control-plane: controller-manager
@@ -38,7 +40,6 @@ spec:
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
         image: gcr.io/kubebuilder/kube-rbac-proxy:v0.14.1
-
         ports:
         - containerPort: 8443
           name: https

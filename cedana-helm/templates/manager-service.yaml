@@ -2,10 +2,14 @@ apiVersion: v1
 kind: Service
 metadata:
   name: cedana-manager-service
+  labels:
+  {{- include "cedana-helm.labels" . | nindent 4 }}
+  {{- with .Values.controllerManager.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   selector:
     app: cedana-manager
   ports:
-    - protocol: TCP
-      port: 1324
-      targetPort: 1324
+	{{- .Values.controllerManager.service.ports | toYaml | nindent 2 }}

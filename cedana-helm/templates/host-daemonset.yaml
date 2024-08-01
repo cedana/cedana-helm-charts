@@ -2,7 +2,13 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: cedana-daemon
+  name: {{ include "cedana-helm.fullname" . }}-daemon
+  labels:
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    control-plane: controller-manager
+  {{- include "cedana-helm.labels" . | nindent 4 }}
 spec:
   updateStrategy:
     type: RollingUpdate
@@ -33,6 +39,10 @@ spec:
               readOnly: false
           command: ["/bin/sh", "-c"]
           args: ["cedana k8s-helper --setup-host true && sleep infinity"]
+          ports:
+            - name: grpc
+              containerPort: 8080
+              protocol: TCP
           livenessProbe:
             grpc:
               port: 8080
