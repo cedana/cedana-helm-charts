@@ -4,8 +4,8 @@ metadata:
   name: {{ include "cedana-helm.fullname" . }}-metrics-reader
   labels:
     app.kubernetes.io/component: kube-rbac-proxy
-    app.kubernetes.io/created-by: cedana-operator
-    app.kubernetes.io/part-of: cedana-operator
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
   {{- include "cedana-helm.labels" . | nindent 4 }}
 rules:
 - nonResourceURLs:

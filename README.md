@@ -22,3 +22,35 @@ helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedan
 # alternatively, you can use the oci repo
 helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-namespace -n cedanacontroller-system
 ```
+
+### Usage
+
+Port-forward manager,
+
+```bash
+# port-forward manager service to access the api
+kubectl port-forwarding -n cedanacontroller-system service/cedana-manager-service 1324:1324
+```
+
+List containers we can attempt to checkpoint/restore,
+
+```bash
+# list containers in default namespace
+# requires: $RUNC_ROOT for the runtime
+# For k8s & containerd: export ROOT=/run/containerd/runc/k8s.io
+# For default k3s:      export ROOT=/host/run/containerd/runc/k8s.io
+curl -X GET localhost:1324/list/default -D "{\"root\": \"$RUNC_ROOT\"}"
+```
+
+### Security
+
+```
+[!NOTE]
+If you want to use our tools, but have specific security requirements reach out and let us know
+about it.
+```
+
+- Daemonset requires privilege escalation for daemon container, and it updates the host directly with
+  required dependencies and our cedana-daemon application.
+
+- Currently our controller requires access to all pods to be able to list, checkpoint and restore them.

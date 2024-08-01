@@ -2,13 +2,15 @@ cedanaConfig:
   signozApiKey: randomkey
 
 daemonHelper:
+  service:
+    annotations: {}
   image:
     repository: cedana/cedana-helper
     tag: latest
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 25%
-    maxUnavailable: 25%
+    maxUnavailable: 0
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -22,13 +24,24 @@ serviceAccount:
   name: "cedana-controller-manager"
 
 controllerManager:
-  podAnnotations: {}
+  autoscaling:
+    enabled: false
+    replicaCount: 1
+    deploymentRevisionHistoryLimit: 10
+  service:
+    annotations: {}
+    ports:
+      - protocol: TCP
+        port: 1324
+        targetPort: 1324
   manager:
+    podAnnotations: {}
     args:
       - --health-probe-bind-address=:8081
       - --metrics-bind-address=127.0.0.1:8080
       - --leader-elect
     containerSecurityContext:
+      # controller doesn't require any privileges
       allowPrivilegeEscalation: false
       capabilities:
         drop:
@@ -38,22 +51,26 @@ controllerManager:
       tag: latest
       imagePullPolicy: IfNotPresent
     resources:
-      limits:
-        cpu: 500m
-        memory: 128Mi
-      requests:
-        cpu: 10m
-        memory: 64Mi
+      # empty to ensure minimal resource
+      # usage on demo/test deployments
+      # uncomment or add custom resource
+      # limits:
+      #   cpu: 500m
+      #   memory: 128Mi
+      # requests:
+      #   cpu: 10m
+      #   memory: 64Mi
   rbac:
     resources:
-      limits:
-        cpu: 500m
-        memory: 128Mi
-      requests:
-        cpu: 10m
-        memory: 64Mi
-  serviceAccount:
-    annotations: {}
+      # empty to ensure minimal resource
+      # usage on demo/test deployments
+      # uncomment or add custom resource
+      # limits:
+      #   cpu: 500m
+      #   memory: 128Mi
+      # requests:
+      #   cpu: 10m
+      #   memory: 64Mi
 
 kubernetesClusterDomain: cluster.local
 

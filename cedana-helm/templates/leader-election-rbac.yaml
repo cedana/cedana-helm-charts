@@ -4,8 +4,8 @@ metadata:
   name: {{ include "cedana-helm.fullname" . }}-leader-election-role
   labels:
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: cedana-operator
-    app.kubernetes.io/part-of: cedana-operator
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
   {{- include "cedana-helm.labels" . | nindent 4 }}
 rules:
 - apiGroups:
@@ -46,8 +46,8 @@ metadata:
   name: {{ include "cedana-helm.fullname" . }}-leader-election-rolebinding
   labels:
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: cedana-operator
-    app.kubernetes.io/part-of: cedana-operator
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
   {{- include "cedana-helm.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
