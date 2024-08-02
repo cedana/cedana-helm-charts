@@ -58,10 +58,6 @@ spec:
               port: 8080
             initialDelaySeconds: 100
             periodSeconds: 20
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "cedana k8s-helper destroy"]
           env:
             - name: SIGNOZ_ACCESS_TOKEN
               valueFrom:
