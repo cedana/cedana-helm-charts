@@ -1,16 +1,18 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cedana-daemon-grpc-service
+  name: {{ include "cedana-helm.fullname" . }}-helper
   labels:
-  {{- include "cedana-helm.labels" . | nindent 4 }}
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: helper
   {{- with .Values.daemonHelper.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
   selector:
-    app: binary-app
+    {{- include "cedana-helm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: helper
   ports:
     - protocol: TCP
       port: 8080
