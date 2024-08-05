@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ include "cedana-helm.fullname" . }}
+  name: {{ include "cedana-helm.fullname" . }}-helper
   labels:
     app.kubernetes.io/component: helper
     app.kubernetes.io/created-by: cedana-helm
