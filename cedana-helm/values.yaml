@@ -2,6 +2,7 @@ cedanaConfig:
   signozApiKey: randomkey
 
 daemonHelper:
+  upgradeAndRestart: false
   service:
     annotations: {}
   image:
@@ -9,8 +10,8 @@ daemonHelper:
     tag: latest
     imagePullPolicy: IfNotPresent
   updateStrategy:
-    maxSurge: 25%
-    maxUnavailable: 0
+    maxSurge: 0
+    maxUnavailable: 1
 
 serviceAccount:
   # Specifies whether a service account should be created
