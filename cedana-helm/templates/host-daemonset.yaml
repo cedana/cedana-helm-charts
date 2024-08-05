@@ -38,7 +38,11 @@ spec:
               mountPath: /host
               readOnly: false
           command: ["/bin/sh", "-c"]
+          {{ if .Values.daemonHelper.upgradeAndRestart }}
+          args: ["cedana k8s-helper --restart true && sleep infinity"]
+          {{ else }}
           args: ["cedana k8s-helper --setup-host true && sleep infinity"]
+          {{ end }}
           ports:
             - name: grpc
               containerPort: 8080
@@ -46,22 +50,16 @@ spec:
           livenessProbe:
             grpc:
               port: 8080
-            initialDelaySeconds: 200
             periodSeconds: 20
           startupProbe:
             grpc:
               port: 8080
-            initialDelaySeconds: 100
-            periodSeconds: 20
+            initialDelaySeconds: 1
+            periodSeconds: 2
           readinessProbe:
             grpc:
               port: 8080
-            initialDelaySeconds: 100
             periodSeconds: 20
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "cedana k8s-helper destroy"]
           env:
             - name: SIGNOZ_ACCESS_TOKEN
               valueFrom:
