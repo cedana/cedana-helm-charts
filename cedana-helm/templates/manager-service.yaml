@@ -1,15 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cedana-manager-service
+  name: {{ include "cedana-helm.fullname" . }}-manager
   labels:
-  {{- include "cedana-helm.labels" . | nindent 4 }}
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: manager
   {{- with .Values.controllerManager.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
   selector:
-    app: cedana-manager
+    {{- include "cedana-helm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: manager
   ports:
 	{{- .Values.controllerManager.service.ports | toYaml | nindent 2 }}
