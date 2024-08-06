@@ -21,8 +21,8 @@ spec:
   template:
     metadata:
       labels:
-        app: binary-app
         app.kubernetes.io/component: helper
+        cedana.ai/app: helper
         {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
     spec:
       hostPID: true
