@@ -67,6 +67,11 @@ spec:
                 secretKeyRef:
                   name: cedana-secrets
                   key: signoz-api-key
+            - name: CEDANA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cedana-secrets
+                  key: cedana-api-key
       volumes:
         - name: varlog
           hostPath:
