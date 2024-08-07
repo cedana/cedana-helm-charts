@@ -12,7 +12,7 @@ metadata:
 spec:
   selector:
     {{- include "cedana-helm.selectorLabels" . | nindent 4 }}
-    cedana.ai/app: helper
+    app.kubernetes.io/component: helper 
   ports:
     - protocol: TCP
       port: 8080
