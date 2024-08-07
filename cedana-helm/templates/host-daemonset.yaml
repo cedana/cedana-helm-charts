@@ -72,6 +72,12 @@ spec:
                 secretKeyRef:
                   name: cedana-secrets
                   key: cedana-api-key
+            - name: CEDANA_API_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: cedana-secrets
+                  key: cedana-api-server
+      volumes
       volumes:
         - name: varlog
           hostPath:
