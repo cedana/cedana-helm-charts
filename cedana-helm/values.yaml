@@ -3,6 +3,8 @@ fullnameOverride: ""
 
 cedanaConfig:
   signozApiKey: randomkey
+  cedanaApiKey: randomkey
+  cedanaApiServer: randomserver
 
 daemonHelper:
   upgradeAndRestart: false
