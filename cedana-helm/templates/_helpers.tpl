@@ -62,8 +62,8 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Create the name of the cedana secret to use
+Return secret name to be used based on provided values.
 */}}
 {{- define "cedana-helm.cedanaSecretName" -}}
-{{- default "cedana-secrets" .Values.cedanaConfig.preExistingSecret }}
-{{- end }}
+{{- default "cedana-secrets" .Values.cedanaConfig.preExistingSecret -}}
+{{- end -}}
