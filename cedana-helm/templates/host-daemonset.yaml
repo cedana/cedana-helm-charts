@@ -52,8 +52,18 @@ spec:
             - name: SIGNOZ_ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: cedana-secrets
+                  name: {{ "cedana-helm.cedanaSecretName" }}
                   key: signoz-api-key
+            - name: CEDANA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ "cedana-helm.cedanaSecretName" }}
+                  key: cedana-api-key
+            - name: CEDANA_API_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ "cedana-helm.cedanaSecretName" }}
+                  key: cedana-api-server
       volumes:
         - name: varlog
           hostPath:
