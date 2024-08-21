@@ -52,11 +52,6 @@ spec:
             grpc:
               port: 8080
             periodSeconds: 20
-          startupProbe:
-            grpc:
-              port: 8080
-            initialDelaySeconds: 1
-            periodSeconds: 2
           readinessProbe:
             grpc:
               port: 8080
