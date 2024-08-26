@@ -40,7 +40,7 @@ jobs:
           grep -qF '${{ steps.version.outputs.VERSION }}' chart/Chart.yaml
       - name: Lint helm chart
         run: |
-          helm lint chart
+          helm lint cedana-helm
       - name: Push helm chart
         uses: appany/helm-oci-chart-releaser@v0.4.2
         with:
