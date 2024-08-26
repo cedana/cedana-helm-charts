@@ -36,7 +36,6 @@ jobs:
 
       - name: install helm chart
         run: |
-          git clone -b remove-crds https://github.com/cedana/cedana-helm-charts
-          helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-operator-system
+          helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system
           kubectl wait --timeout=1m --for=condition=Ready pod -A -l app.kubernetes.io/component=manager
 
