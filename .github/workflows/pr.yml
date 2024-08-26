@@ -32,7 +32,7 @@ jobs:
 
       - name: Lint helm chart
         run: |
-          helm lint chart
+          helm lint cedana-helm
 
       - name: install helm chart
         run: |
