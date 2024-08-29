@@ -1,0 +1,41 @@
+name: PR to Main Branch
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Use Docker
+        uses: actions-hub/docker/cli@master
+        env:
+          SKIP_LOGIN: true
+
+      # check if this uses docker image
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: kind
+
+      - name: Lint helm chart
+        run: |
+          helm lint cedana-helm
+
+      - name: install helm chart
+        run: |
+          helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system
+          kubectl wait --timeout=1m --for=condition=Ready pod -A -l app.kubernetes.io/component=manager
+
