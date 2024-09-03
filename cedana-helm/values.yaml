@@ -2,7 +2,16 @@ nameOverride: ""
 fullnameOverride: ""
 
 cedanaConfig:
-  signozApiKey: randomkey
+  signozApiKey: ""
+  cedanaApiKey: ""
+  cedanaApiServer: ""
+  # Uncomment, to use custom pre-existing secret
+  # preExistingSecret: cedana-secret-user
+
+  # Secrets required
+  #    signoz-api-key
+  #    cedana-api-key
+  #    cedana-api-server
 
 daemonHelper:
   upgradeAndRestart: false
