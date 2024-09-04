@@ -6,31 +6,13 @@ metadata:
   {{- include "cedana-helm.labels" . | nindent 4 }}
 rules:
 - apiGroups:
-  - core.cedana.ai
+  - ""
   resources:
-  - cedanas
+  - nodes
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - core.cedana.ai
-  resources:
-  - cedanas/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - core.cedana.ai
-  resources:
-  - cedanas/status
-  verbs:
-  - get
-  - patch
-  - update
 - apiGroups:
   - ""
   resources:
