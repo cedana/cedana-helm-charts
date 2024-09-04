@@ -24,6 +24,8 @@ daemonHelper:
   updateStrategy:
     maxSurge: 0
     maxUnavailable: 1
+  tolerations: []
+  affinity: {}
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -84,6 +86,8 @@ controllerManager:
       # requests:
       #   cpu: 10m
       #   memory: 64Mi
+  tolerations: []
+  affinity: {}
 
 kubernetesClusterDomain: cluster.local
 

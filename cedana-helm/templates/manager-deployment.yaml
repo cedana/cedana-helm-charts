@@ -107,3 +107,11 @@ spec:
         runAsNonRoot: true
       serviceAccountName: {{ include "cedana-helm.serviceAccountName" . }}
       terminationGracePeriodSeconds: 10
+      {{- with .Values.daemonHelper.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonHelper.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
