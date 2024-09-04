@@ -48,36 +48,22 @@ spec:
             - name: grpc
               containerPort: 8080
               protocol: TCP
-          livenessProbe:
-            grpc:
-              port: 8080
-            periodSeconds: 20
-          startupProbe:
-            grpc:
-              port: 8080
-            initialDelaySeconds: 1
-            periodSeconds: 2
-          readinessProbe:
-            grpc:
-              port: 8080
-            periodSeconds: 20
           env:
             - name: SIGNOZ_ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: cedana-secrets
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: signoz-api-key
             - name: CEDANA_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: cedana-secrets
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: cedana-api-key
             - name: CEDANA_API_SERVER
               valueFrom:
                 secretKeyRef:
-                  name: cedana-secrets
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: cedana-api-server
-      volumes
       volumes:
         - name: varlog
           hostPath:

@@ -54,6 +54,21 @@ spec:
         command:
         - /manager
         env:
+        - name: SIGNOZ_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: signoz-api-key
+        - name: CEDANA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: cedana-api-key
+        - name: CEDANA_API_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: cedana-api-server
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
         - name: CEDANA_API_SERVER
