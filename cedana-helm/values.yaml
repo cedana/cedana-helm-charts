@@ -1,6 +1,8 @@
 nameOverride: ""
 fullnameOverride: ""
 
+startOtelcol: true
+
 cedanaConfig:
   signozApiKey: ""
   cedanaApiKey: ""
