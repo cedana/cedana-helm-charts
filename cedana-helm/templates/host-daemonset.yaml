@@ -26,6 +26,7 @@ spec:
     spec:
       hostPID: true
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       hostIPC: true
       containers:
         - name: binary-container
