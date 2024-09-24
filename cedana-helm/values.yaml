@@ -5,15 +5,15 @@ startOtelcol: true
 
 cedanaConfig:
   signozApiKey: ""
-  cedanaApiKey: ""
-  cedanaApiServer: ""
+  cedanaAuthToken: ""
+  cedanaUrl: ""
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
   # Secrets required
   #    signoz-api-key
-  #    cedana-api-key
-  #    cedana-api-server
+  #    cedana-auth-token
+  #    cedana-url
 
 daemonHelper:
   upgradeAndRestart: false
