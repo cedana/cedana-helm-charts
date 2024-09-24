@@ -54,7 +54,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
-                  key: signoz-api-key
+                  key: signoz-access-token
             - name: CEDANA_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:

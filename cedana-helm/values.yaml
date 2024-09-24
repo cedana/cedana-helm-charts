@@ -4,14 +4,14 @@ fullnameOverride: ""
 startOtelcol: true
 
 cedanaConfig:
-  signozApiKey: ""
+  signozAccessToken: ""
   cedanaAuthToken: ""
   cedanaUrl: ""
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
   # Secrets required
-  #    signoz-api-key
+  #    signoz-access-token
   #    cedana-auth-token
   #    cedana-url
 
