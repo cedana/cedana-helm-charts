@@ -95,9 +95,7 @@ config:
     otlp:
       protocols:
         grpc:
-          endpoint: 0.0.0.0:4317
-        http:
-          endpoint: 0.0.0.0:4318
+          endpoint: 0.0.0.0:7777
     filelog/daemonlogs:
       include:
         - "/var/log/cedana-daemon.log"
@@ -108,21 +106,6 @@ config:
         - "/tmp/cedana-gpucontroller.log"
         - "/host/tmp/cedana-gpucontroller.log"
       start_at: end
-    hostmetrics:
-      collection_interval: 60s
-      scrapers:
-        cpu: {}
-        disk: {}
-        load: {}
-        filesystem: {}
-        memory: {}
-        network: {}
-        paging: {}
-        process:
-          mute_process_name_error: true
-          mute_process_exe_error: true
-          mute_process_io_error: true
-        processes: {}
     prometheus:
       config:
         global:
@@ -153,9 +136,7 @@ config:
       tls:
         insecure: false
       headers:
-        "signoz-access-token": "${env:SIGNOZ_ACCESS_TOKEN}" # Set as a variable before helm install instead of passing it in --set flag
-    logging:
-      verbosity: normal
+        "signoz-access-token": "your-signoz-access-token" # We are working on making this an env variable
   service:
     telemetry:
       metrics:
@@ -167,7 +148,7 @@ config:
         processors: [batch]
         exporters: [otlp]
       metrics/internal:
-        receivers: [prometheus, hostmetrics]
+        receivers: [prometheus]
         processors: [batch]
         exporters: [otlp]
       traces:
@@ -178,6 +159,7 @@ config:
         receivers: [otlp, filelog/daemonlogs, filelog/gpulogs]
         processors: [batch]
         exporters: [otlp]
+
 # Components configured by presets will be injected in the same way they are for `config`.
 alternateConfig: {}
 
