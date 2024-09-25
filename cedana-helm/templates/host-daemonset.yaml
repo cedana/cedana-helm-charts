@@ -54,17 +54,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
-                  key: signoz-api-key
-            - name: CEDANA_API_KEY
+                  key: signoz-access-token
+            - name: CEDANA_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
-                  key: cedana-api-key
-            - name: CEDANA_API_SERVER
+                  key: cedana-auth-token
+            - name: CEDANA_URL
               valueFrom:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
-                  key: cedana-api-server
+                  key: cedana-url
       volumes:
         - name: varlog
           hostPath:
