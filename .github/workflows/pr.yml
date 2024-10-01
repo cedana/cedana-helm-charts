@@ -16,8 +16,6 @@ jobs:
     runs-on: ubicloud-standard-2
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
       - name: Lint helm chart
         run: |
           helm lint cedana-helm
@@ -25,6 +23,7 @@ jobs:
   install-test:
     runs-on: ubicloud-standard-8
     steps:
+      - uses: actions/checkout@v3
       - name: Use Docker
         uses: actions-hub/docker/cli@master
         env:
