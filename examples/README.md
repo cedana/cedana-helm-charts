@@ -22,28 +22,33 @@ HSET 'user:001' first_name 'John' last_name 'doe' dob '12-JUN-1970'
 HSET 'user:002' first_name 'David' last_name 'Bloom' dob '03-MAR-1981'
 ```
 
-Great! Now its time to checkpoint the container. Lets set necessary environment variables before we proceed.
+Great! Now its time to checkpoint the container. Lets set necessary environment variables before we proceed. The following variables should work on k3s.
 
 ```bash
 export CHECKPOINT_CONTAINER=redis \
-export CHECKPOINT_SANDBOX=default \
-export RESTORE_CONTAINER=redis-1 \
-export RESTORE_SANDBOX=default \
-export NAMESPACE=k8s.io \
+export CHECKPOINT_SANDBOX=redis-6b5bcbb6b6-4vmhf \
+export RESTORE_CONTAINER=redis \
+export RESTORE_SANDBOX=redis-6b5bcbb6b6-4vmhf \
+export NAMESPACE=cedana-examples \
 export CONTROLLER_URL=localhost \
-export ROOT=root 
+export ROOT=/run/containerd/runc/k8s.io \
+export CHECKPOINT_PATH=/tmp/ckpt-$(date +%s%N)
+```
+Let's try to list all the pods in `cedana-examples` namespace
+
+```bash
+curl -X GET -H 'Content-Type: application/json' -d '{
+  "root": "'$ROOT'"
+}' $CONTROLLER_URL:1324/list/cedana-examples
 ```
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
-  "checkpoint_data": {
     "container_name": "'$CHECKPOINT_CONTAINER'",
     "sandbox_name": "'$CHECKPOINT_SANDBOX'",
     "namespace": "'$NAMESPACE'",
     "checkpoint_path": "'$CHECKPOINT_PATH'",
     "root": "'$ROOT'"
-  },
-  "leave_running": false
 }' http://$CONTROLLER_URL:1324/checkpoint
 ```
 
