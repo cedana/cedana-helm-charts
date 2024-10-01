@@ -1,43 +1,25 @@
 name: release
 
 on:
-  workflow_call:
-    inputs:
-      ref:
-        description: "ref to build eg v0.8.0"
-        required: false
-        type: string
-      version:
-        description: "push helm chart with this version, eg v0.8.0"
-        type: string
-  workflow_dispatch:
-    inputs:
-      ref:
-        description: "ref to build eg v0.8.0"
-        required: false
-        type: string
-      version:
-        description: "push helm chart with this version, eg v0.8.0"
-        type: string
+  push:
+    tag:
+      - v*
 
 jobs:
   release-helm-chart:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ref: ${{ inputs.ref }}
+      - uses: actions/checkout@v4
       - name: Write release version
         id: version
         run: |
-          VERSION=${{ inputs.version }}
+          VERSION=${{ github.ref_name }}
+          # strip v
           echo Version: ${VERSION#v}
           echo "VERSION=${VERSION#v}" >> "$GITHUB_OUTPUT"
       - name: Check helm versions
         run: |
-          grep -qF '${{ steps.version.outputs.VERSION }}' chart/Chart.yaml
+          grep -qF '${{ steps.version.outputs.VERSION }}' cedana-helm/Chart.yaml || (echo "update the version field in cedana-helm/Chart.yaml"; exit 1)
       - name: Lint helm chart
         run: |
           helm lint cedana-helm
@@ -51,3 +33,4 @@ jobs:
           path: chart
           registry_username: ${{ secrets.DOCKER_USERNAME }}
           registry_password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: ncipollo/release-action@v1
