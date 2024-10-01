@@ -24,6 +24,7 @@ jobs:
 
   install-test:
     runs-on: ubicloud-standard-8
+    steps:
       - name: Use Docker
         uses: actions-hub/docker/cli@master
         env:
@@ -41,4 +42,3 @@ jobs:
               --set cedanaConfig.cedanaAuthToken="${CEDANA_API_KEY}" \
               --set cedanaConfig.cedanaUrl="https://sandbox.cedana.ai"
           kubectl wait --timeout=1m --for=condition=Ready pod -A -l app.kubernetes.io/component=manager
-
