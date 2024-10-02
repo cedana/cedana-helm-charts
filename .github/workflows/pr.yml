@@ -43,3 +43,5 @@ jobs:
           kubectl get pods -n cedana-operator-system
           sleep 20
           kubectl get pods -n cedana-operator-system
+        env:
+          CEDANA_API_KEY: ${{ secrets.CEDANA_API_KEY }}
