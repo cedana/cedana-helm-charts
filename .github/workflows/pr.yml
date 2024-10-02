@@ -40,6 +40,6 @@ jobs:
           helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system \
               --set cedanaConfig.cedanaAuthToken="${CEDANA_API_KEY}" \
               --set cedanaConfig.cedanaUrl="https://sandbox.cedana.ai"
-          kubectl wait --for=jsonpath='{.status.phase}'=Running --all -n cedana-operator-system
+          kubectl wait --for=jsonpath='{.status.phase}'=Running --all pod -n cedana-operator-system
         env:
           CEDANA_API_KEY: ${{ secrets.CEDANA_API_KEY }}
