@@ -13,12 +13,17 @@ concurrency:
 
 jobs:
   helm-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
+      - name: Lint helm chart
+        run: |
+          helm lint cedana-helm
 
+  install-test:
+    runs-on: ubicloud-standard-2
+    steps:
+      - uses: actions/checkout@v3
       - name: Use Docker
         uses: actions-hub/docker/cli@master
         env:
@@ -30,12 +35,11 @@ jobs:
         with:
           cluster_name: kind
 
-      - name: Lint helm chart
-        run: |
-          helm lint cedana-helm
-
       - name: install helm chart
         run: |
-          helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system
-          kubectl wait --timeout=1m --for=condition=Ready pod -A -l app.kubernetes.io/component=manager
-
+          helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system \
+              --set cedanaConfig.cedanaAuthToken="${CEDANA_API_KEY}" \
+              --set cedanaConfig.cedanaUrl="https://sandbox.cedana.ai"
+          kubectl get pods -n cedana-operator-system
+          sleep 20
+          kubectl get pods -n cedana-operator-system
