@@ -41,9 +41,9 @@ spec:
               readOnly: false
           command: ["/bin/sh", "-c"]
           {{ if .Values.daemonHelper.upgradeAndRestart }}
-          args: ["cedana k8s-helper --restart true --start-otelcol {{ .Values.startOtelcol }} --port {{ .Values.daemonHelper.service.ports[0].targetPort }} && sleep infinity"]
+          args: ["cedana k8s-helper --restart true --start-otelcol {{ .Values.startOtelcol }} --port {{ (index .Values.daemonHelper.service.ports 0).targetPort }} && sleep infinity"]
           {{ else }}
-          args: ["cedana k8s-helper --setup-host true --start-otelcol {{ .Values.startOtelcol }} --port {{ .Values.daemonHelper.service.ports[0].targetPort }} && sleep infinity"]
+          args: ["cedana k8s-helper --setup-host true --start-otelcol {{ .Values.startOtelcol }} --port {{ (index .Values.daemonHelper.service.ports 0).targetPort }} && sleep infinity"]
           {{ end }}
           ports:
             - name: grpc
