@@ -51,7 +51,6 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "namespace": "'$NAMESPACE'",
     "checkpoint_path": "'$CHECKPOINT_PATH'",
     "root": "'$ROOT'",
-    "is_k3s":"false"
   }
 }' http://$CONTROLLER_URL:1324/checkpoint
 ```
@@ -72,7 +71,6 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "namespace": "'$NAMESPACE'",
     "checkpoint_path": "'$CHECKPOINT_PATH'",
     "root": "'$ROOT'",
-    "is_k3s":"false"
   }
 }' http://$CONTROLLER_URL:1324/restore
 ```
