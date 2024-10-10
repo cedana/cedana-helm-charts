@@ -65,6 +65,8 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: cedana-url
+            - name: CEDANA_CONTROLLER_SERVICE
+              value: {{ include "cedana-helm.fullname" . }}-manager-service
       volumes:
         - name: varlog
           hostPath:
