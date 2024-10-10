@@ -22,7 +22,7 @@ HSET 'user:001' first_name 'John' last_name 'doe' dob '12-JUN-1970'
 HSET 'user:002' first_name 'David' last_name 'Bloom' dob '03-MAR-1981'
 ```
 
-Great! Now its time to checkpoint the container. Lets set necessary environment variables before we proceed. The following variables should work on GKE.
+Great! Now its time to checkpoint the container. Lets set necessary environment variables before we proceed. The following variables should work on most default containerd clusters.
 
 ```bash
 export CHECKPOINT_CONTAINER=redis \
