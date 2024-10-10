@@ -30,7 +30,7 @@ jobs:
           repository: cedana
           tag: ${{ steps.version.outputs.VERSION }}
           registry: registry-1.docker.io
-          path: chart
+          path: cedana-helm
           registry_username: ${{ secrets.DOCKER_USERNAME }}
           registry_password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: ncipollo/release-action@v1
