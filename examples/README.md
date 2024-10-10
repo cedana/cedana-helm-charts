@@ -22,17 +22,17 @@ HSET 'user:001' first_name 'John' last_name 'doe' dob '12-JUN-1970'
 HSET 'user:002' first_name 'David' last_name 'Bloom' dob '03-MAR-1981'
 ```
 
-Great! Now its time to checkpoint the container. Lets set necessary environment variables before we proceed. The following variables should work on k3s.
+Great! Now its time to checkpoint the container. Lets set necessary environment variables before we proceed. The following variables should work on most default containerd clusters.
 
 ```bash
 export CHECKPOINT_CONTAINER=redis \
-export CHECKPOINT_SANDBOX=redis-6b5bcbb6b6-4vmhf \
-export RESTORE_CONTAINER=redis \
-export RESTORE_SANDBOX=redis-6b5bcbb6b6-4vmhf \
+export CHECKPOINT_SANDBOX=redis-6b5bcbb6b6-tdb4p \
+export RESTORE_CONTAINER=redis-restore \
+export RESTORE_SANDBOX=redis-restore-c6c794b64-h7ccs \
 export NAMESPACE=cedana-examples \
 export CONTROLLER_URL=localhost \
 export ROOT=/run/containerd/runc/k8s.io \
-export CHECKPOINT_PATH=/tmp/ckpt-$(date +%s%N)
+export CHECKPOINT_PATH=/tmp/ckpt-redis
 ```
 Let's try to list all the pods in `cedana-examples` namespace
 
@@ -41,18 +41,27 @@ curl -X GET -H 'Content-Type: application/json' -d '{
   "root": "'$ROOT'"
 }' $CONTROLLER_URL:1324/list/cedana-examples
 ```
+Runc container checkpoint
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
+  "checkpoint_data": {
     "container_name": "'$CHECKPOINT_CONTAINER'",
     "sandbox_name": "'$CHECKPOINT_SANDBOX'",
     "namespace": "'$NAMESPACE'",
     "checkpoint_path": "'$CHECKPOINT_PATH'",
     "root": "'$ROOT'"
+  }
 }' http://$CONTROLLER_URL:1324/checkpoint
 ```
 
-Once this completes, restore the container using the following commands
+Once this completes, we need a new pod to restore the redis data into. This pod must be in inactive state to accomplish a successful restore and to do this we will put the pod in `sleep infinity` state.
+
+```bash
+k apply -f redis-restore-example.yaml
+```
+
+Now restore the container using the following commands
 
 ```bash
 curl -X POST -H "Content-Type: application/json" -d '{
@@ -65,8 +74,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
   }
 }' http://$CONTROLLER_URL:1324/restore
 ```
-
-Now connect to redis-cli once again to check if the new restored container has the previously set data
+Finally connect to redis-cli once again to check if the new restored container has the previously set data
 
 ```bash
 HGETALL user:001
