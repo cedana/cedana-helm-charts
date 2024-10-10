@@ -50,7 +50,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "sandbox_name": "'$CHECKPOINT_SANDBOX'",
     "namespace": "'$NAMESPACE'",
     "checkpoint_path": "'$CHECKPOINT_PATH'",
-    "root": "'$ROOT'",
+    "root": "'$ROOT'"
   }
 }' http://$CONTROLLER_URL:1324/checkpoint
 ```
@@ -70,7 +70,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
     "sandbox_name": "'$RESTORE_SANDBOX'",
     "namespace": "'$NAMESPACE'",
     "checkpoint_path": "'$CHECKPOINT_PATH'",
-    "root": "'$ROOT'",
+    "root": "'$ROOT'"
   }
 }' http://$CONTROLLER_URL:1324/restore
 ```
