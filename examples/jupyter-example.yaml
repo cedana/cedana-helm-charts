@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jupyter-notebook
+  labels:
+    app: jupyter
+spec:
+  containers:
+  - name: jupyter-container
+    image: jupyter/base-notebook:latest
+    ports:
+    - containerPort: 8888
+    args:
+      - start-notebook.sh
+    env:
+    - name: JUPYTER_TOKEN
+      value: "helloworld"  # Set your Jupyter token password here
+  restartPolicy: OnFailure
+
