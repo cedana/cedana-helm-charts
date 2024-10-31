@@ -95,7 +95,7 @@ Now portforward the jupyter-notebook pod to your local.
 ```bash
 kubectl port-forward pod/jupyter-notebook -n cedana-examples 8888:8888
 ```
-pip install to install necessary modules for training
+pip install to install necessary modules for training (optional)
 ```bash
 pip install torch torchvision numpy
 ```
@@ -187,17 +187,16 @@ export new_image_ref=""
 ```
 ```bash
 	registry_auth=$(echo -n $username:$password | base64 -w 0)
-	jupyter_sandbox_name=$(kubectl get po -n cedana-examples  --no-headers=true | grep jupyter-notebook | cut -d " " -f 1)
 	response=$(curl -X POST -H "Content-Type: application/json" -d '{
 	"container_name": "jupyter-container",
 	"root": "/run/runc",
-	"sandbox_name": "'$jupyter_sandbox_name'",
+	"sandbox_name": "jupyter-notebook",
 	"namespace": "cedana-examples",
 	"registry_auth_data": {
   	"pull_auth_token": "'$registry_auth'",
   	"push_auth_token": "'$registry_auth'"
 	},
-	"image_ref": "docker.io/jupyter/base-notebook:latest",
+	"image_ref": "docker.io/cedana/jupyter-base:latest",
 	"new_image_ref": "'$new_image_ref'"
 	}' http://localhost:1324/checkpoint/rootfs/crio)
 	echo "crio_rootfs_checkpoint_response: $response"

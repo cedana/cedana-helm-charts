@@ -7,7 +7,7 @@ metadata:
 spec:
   containers:
   - name: jupyter-container
-    image: jupyter/base-notebook:latest
+    image: cedana/jupyter-base:latest
     ports:
     - containerPort: 8888
     args:
