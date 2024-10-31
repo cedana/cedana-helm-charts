@@ -25,7 +25,7 @@ HSET 'user:002' first_name 'David' last_name 'Bloom' dob '03-MAR-1981'
 Great! Now its time to checkpoint the container. Lets set necessary environment variables before we proceed. The following variables should work on most default containerd clusters.
 
 ```bash
-kubectl port-forward service/ -n cedanacontroller-system 1324:1324
+kubectl port-forward service/cedana-cedana-helm-manager-service-n cedanacontroller-system 1324:1324
 ```
 
 ```bash
@@ -99,7 +99,7 @@ pip install to install necessary modules for training (optional)
 ```bash
 pip install torch torchvision numpy
 ```
-Time to run the actual code in the checkpoint containr notebook:
+Time to run the actual code in the checkpoint container notebook:
 ```python
 import torch
 import torch.nn as nn
@@ -201,3 +201,5 @@ export new_image_ref=""
 	}' http://localhost:1324/checkpoint/rootfs/crio)
 	echo "crio_rootfs_checkpoint_response: $response"
 ```
+
+Congrats! You just made made a CRIO rootfs dump! To restore the image into a new pod, simply use new_image_ref in the pod manifest file and all the variables should be preserved just as the previously checkpointed container. To test this, simply run a `print(accuracy)`. 
