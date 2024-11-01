@@ -8,7 +8,7 @@ in kubernetes cluster.
 - Kubernetes 1.24+
 - Helm 3.9+
 
-## Installing the Chart
+## Installing the Charts
 
 Add OpenTelemetry Helm repository:
 
