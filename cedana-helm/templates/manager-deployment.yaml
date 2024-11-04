@@ -69,6 +69,11 @@ spec:
             secretKeyRef:
               name: {{ template "cedana-helm.cedanaSecretName" . }}
               key: cedana-url
+        - name: CEDANA_PORT
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: cedana-port
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
         - name: CONTROLLER_NAMESPACE
