@@ -20,7 +20,7 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
+    repository: cedana/cedana-helper-test
     tag: experimental-sdk
     imagePullPolicy: Always
   updateStrategy:
