@@ -22,7 +22,7 @@ daemonHelper:
   image:
     repository: cedana/cedana-helper
     tag: latest
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
     maxUnavailable: 1
@@ -66,7 +66,7 @@ controllerManager:
     image:
       repository: cedana/cedana-controller
       tag: latest
-      imagePullPolicy: IfNotPresent
+      imagePullPolicy: Always
     resources:
       # empty to ensure minimal resource
       # usage on demo/test deployments
