@@ -21,7 +21,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: latest
+    tag: experimental-sdk
     imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
