@@ -20,8 +20,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper-test
-    tag: experimental-sdk
+    repository: cedana/cedana-helper
+    tag: v0.9.233
     imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
@@ -65,7 +65,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: latest
+      tag: v0.3.1
       imagePullPolicy: Always
     resources:
       # empty to ensure minimal resource
