@@ -64,8 +64,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.3.1
+      repository: cedana/cedana-controller-test
+      tag: feat-bump-buf
       imagePullPolicy: Always
     resources:
       # empty to ensure minimal resource
