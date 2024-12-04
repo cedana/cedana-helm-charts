@@ -20,8 +20,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: v0.9.233
+    repository: cedana/cedana-helper-test
+    tag: hotfix-buffersize
     imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
