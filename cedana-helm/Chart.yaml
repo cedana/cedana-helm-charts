@@ -2,9 +2,9 @@ apiVersion: v2
 name: cedana-helm
 description: A Helm chart for Cedana k8s operator
 type: application
-version: 0.2.2
+version: 0.3.0
 # we currently don't tie app version to chart version,
 # as our application and chart are both considered alpha
 # use with caution, try to use the latest version of the
 # chart if possible
-appVersion: "0.9.227"
+appVersion: "0.9.234"
