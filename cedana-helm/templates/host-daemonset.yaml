@@ -40,7 +40,7 @@ spec:
               mountPath: /host
               readOnly: false
             - name: checkpoint-pvc
-              mountPath: /checkpoints
+              mountPath: /host/checkpoints
           command: ["/bin/sh", "-c"]
           {{ if .Values.daemonHelper.upgradeAndRestart }}
           args: ["cedana k8s-helper --restart true --start-otelcol {{ .Values.startOtelcol }} && sleep infinity"]
