@@ -39,8 +39,6 @@ spec:
             - name: host-volume
               mountPath: /host
               readOnly: false
-            - name: checkpoint-pvc
-              mountPath: /host/checkpoints
           command: ["/bin/sh", "-c"]
           {{ if .Values.daemonHelper.upgradeAndRestart }}
           args: ["cedana k8s-helper --restart true --start-otelcol {{ .Values.startOtelcol }} && sleep infinity"]
@@ -70,9 +68,6 @@ spec:
             - name: CEDANA_CONTROLLER_SERVICE
               value: {{ include "cedana-helm.fullname" . }}-manager-service
       volumes:
-        - name: checkpoint-pvc
-          persistentVolumeClaim:
-            claimName: checkpoint-pvc
         - name: varlog
           hostPath:
             path: /var/log
