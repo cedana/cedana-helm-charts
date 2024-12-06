@@ -70,15 +70,15 @@ spec:
             - name: CEDANA_CONTROLLER_SERVICE
               value: {{ include "cedana-helm.fullname" . }}-manager-service
       volumes:
-        - name: checkpoint-pvc
-          persistentVolumeClaim:
-            claimName: checkpoint-pvc
-        - name: varlog
+       - name: varlog
           hostPath:
             path: /var/log
         - name: host-volume
           hostPath:
             path: /
+        - name: checkpoint-pvc
+          persistentVolumeClaim:
+            claimName: checkpoint-pvc 
       {{- with .Values.daemonHelper.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
