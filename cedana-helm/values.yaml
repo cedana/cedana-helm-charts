@@ -21,7 +21,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper-test
-    tag: fix-runc-dir
+    tag: hotfix-buffersize
     imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
