@@ -71,7 +71,7 @@ spec:
        - name: varlog
           hostPath:
             path: /var/log
-        - name: host-volume
+       - name: host-volume
           hostPath:
             path: /
       {{- with .Values.daemonHelper.affinity }}
