@@ -69,11 +69,11 @@ spec:
               value: {{ include "cedana-helm.fullname" . }}-manager-service
       volumes:
        - name: varlog
-          hostPath:
-            path: /var/log
+         hostPath:
+           path: /var/log
        - name: host-volume
-          hostPath:
-            path: /
+         hostPath:
+           path: /
       {{- with .Values.daemonHelper.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
