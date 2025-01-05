@@ -52,7 +52,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: cluster-admin
+  name: '{{ include "cedana-helm.fullname" . }}-leader-election-role'
 subjects:
 - kind: ServiceAccount
   name: '{{ include "cedana-helm.serviceAccountName" . }}'
