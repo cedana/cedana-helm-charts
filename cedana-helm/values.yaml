@@ -20,8 +20,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper-test
-    tag: hotfix-buffersize
+    repository: cedana/cedana-helper
+    tag: v0.9.236
     imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
@@ -64,8 +64,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller-test
-      tag: fix-runc-dir
+      repository: cedana/cedana-controller
+      tag: v0.3.3
       imagePullPolicy: Always
     resources:
       # empty to ensure minimal resource
