@@ -26,6 +26,16 @@ rules:
   - update
   - watch
   - deletecollection
+- apiGroups:
+  - "apps"
+  resources:
+  - deployments
+  - daemonsets
+  - statefulsets
+  verbs:
+  - list
+  - watch
+  - get
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: ["list", "watch"]
