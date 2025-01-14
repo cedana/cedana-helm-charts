@@ -21,7 +21,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.236
+    tag: cgroups
     imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
