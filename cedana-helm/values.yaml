@@ -21,7 +21,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper-test
-    tag: fix-scripts-22f7d08
+    tag: hotfix-setupaws
     imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
