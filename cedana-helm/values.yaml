@@ -20,8 +20,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: cgroups
+    repository: cedana/cedana-helper-test
+    tag: fix-scripts-22f7d08
     imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
