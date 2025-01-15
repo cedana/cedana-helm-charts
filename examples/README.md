@@ -25,6 +25,10 @@ HSET 'user:002' first_name 'David' last_name 'Bloom' dob '03-MAR-1981'
 Great! Now its time to checkpoint the container. Lets set necessary environment variables before we proceed. The following variables should work on most default containerd clusters.
 
 ```bash
+kubectl port-forward service/cedana-cedana-helm-manager-service-n cedanacontroller-system 1324:1324
+```
+
+```bash
 export CHECKPOINT_CONTAINER=redis \
 export CHECKPOINT_SANDBOX=redis-6b5bcbb6b6-tdb4p \
 export RESTORE_CONTAINER=redis-restore \
@@ -80,3 +84,122 @@ Finally connect to redis-cli once again to check if the new restored container h
 HGETALL user:001
 HGETALL user:002
 ```
+
+## Jupyter Notebook checkpoint restore
+Now lets try checkpointing a jupyter notebook using CRIO runtime. This example includes us training against an MNIST dataset (basically have a model classify numbers based on images). Let's start with creating the empty notebook to be checkpointed.
+
+```bash
+kubectl apply -f jupyter-example.yaml -f -n cedana-examples
+```
+Now portforward the jupyter-notebook pod to your local.
+```bash
+kubectl port-forward pod/jupyter-notebook -n cedana-examples 8888:8888
+```
+pip install to install necessary modules for training (optional)
+```bash
+pip install torch torchvision numpy
+```
+Time to run the actual code in the checkpoint container notebook:
+```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+import numpy
+
+# Define a very simple neural network with one linear layer
+class SimpleNN(nn.Module):
+    def __init__(self):
+        super(SimpleNN, self).__init__()
+        self.fc = nn.Linear(28 * 28, 10)  # Input: 28*28 (flattened image), Output: 10 (class scores)
+
+    def forward(self, x):
+        x = x.view(-1, 28 * 28)  # Flatten the input
+        x = self.fc(x)
+        return x
+
+# Setup device
+device = torch.device('cpu')  # Using CPU
+
+# Create the model and move it to the device
+model = SimpleNN().to(device)
+
+# Loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.01)
+
+# Data transformations
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+])
+
+# Load MNIST dataset
+train_dataset = datasets.MNIST(root='./data', train=True, transform=transform, download=True)
+train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
+
+# Training loop (1 epoch)
+for epoch in range(1):  # Single epoch
+    model.train()
+    for images, labels in train_loader:
+        images, labels = images.to(device), labels.to(device)
+
+        # Forward pass
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    print(f'Epoch {epoch+1}: Loss: {loss.item()}')
+
+print('Training complete')
+
+# Evaluation on test dataset
+test_dataset = datasets.MNIST(root='./data', train=False, transform=transform, download=True)
+test_loader = DataLoader(dataset=test_dataset, batch_size=1000, shuffle=False)
+
+model.eval()
+correct = 0
+total = 0
+
+with torch.no_grad():
+    for images, labels in test_loader:
+        images, labels = images.to(device), labels.to(device)
+        outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+accuracy = 100 * correct / total
+print(f'Accuracy: {accuracy}%')
+```
+
+Assuming the cedana service is still port-forwarded at 1324, lets run CRIO rootfs checkpoint on the container. Note that we must provide credentials to push rootfs as an image to the specified registry of your choice.
+
+```bash
+# Enter your container registry username and password and the name of the image you want to push
+export username=""
+export password=""
+export new_image_ref=""
+```
+```bash
+	registry_auth=$(echo -n $username:$password | base64 -w 0)
+	response=$(curl -X POST -H "Content-Type: application/json" -d '{
+	"container_name": "jupyter-container",
+	"root": "/run/runc",
+	"sandbox_name": "jupyter-notebook",
+	"namespace": "cedana-examples",
+	"registry_auth_data": {
+  	"pull_auth_token": "'$registry_auth'",
+  	"push_auth_token": "'$registry_auth'"
+	},
+	"image_ref": "docker.io/cedana/jupyter-base:latest",
+	"new_image_ref": "'$new_image_ref'"
+	}' http://localhost:1324/checkpoint/rootfs/crio)
+	echo "crio_rootfs_checkpoint_response: $response"
+```
+
+Congrats! You just made made a CRIO rootfs dump! To restore the image into a new pod, simply use new_image_ref in the pod manifest file and all the variables should be preserved just as the previously checkpointed container. To test this, simply run a `print(accuracy)`. 
