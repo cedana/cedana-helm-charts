@@ -66,7 +66,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller-test
-      tag: feat-clusterinfo-24ccb3c
+      tag: feat-clusterinfo-0e214be
       imagePullPolicy: Always
     resources:
       # empty to ensure minimal resource
