@@ -43,6 +43,16 @@ spec:
             secretKeyRef:
               name: {{ template "cedana-helm.cedanaSecretName" . }}
               key: cedana-auth-token
+        - name: CEDANA_SQS_QUEUE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: cedana-sqs-queue-url
+        - name: CEDANA_CLUSTER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: cedana-cluster-name
         - name: CEDANA_URL
           valueFrom:
             secretKeyRef:
@@ -68,10 +78,8 @@ spec:
             port: 8081
           initialDelaySeconds: 5
           periodSeconds: 10
-        resources: {{- toYaml .Values.controllerManager.manager.resources | nindent 10
-          }}
-        securityContext: {{- toYaml .Values.controllerManager.manager.containerSecurityContext
-          | nindent 10 }}
+        resources: {{- toYaml .Values.controllerManager.manager.resources | nindent 10 }}
+        securityContext: {{- toYaml .Values.controllerManager.manager.containerSecurityContext | nindent 10 }}
       securityContext:
         runAsNonRoot: true
       serviceAccountName: {{ include "cedana-helm.serviceAccountName" . }}

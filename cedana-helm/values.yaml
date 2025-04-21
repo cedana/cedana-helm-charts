@@ -6,6 +6,7 @@ startOtelcol: true
 cedanaConfig:
   signozAccessToken: ""
   cedanaAuthToken: ""
+  cedanaClusterName: ""
   cedanaUrl: ""
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
@@ -20,8 +21,11 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: latest
+    repository: cedana/cedana-helper-test
+    tag: feat-opt-out-daemon-6d1f52c0
+    #tag: fix-resume-pod
+    #tag: feat-shim-install
+    #tag: feat-ced-939-k8s-restores
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
@@ -64,9 +68,12 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: latest
-      imagePullPolicy: IfNotPresent
+      repository: cedana/cedana-controller-test
+      #tag: feat-queue-temp-log-2db868b
+      tag: feat-queue-consumption-c5f2a74
+      #tag: feat-spot-notices-rmq-822240a
+      #tag: feat-queue-consumption-630ae10
+      imagePullPolicy: Always
     resources:
       # empty to ensure minimal resource
       # usage on demo/test deployments

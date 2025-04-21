@@ -60,6 +60,11 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: cedana-auth-token
+            - name: CEDANA_CLUSTER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                  key: cedana-cluster-name
             - name: CEDANA_URL
               valueFrom:
                 secretKeyRef:
