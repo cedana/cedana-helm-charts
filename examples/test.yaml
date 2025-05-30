@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cedana-restoredql22h
+  namespace: default
+spec:
+  runtimeClassName: cedana  
+  containers:
+  - env:
+    - name: CEDANA_RUNC_RESTORE
+      value: cedana://7fb03faa-eed5-4bc6-ad83-475cafb708c2
+    image: redis:6.2
+    imagePullPolicy: IfNotPresent
+    name: example-redis
+    ports:
+    - containerPort: 6379
+      protocol: TCP
+    resources:
+      requests:
+        cpu: 500m
