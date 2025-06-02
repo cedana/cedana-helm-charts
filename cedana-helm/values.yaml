@@ -3,15 +3,21 @@ fullnameOverride: ""
 
 startOtelcol: true
 
+# Install the following CRDs before setting installKueue as true
+# kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.10.1/manifests.yaml
+installKueue: false
+
 cedanaConfig:
   signozAccessToken: ""
   cedanaAuthToken: ""
   cedanaUrl: ""
+  cedanaClusterName: ""
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
   # Secrets required
   #    signoz-access-token
+  #    cedana-cluster-name
   #    cedana-auth-token
   #    cedana-url
 

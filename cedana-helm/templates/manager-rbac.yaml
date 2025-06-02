@@ -5,6 +5,30 @@ metadata:
   labels:
   {{- include "cedana-helm.labels" . | nindent 4 }}
 rules:
+{{ if .Values.installKueue }}
+- apiGroups:
+  - "kueue.x-k8s.io"
+  resources:
+  - workloads
+  - localqueues
+  - clusterqueues
+  - resourceflavours
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "kueue.x-k8s.io/v1beta1"
+  resources:
+  - workloads
+  - localqueues
+  - clusterqueues
+  - resourceflavours
+  verbs:
+  - get
+  - list
+  - watch
+{{ end }}
 - apiGroups:
   - ""
   resources:

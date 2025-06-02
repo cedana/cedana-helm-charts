@@ -38,6 +38,11 @@ spec:
             secretKeyRef:
               name: {{ template "cedana-helm.cedanaSecretName" . }}
               key: signoz-access-token
+        - name: CEDANA_CLUSTER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: signoz-access-token
         - name: CEDANA_AUTH_TOKEN
           valueFrom:
             secretKeyRef:
