@@ -34,3 +34,4 @@ jobs:
           registry_username: ${{ vars.DOCKER_USERNAME }}
           registry_password: ${{ secrets.DOCKER_TOKEN }}
       - uses: ncipollo/release-action@v1
+        continue-on-error: true
