@@ -6,9 +6,7 @@ Kubernetes cluster.
 ## cedana-helm
 
 Chart for installing the controller and cedana daemon.
-Additionally it aims to provide optional deployments for services commonly used with our
-deployments.
-
+Additionally it aims to provide optional deployments for services commonly used with our deployments such as Kueue. 
 ### Installation
 
 Currently you can install the chart using this repo or you can use the oci repository.
@@ -17,30 +15,18 @@ Currently you can install the chart using this repo or you can use the oci repos
 # clone the repo
 git clone https://github.com/cedana/cedana-helm-charts --depth 1
 # install from local chart files
-helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedanacontroller-system
+helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-systems \ 
+--set cedanaConfig.cedanaUrl=$CEDANA_URL \
+--set cedanaConfig.cedanaAuthToken=$CEDANA_AUTH_TOKEN
 
 # alternatively, you can use the oci repo
-helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-namespace -n cedanacontroller-system
+helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-namespace -n cedana-systems \ 
+--set cedanaConfig.cedanaUrl=$CEDANA_URL \
+--set cedanaConfig.cedanaAuthToken=$CEDANA_AUTH_TOKEN
 ```
 
 ### Usage
-
-Port-forward manager,
-
-```bash
-# port-forward manager service to access the api
-kubectl port-forwarding -n cedanacontroller-system service/cedana-manager-service 1324:1324
-```
-
-List containers we can attempt to checkpoint/restore,
-
-```bash
-# list containers in default namespace
-# requires: $RUNC_ROOT for the runtime
-# For k8s & containerd: export ROOT=/run/containerd/runc/k8s.io
-# For default k3s:      export ROOT=/host/run/containerd/runc/k8s.io
-curl -X GET localhost:1324/list/default -D "{\"root\": \"$RUNC_ROOT\"}"
-```
+See https://docs.cedana.ai/get-started/using-the-cedana-platform for usage instructions with the Cedana Platform!
 
 ### Security
 
