@@ -12,6 +12,7 @@ cedanaConfig:
   cedanaAuthToken: ""
   cedanaUrl: ""
   cedanaClusterName: ""
+  cedanaSqsQueueUrl: ""
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
