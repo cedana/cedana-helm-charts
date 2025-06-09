@@ -90,6 +90,16 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: plugins-gpu-version
+            - name: CEDANA_PLUGINS_STREAMER_VERSION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                  key: plugins-streamer-version
+            - name: CEDANA_RESET_CONFIG
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                  key: reset
             - name: CEDANA_CONTROLLER_SERVICE
               value: {{ include "cedana-helm.fullname" . }}-manager-service
       volumes:

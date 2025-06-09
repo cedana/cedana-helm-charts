@@ -18,6 +18,8 @@ cedanaConfig:
   pluginsCriuVersion: "latest"
   pluginsRuntimeShimVersion: "latest"
   pluginsGpuVersion: "latest"
+  pluginsStreamerVersion: "latest"
+  reset: true # reset existing config on host
 
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
