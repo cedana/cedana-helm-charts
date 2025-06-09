@@ -13,6 +13,12 @@ cedanaConfig:
   cedanaUrl: ""
   cedanaClusterName: ""
   cedanaSqsQueueUrl: ""
+  pluginsBuilds: "release"
+  pluginsNativeVersion: "latest"
+  pluginsCriuVersion: "latest"
+  pluginsRuntimeShimVersion: "latest"
+  pluginsGpuVersion: "latest"
+
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
