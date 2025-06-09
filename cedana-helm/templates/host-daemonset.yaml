@@ -68,27 +68,27 @@ spec:
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "cedana-helm.pluginsBuilds" . }}
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: plugins-builds
             - name: CEDANA_PLUGINS_NATIVE_VERSION
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "cedana-helm.pluginsNativeVersion" . }}
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: plugins-native-version
             - name: CEDANA_PLUGINS_CRIU_VERSION
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "cedana-helm.pluginsCriuVersion" . }}
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: plugins-criu-version
             - name: CEDANA_PLUGINS_K8S_RUNTIME_SHIM_VERSION
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "cedana-helm.pluginsRuntimeShimVersion" . }}
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: plugins-runtime-shim-version
             - name: CEDANA_PLUGINS_GPU_VERSION
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "cedana-helm.pluginsGpuVersion" . }}
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: plugins-gpu-version
             - name: CEDANA_CONTROLLER_SERVICE
               value: {{ include "cedana-helm.fullname" . }}-manager-service
