@@ -40,5 +40,5 @@ jobs:
         run: |
           helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system \
               --set cedanaConfig.cedanaUrl="${CEDANA_URL}" \
-              --set cedanaConfig.cedanaAuthToken="${CEDANA_AUTH_TOKEN}" \
+              --set cedanaConfig.cedanaAuthToken="${CEDANA_AUTH_TOKEN}"
           kubectl wait --for=jsonpath='{.status.phase}'=Running --all pod -n cedana-operator-system
