@@ -22,6 +22,9 @@ jobs:
 
   install-test:
     runs-on: ubicloud-standard-2
+    env:
+      CEDANA_URL: ${{ vars.CEDANA_URL }}
+      CEDANA_AUTH_TOKEN: ${{ secrets.CEDANA_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v3
       - name: Use Docker
@@ -36,8 +39,6 @@ jobs:
       - name: install helm chart
         run: |
           helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system \
-              --set cedanaConfig.cedanaAuthToken="${CEDANA_API_KEY}" \
-              --set cedanaConfig.cedanaUrl="https://sandbox.cedana.ai/v1"
+              --set cedanaConfig.cedanaUrl="${CEDANA_URL}" \
+              --set cedanaConfig.cedanaAuthToken="${CEDANA_AUTH_TOKEN}" \
           kubectl wait --for=jsonpath='{.status.phase}'=Running --all pod -n cedana-operator-system
-        env:
-          CEDANA_API_KEY: ${{ secrets.CEDANA_API_KEY }}
