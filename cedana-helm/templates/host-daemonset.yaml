@@ -57,48 +57,48 @@ spec:
                   key: cedana-auth-token
             - name: CEDANA_URL
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: cedana-url
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: plugins-builds
             - name: CEDANA_PLUGINS_NATIVE_VERSION
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: plugins-native-version
             - name: CEDANA_PLUGINS_CRIU_VERSION
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: plugins-criu-version
             - name: CEDANA_PLUGINS_K8S_RUNTIME_SHIM_VERSION
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: plugins-runtime-shim-version
             - name: CEDANA_PLUGINS_GPU_VERSION
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: plugins-gpu-version
             - name: CEDANA_PLUGINS_STREAMER_VERSION
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: plugins-streamer-version
             - name: CEDANA_LOG_LEVEL
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: log-level
             - name: CEDANA_LOG_LEVEL_NO_SERVER
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: log-level
             - name: CEDANA_CONTROLLER_SERVICE
               value: {{ include "cedana-helm.fullname" . }}-manager-service

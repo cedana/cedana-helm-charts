@@ -67,3 +67,8 @@ Return secret name to be used based on provided values.
 {{- define "cedana-helm.cedanaSecretName" -}}
 {{- default "cedana-secrets" .Values.cedanaConfig.preExistingSecret -}}
 {{- end -}}
+
+# Config map helper
+{{- define "cedana-helm.cedanaConfigMapName" -}}
+{{- default "cedana-config" .Values.cedanaConfig.preExistingSecret -}}
+{{- end -}}

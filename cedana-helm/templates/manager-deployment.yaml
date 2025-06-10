@@ -35,13 +35,13 @@ spec:
         env:
         - name: CEDANA_SQS_QUEUE_URL
           valueFrom:
-            secretKeyRef:
-              name: {{ template "cedana-helm.cedanaSecretName" . }}
+            configMapKeyRef:
+              name: {{ template "cedana-helm.cedanaConfigMapName" . }}
               key: cedana-sqs-queue-url
         - name: CEDANA_CLUSTER_NAME
           valueFrom:
-            secretKeyRef:
-              name: {{ template "cedana-helm.cedanaSecretName" . }}
+            configMapKeyRef:
+              name: {{ template "cedana-helm.cedanaConfigMapName" . }}
               key: cedana-cluster-name
         - name: CEDANA_AUTH_TOKEN
           valueFrom:
@@ -50,8 +50,8 @@ spec:
               key: cedana-auth-token
         - name: CEDANA_URL
           valueFrom:
-            secretKeyRef:
-              name: {{ template "cedana-helm.cedanaSecretName" . }}
+            configMapKeyRef:
+              name: {{ template "cedana-helm.cedanaConfigMapName" . }}
               key: cedana-url
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
