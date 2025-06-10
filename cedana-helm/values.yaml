@@ -8,11 +8,18 @@ startOtelcol: true
 installKueue: false
 
 cedanaConfig:
-  signozAccessToken: ""
   cedanaAuthToken: ""
   cedanaUrl: ""
   cedanaClusterName: ""
   cedanaSqsQueueUrl: ""
+  pluginsBuilds: "alpha"
+  pluginsNativeVersion: "latest"
+  pluginsCriuVersion: "main"
+  pluginsRuntimeShimVersion: "cedana"
+  pluginsGpuVersion: "main"
+  pluginsStreamerVersion: "main"
+  logLevel: "debug"
+
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
