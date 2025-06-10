@@ -95,6 +95,16 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: plugins-streamer-version
+            - name: CEDANA_LOG_LEVEL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                  key: log-level
+            - name: CEDANA_LOG_LEVEL_NO_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                  key: log-level
             - name: CEDANA_RESET_CONFIG
               valueFrom:
                 secretKeyRef:
