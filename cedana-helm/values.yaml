@@ -13,14 +13,13 @@ cedanaConfig:
   cedanaUrl: ""
   cedanaClusterName: ""
   cedanaSqsQueueUrl: ""
-  pluginsBuilds: "release"
+  pluginsBuilds: "alpha"
   pluginsNativeVersion: "latest"
-  pluginsCriuVersion: "latest"
-  pluginsRuntimeShimVersion: "latest"
-  pluginsGpuVersion: "latest"
-  pluginsStreamerVersion: "latest"
-  logLevel: "info"
-  reset: true # reset existing config on host
+  pluginsCriuVersion: "main"
+  pluginsRuntimeShimVersion: "cedana"
+  pluginsGpuVersion: "main"
+  pluginsStreamerVersion: "main"
+  logLevel: "debug"
 
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
