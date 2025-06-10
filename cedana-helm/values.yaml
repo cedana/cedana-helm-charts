@@ -8,7 +8,6 @@ startOtelcol: true
 installKueue: false
 
 cedanaConfig:
-  signozAccessToken: ""
   cedanaAuthToken: ""
   cedanaUrl: ""
   cedanaClusterName: ""

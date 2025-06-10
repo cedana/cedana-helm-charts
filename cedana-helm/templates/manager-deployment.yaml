@@ -33,11 +33,6 @@ spec:
         command:
         - /manager
         env:
-        - name: SIGNOZ_ACCESS_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: {{ template "cedana-helm.cedanaSecretName" . }}
-              key: signoz-access-token
         - name: CEDANA_SQS_QUEUE_URL
           valueFrom:
             secretKeyRef:

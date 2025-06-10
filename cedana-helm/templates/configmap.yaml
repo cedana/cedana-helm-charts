@@ -1,0 +1,22 @@
+{{- if not .Values.cedanaConfig.preExistingConfigMap -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedana-config
+  labels:
+    app: cedana-config
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+  cedana-cluster-name: "{{ .Values.cedanaConfig.cedanaClusterName }}"
+  cedana-url: "{{ .Values.cedanaConfig.cedanaUrl }}"
+  cedana-sqs-queue-url: "{{ .Values.cedanaConfig.cedanaSqsQueueUrl }}"
+  plugins-builds: "{{ .Values.cedanaConfig.pluginsBuilds }}"
+  plugins-native-version: "{{ .Values.cedanaConfig.pluginsNativeVersion }}"
+  plugins-criu-version: "{{ .Values.cedanaConfig.pluginsCriuVersion }}"
+  plugins-runtime-shim-version: "{{ .Values.cedanaConfig.pluginsRuntimeShimVersion }}"
+  plugins-gpu-version: "{{ .Values.cedanaConfig.pluginsGpuVersion }}"
+  plugins-streamer-version: "{{ .Values.cedanaConfig.pluginsStreamerVersion }}"
+  log-level: "{{ .Values.cedanaConfig.logLevel }}"
+{{- end }}
