@@ -12,13 +12,13 @@ cedanaConfig:
   cedanaUrl: ""
   cedanaClusterName: ""
   cedanaSqsQueueUrl: ""
-  pluginsBuilds: "alpha"
+  pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
-  pluginsCriuVersion: "main"
-  pluginsRuntimeShimVersion: "cedana"
-  pluginsGpuVersion: "main"
-  pluginsStreamerVersion: "main"
-  logLevel: "debug"
+  pluginsCriuVersion: "v4.1-cedana.00"
+  pluginsRuntimeShimVersion: "v0.5.8"
+  pluginsGpuVersion: "v0.5.4"
+  pluginsStreamerVersion: "v0.0.8"
+  logLevel: "info"
 
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
@@ -35,7 +35,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: latest
+    tag: v0.9.247
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
@@ -79,7 +79,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: latest
+      tag: v0.4.3
       imagePullPolicy: IfNotPresent
     resources:
       # empty to ensure minimal resource

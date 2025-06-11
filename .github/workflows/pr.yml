@@ -1,4 +1,4 @@
-name: PR to Main Branch
+name: PR
 
 on:
   pull_request:
@@ -12,31 +12,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  helm-lint:
-    runs-on: ubicloud-standard-2
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Lint helm chart
         run: |
           helm lint cedana-helm
 
-  install-test:
-    runs-on: ubicloud-standard-2
+  test:
+    name: Test
+    runs-on: ubuntu-latest
     env:
       CEDANA_URL: ${{ vars.CEDANA_URL }}
       CEDANA_AUTH_TOKEN: ${{ secrets.CEDANA_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v3
+
       - name: Use Docker
         uses: actions-hub/docker/cli@master
         env:
           SKIP_LOGIN: true
-      # check if this uses docker image
+
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1
         with:
           cluster_name: kind
-      - name: install helm chart
+
+      - name: Install and test
         run: |
           helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system \
               --set cedanaConfig.cedanaUrl="${CEDANA_URL}" \
