@@ -1,9 +1,13 @@
-name: Publish
+name: Release
 
 on:
   push:
     tags:
       - v*
+
+concurrency:
+  group: release-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   dockerhub:
