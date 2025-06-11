@@ -38,7 +38,7 @@ jobs:
           name: cedana-helm
           repository: cedana
           tag: ${{ steps.version.outputs.VERSION }}
-          registry: registry-1.docker.io
+          registry: registry.hub.docker.com
           path: cedana-helm
           registry_username: ${{ vars.DOCKER_USERNAME }}
           registry_password: ${{ secrets.DOCKER_TOKEN }}
