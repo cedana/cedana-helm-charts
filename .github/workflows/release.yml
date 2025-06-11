@@ -102,9 +102,7 @@ jobs:
           RELEASE_NOTES_URL: https://github.com/${{ github.repository }}/releases/${{ steps.tag.outputs.tag }}
           RELEASE_BODY: "${{ steps.release-info.outputs.description }}"
           TAG: ${{ steps.tag.outputs.tag }}
-          BINARIES_DIR: current
           PREVIOUS_TAG: ${{ steps.previous-tag.outputs.tag }}
-          PREVIOUS_BINARIES_DIR: previous
         run: |
           echo $RELEASE_BODY > $GITHUB_STEP_SUMMARY
           echo ::set-output name=slack-summary::$(scripts/ci/release-summary-slack)
