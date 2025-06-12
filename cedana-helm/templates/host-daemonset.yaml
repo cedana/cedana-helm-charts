@@ -60,6 +60,16 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: cedana-url
+            - name: CEDANA_CHECKPOINT_STREAMS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: checkpoint-streams
+            - name: CEDANA_CHECKPOINT_COMPRESSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: checkpoint-compression
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
@@ -90,6 +100,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: plugins-streamer-version
+            - name: CEDANA_PROFILING_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: profiling-enabled
             - name: CEDANA_LOG_LEVEL
               valueFrom:
                 configMapKeyRef:

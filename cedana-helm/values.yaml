@@ -12,22 +12,26 @@ cedanaConfig:
   cedanaUrl: ""
   cedanaClusterName: ""
   cedanaSqsQueueUrl: ""
+
+  # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
+  # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
+  checkpointStreams: 4
+  checkpointCompression: "lz4" # Options: "none", "tar", "lz4", "gzip", "zlib"
+
+  # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
+  # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1-cedana.00"
-  pluginsRuntimeShimVersion: "v0.5.8"
+  pluginsRuntimeShimVersion: "v0.5.9"
   pluginsGpuVersion: "v0.5.4"
   pluginsStreamerVersion: "v0.0.8"
+
+  profilingEnabled: true
   logLevel: "info"
 
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
-
-  # Secrets required
-  #    signoz-access-token
-  #    cedana-cluster-name
-  #    cedana-auth-token
-  #    cedana-url
 
 daemonHelper:
   upgradeAndRestart: false
