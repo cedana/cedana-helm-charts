@@ -22,7 +22,7 @@ cedanaConfig:
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
-  pluginsCriuVersion: "v4.1-cedana.00"
+  pluginsCriuVersion: "v4.1-cedana.01"
   pluginsRuntimeShimVersion: "v0.5.9"
   pluginsGpuVersion: "v0.5.4"
   pluginsStreamerVersion: "v0.0.8"
@@ -39,7 +39,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.247
+    tag: v0.9.248
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
