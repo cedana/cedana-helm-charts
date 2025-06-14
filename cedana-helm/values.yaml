@@ -86,7 +86,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.4.3
+      tag: v0.4.4
       imagePullPolicy: IfNotPresent
     resources:
       # empty to ensure minimal resource
