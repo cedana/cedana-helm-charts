@@ -60,6 +60,10 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: cedana-url
+            - name: CEDANA_ADDRESS
+              value: /run/cedana.sock
+            - name: CEDANA_PROTOCOL
+              value: unix
             - name: CEDANA_CHECKPOINT_STREAMS
               valueFrom:
                 configMapKeyRef:
@@ -70,6 +74,21 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: checkpoint-compression
+            - name: CEDANA_GPU_POOL_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: gpu-pool-size
+            - name: CEDANA_GPU_FREEZE_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: gpu-freeze-type
+            - name: CEDANA_GPU_SHM_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: gpu-shm-size
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
@@ -105,6 +124,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: profiling-enabled
+            - name: CEDANA_METRICS_OTEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: metrics-otel
             - name: CEDANA_LOG_LEVEL
               valueFrom:
                 configMapKeyRef:

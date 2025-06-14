@@ -1,8 +1,6 @@
 nameOverride: ""
 fullnameOverride: ""
 
-startOtelcol: true
-
 # Install the following CRDs before setting installKueue as true
 # kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.10.1/manifests.yaml
 installKueue: false
@@ -18,6 +16,10 @@ cedanaConfig:
   checkpointStreams: 4
   checkpointCompression: "lz4" # Options: "none", "tar", "lz4", "gzip", "zlib"
 
+  gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time.
+  gpuFreezeType: "IPC" # Default freeze type for GPU workloads. Options: "IPC", "NCCL"
+  gpuShmSize: 8589934592 # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
+
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: "release"
@@ -28,6 +30,7 @@ cedanaConfig:
   pluginsStreamerVersion: "v0.0.8"
 
   profilingEnabled: true
+  metricsOtel: true
   logLevel: "info"
 
   # Uncomment, to use custom pre-existing secret
@@ -39,7 +42,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.248
+    tag: v0.9.249
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
