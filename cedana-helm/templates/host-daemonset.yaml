@@ -61,9 +61,9 @@ spec:
                   name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: cedana-url
             - name: CEDANA_ADDRESS
-              value: /run/cedana.sock
+              value: 0.0.0.0:8080
             - name: CEDANA_PROTOCOL
-              value: unix
+              value: tcp
             - name: CEDANA_CHECKPOINT_STREAMS
               valueFrom:
                 configMapKeyRef:
