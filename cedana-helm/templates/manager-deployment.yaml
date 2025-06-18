@@ -27,6 +27,8 @@ spec:
         app.kubernetes.io/component: manager
         {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
     spec:
+      nodeSelector:
+        alpha.eksctl.io/nodegroup-name: cedana-cluster-ng
       containers:
       - name: manager
         args: {{- toYaml .Values.controllerManager.manager.args | nindent 8 }}
