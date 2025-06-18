@@ -42,7 +42,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.249
+    tag: v0.9.250
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
