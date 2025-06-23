@@ -20,6 +20,3 @@ spec:
         args:
           - -c
           - gpu_smr/mem-throughput-saxpy-loop
-        env:
-        - name: CEDANA_GPU
-          value: "1"

@@ -20,6 +20,3 @@ spec:
         args:
           - -c
           - gpu_smr/vector_add
-        env:
-        - name: CEDANA_GPU
-          value: "1"
