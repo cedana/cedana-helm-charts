@@ -89,6 +89,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: gpu-shm-size
+            - name: CEDANA_GPU_LD_LIB_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: gpu-ld-lib-path
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
