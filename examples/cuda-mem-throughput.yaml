@@ -20,6 +20,3 @@ spec:
         args:
           - -c
           - gpu_smr/mem-throughput-saxpy-loop
-        resources:
-          limits:
-            nvidia.com/gpu: 1

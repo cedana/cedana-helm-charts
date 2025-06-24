@@ -16,7 +16,7 @@ data:
   checkpoint-compression: "{{ .Values.cedanaConfig.checkpointCompression }}"
   gpu-pool-size: "{{ .Values.cedanaConfig.gpuPoolSize }}"
   gpu-freeze-type: "{{ .Values.cedanaConfig.gpuFreezeType }}"
-  gpu-shm-size: "{{ .Values.cedanaConfig.gpuShmSize }}"
+  gpu-shm-size: "{{ printf "%.0f" .Values.cedanaConfig.gpuShmSize }}"
   plugins-builds: "{{ .Values.cedanaConfig.pluginsBuilds }}"
   plugins-native-version: "{{ .Values.cedanaConfig.pluginsNativeVersion }}"
   plugins-criu-version: "{{ .Values.cedanaConfig.pluginsCriuVersion }}"
