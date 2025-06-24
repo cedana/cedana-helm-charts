@@ -17,6 +17,7 @@ data:
   gpu-pool-size: "{{ .Values.cedanaConfig.gpuPoolSize }}"
   gpu-freeze-type: "{{ .Values.cedanaConfig.gpuFreezeType }}"
   gpu-shm-size: "{{ .Values.cedanaConfig.gpuShmSize }}"
+  gpu-ld-lib-path: "{{ .Values.cedanaConfig.gpuLdLibPath }}"
   plugins-builds: "{{ .Values.cedanaConfig.pluginsBuilds }}"
   plugins-native-version: "{{ .Values.cedanaConfig.pluginsNativeVersion }}"
   plugins-criu-version: "{{ .Values.cedanaConfig.pluginsCriuVersion }}"
