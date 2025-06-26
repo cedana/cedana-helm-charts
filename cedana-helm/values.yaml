@@ -42,7 +42,7 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper-test
+    repository: cedana/cedana-helper
     tag: v0.9.250
     imagePullPolicy: IfNotPresent
   updateStrategy:

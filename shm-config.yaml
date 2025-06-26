@@ -78,15 +78,15 @@ spec:
               mountPath: /host
               readOnly: false
             - name: shm-config
-              mountPath: /scripts
+              mountPath: /shm-scripts
               readOnly: true
           command: ["/bin/sh"]
-          args: ["/scripts/configure-shm.sh"]
+          args: ["/shm-scripts/configure-shm.sh"]
           # Run once and exit
           lifecycle:
             postStart:
               exec:
-                command: ["/bin/sh", "-c", "chmod +x /scripts/configure-shm.sh"]
+                command: ["/bin/sh", "-c", "chmod +x /shm-scripts/configure-shm.sh"]
       volumes:
         - name: host-volume
           hostPath:

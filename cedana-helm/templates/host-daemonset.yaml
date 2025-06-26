@@ -41,10 +41,10 @@ spec:
               mountPath: /host
               readOnly: false
             - name: shm-config
-              mountPath: /scripts
+              mountPath: /shm-scripts
               readOnly: true
           command: ["/bin/bash"]
-          args: ["/scripts/configure-shm.sh"]
+          args: ["/shm-scripts/configure-shm.sh"]
       {{- end }}
       containers:
         - name: binary-container
@@ -59,7 +59,7 @@ spec:
               readOnly: false
             {{- if .Values.shmConfig.enabled }}
             - name: shm-config
-              mountPath: /scripts
+              mountPath: /shm-scripts
               readOnly: true
             {{- end }}
           command: ["/bin/sh", "-c"]
