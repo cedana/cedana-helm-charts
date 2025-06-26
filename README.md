@@ -51,7 +51,6 @@ helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedan
 Alternatively, you can apply the standalone SHM configuration:
 
 ```bash
-# Apply standalone SHM configuration
 kubectl apply -f cedana-helm-charts/shm-config.yaml
 ```
 
@@ -63,14 +62,9 @@ kubectl apply -f cedana-helm-charts/shm-config.yaml
 See https://docs.cedana.ai/get-started/using-the-cedana-platform for usage instructions with the Cedana Platform!
 
 ### Security
-
-[!NOTE]
 If you want to use our tools, but have specific security requirements reach out and let us know
 about it.
-
 - Daemonset requires privilege escalation for daemon container, and it updates the host directly with
   required dependencies and our cedana-daemon application.
-
 - Currently our controller requires access to all pods to be able to list, checkpoint and restore them.
-
 - SHM configuration requires privileged access to modify host filesystem and mount points.
