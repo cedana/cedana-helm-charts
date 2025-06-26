@@ -1,5 +1,5 @@
-nameOverride: ""
-fullnameOverride: ""
+nameOverride: "cedana"
+fullnameOverride: "cedana"
 
 # Install the following CRDs before setting installKueue as true
 # kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.10.1/manifests.yaml
