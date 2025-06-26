@@ -28,6 +28,24 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       hostIPC: true
+      {{- if .Values.shmConfig.enabled }}
+      initContainers:
+        - name: shm-config
+          image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
+          imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: host-volume
+              mountPath: /host
+              readOnly: false
+            - name: shm-config
+              mountPath: /shm-scripts
+              readOnly: true
+          command: ["/bin/bash"]
+          args: ["/shm-scripts/configure-shm.sh"]
+      {{- end }}
       containers:
         - name: binary-container
           image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
@@ -39,6 +57,11 @@ spec:
             - name: host-volume
               mountPath: /host
               readOnly: false
+            {{- if .Values.shmConfig.enabled }}
+            - name: shm-config
+              mountPath: /shm-scripts
+              readOnly: true
+            {{- end }}
           command: ["/bin/sh", "-c"]
           {{ if .Values.daemonHelper.upgradeAndRestart }}
           args: ["cedana k8s-helper --restart true && sleep infinity"]
@@ -153,6 +176,11 @@ spec:
         - name: host-volume
           hostPath:
             path: /
+        {{- if .Values.shmConfig.enabled }}
+        - name: shm-config
+          configMap:
+            name: {{ include "cedana-helm.fullname" . }}-shm-config
+        {{- end }}
       {{- with .Values.daemonHelper.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}

@@ -14,8 +14,8 @@ spec:
         app: counting
     spec:
       containers:
-      - name: counting
-        image: cedana/cedana-samples:latest
-        args:
-          - -c
-          - cpu_smr/counting.sh
+        - name: counting
+          image: cedana/cedana-samples:latest
+          args:
+            - -c
+            - cpu_smr/counting.sh
