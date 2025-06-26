@@ -26,8 +26,8 @@ cedanaConfig:
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1-cedana.01"
-  pluginsRuntimeShimVersion: "v0.6.0"
-  pluginsGpuVersion: "v0.5.4"
+  pluginsRuntimeShimVersion: "v0.6.1"
+  pluginsGpuVersion: "v0.5.5"
   pluginsStreamerVersion: "v0.0.8"
 
   profilingEnabled: true
@@ -43,7 +43,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.250
+    tag: v0.9.251
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
@@ -118,10 +118,9 @@ kubernetesClusterDomain: cluster.local
 # Optional configuration to increase /dev/shm size on nodes
 # This is useful for workloads that require large shared memory
 shmConfig:
-  enabled: false  # Set to true to enable /dev/shm size increase
-  size: "10G"     # Size to set for /dev/shm (e.g., "10G", "20G")
-  # Minimum size in bytes to trigger remount (default: 10GB)
-  minBytes: "10737418240"
+  enabled: false # Set to true to enable /dev/shm size increase
+  size: "10G" # Size to set for /dev/shm (e.g., "10G", "20G")
+  minBytes: "10737418240" # Minimum size in bytes to trigger remount (default: 10GB)
 
 metricsService:
   ports:

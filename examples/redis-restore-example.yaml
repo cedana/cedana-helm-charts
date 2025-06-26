@@ -14,11 +14,11 @@ spec:
         app: redis-restore
     spec:
       containers:
-      - name: redis-restore
-        image: redis:latest
-        ports:
-        - containerPort: 6379
-        command: ["sleep", "infinity"]
+        - name: redis-restore
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+          command: ["sleep", "infinity"]
 ---
 apiVersion: v1
 kind: Service
