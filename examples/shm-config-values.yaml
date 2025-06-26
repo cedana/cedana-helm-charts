@@ -1,0 +1,30 @@
+# Example values file for enabling SHM configuration
+# This file shows how to configure shared memory size for workloads that require large shared memory
+
+# Basic Cedana configuration (replace with your actual values)
+cedanaConfig:
+  cedanaAuthToken: "your-auth-token-here"
+  cedanaUrl: "https://your-cedana-instance.com"
+  cedanaClusterName: "your-cluster-name"
+  cedanaSqsQueueUrl: "https://sqs.region.amazonaws.com/account/queue-name"
+
+# Enable SHM configuration
+shmConfig:
+  enabled: true  # Set to true to enable /dev/shm size increase
+  size: "10G"    # Size to set for /dev/shm (e.g., "10G", "20G", "50G")
+  # Minimum size in bytes to trigger remount (default: 10GB = 10737418240 bytes)
+  minBytes: "10737418240"
+
+# Other optional configurations
+daemonHelper:
+  image:
+    repository: cedana/cedana-helper-test
+    tag: latest
+    imagePullPolicy: Always
+
+controllerManager:
+  manager:
+    image:
+      repository: cedana/cedana-controller
+      tag: latest
+      imagePullPolicy: IfNotPresent 

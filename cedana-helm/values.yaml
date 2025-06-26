@@ -23,12 +23,12 @@ cedanaConfig:
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: "release"
+  pluginsBuilds: "alpha"
   pluginsNativeVersion: "latest"
-  pluginsCriuVersion: "v4.1-cedana.01"
-  pluginsRuntimeShimVersion: "v0.6.0"
-  pluginsGpuVersion: "v0.5.4"
-  pluginsStreamerVersion: "v0.0.8"
+  pluginsCriuVersion: "criu-dev"
+  pluginsRuntimeShimVersion: "cedana"
+  pluginsGpuVersion: "feature/ced-1158-fix-gpu-hostmem-shm-file-issues"
+  pluginsStreamerVersion: "main"
 
   profilingEnabled: true
   metricsOtel: true
@@ -42,9 +42,9 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: v0.9.250
-    imagePullPolicy: IfNotPresent
+    repository: cedana/cedana-helper-test
+    tag: feature-ced-1158-fix-gpu-hostmem-shm-file-issues
+    imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
     maxUnavailable: 1
@@ -114,6 +114,14 @@ controllerManager:
   affinity: {}
 
 kubernetesClusterDomain: cluster.local
+
+# Optional configuration to increase /dev/shm size on nodes
+# This is useful for workloads that require large shared memory
+shmConfig:
+  enabled: false  # Set to true to enable /dev/shm size increase
+  size: "10G"     # Size to set for /dev/shm (e.g., "10G", "20G")
+  # Minimum size in bytes to trigger remount (default: 10GB)
+  minBytes: "10737418240"
 
 metricsService:
   ports:

@@ -7,6 +7,7 @@ Kubernetes cluster.
 
 Chart for installing the controller and cedana daemon.
 Additionally it aims to provide optional deployments for services commonly used with our deployments such as Kueue. 
+
 ### Installation
 
 Currently you can install the chart using this repo or you can use the oci repository.
@@ -25,6 +26,36 @@ helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-names
 --set cedanaConfig.cedanaAuthToken=$CEDANA_AUTH_TOKEN
 ```
 
+### Configuration Options
+
+#### Shared Memory (SHM) Configuration
+
+For workloads that require large shared memory, you can optionally increase the `/dev/shm` size on all nodes:
+
+```bash
+# Enable SHM configuration with default 10G size
+helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-systems \
+--set cedanaConfig.cedanaUrl=$CEDANA_URL \
+--set cedanaConfig.cedanaAuthToken=$CEDANA_AUTH_TOKEN \
+--set shmConfig.enabled=true
+
+# Customize SHM size (e.g., 20G)
+helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-systems \
+--set cedanaConfig.cedanaUrl=$CEDANA_URL \
+--set cedanaConfig.cedanaAuthToken=$CEDANA_AUTH_TOKEN \
+--set shmConfig.enabled=true \
+--set shmConfig.size="20G"
+```
+
+Alternatively, you can apply the standalone SHM configuration:
+
+```bash
+# Apply standalone SHM configuration
+kubectl apply -f cedana-helm-charts/shm-config.yaml
+```
+
+**Note**: The SHM configuration requires privileged access and will modify the host's `/etc/fstab` for persistence.
+
 ### Usage
 See https://docs.cedana.ai/get-started/using-the-cedana-platform for usage instructions with the Cedana Platform!
 
@@ -40,3 +71,5 @@ about it.
   required dependencies and our cedana-daemon application.
 
 - Currently our controller requires access to all pods to be able to list, checkpoint and restore them.
+
+- SHM configuration requires privileged access to modify host filesystem and mount points.
