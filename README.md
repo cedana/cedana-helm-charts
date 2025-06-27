@@ -74,14 +74,8 @@ about it.
 
 ### Uninstallation
 
-To uninstall, simply run:
+To uninstall completely, simply run:
 
 ```bash
 helm uninstall cedana -n cedana-system
-```
-
-Once the uninstallers have completed, delete the namespace to clean up all resources:
-
-```bash
-kubectl delete namespace cedana-system
 ```

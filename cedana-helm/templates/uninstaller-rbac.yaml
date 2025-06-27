@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-uninstaller-sa
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/resource-policy: keep
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-uninstaller-role
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/resource-policy: keep
+rules:
+  - apiGroups: ["apps"]
+    resources: ["daemonsets"]
+    verbs: ["delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-uninstaller-rb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/resource-policy: keep
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "cedana-helm.fullname" . }}-uninstaller-sa
+roleRef:
+  kind: Role
+  name: {{ include "cedana-helm.fullname" . }}-uninstaller-role
+  apiGroup: rbac.authorization.k8s.io
