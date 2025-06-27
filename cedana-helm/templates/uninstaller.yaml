@@ -23,7 +23,6 @@ spec:
     spec:
       serviceAccountName: {{ include "cedana-helm.fullname" . }}-uninstaller-sa
       hostPID: true
-      hostNetwork: true
       hostIPC: true
       initContainers:
         - name: uninstaller
@@ -51,8 +50,27 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              echo "Deleting remaining Cedana resources...";
-              kubectl delete daemonset {{ include "cedana-helm.fullname" . }}-uninstaller -n ${POD_NAMESPACE} --wait=false;
+              SELECTOR="app.kubernetes.io/component=uninstaller";
+              POD_NAME=$(hostname);
+              echo "Waiting for all DaemonSet pods to be Ready...";
+              until [ "$(kubectl get pods -l $SELECTOR -n $POD_NAMESPACE -o json | jq '[.items[] | select(.status.phase=="Running")] | length')" -eq "$(kubectl get nodes --no-headers | wc -l)" ]; do
+                echo "Not all pods ready yet...";
+                sleep 2;
+              done;
+
+              echo "All pods are ready. Determining leader...";
+              LEADER=$(kubectl get pods -l $SELECTOR -n $POD_NAMESPACE -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | sort | head -n 1);
+
+              echo "Leader determined: $LEADER";
+              echo "Current pod: $POD_NAME";
+
+              if [ "$POD_NAME" = "$LEADER" ]; then
+              echo "I am the leader ($POD_NAME), deleting the DaemonSet...";
+              kubectl delete daemonset cedana-uninstaller -n $POD_NAMESPACE;
+              else
+              echo "Not the leader ($POD_NAME), exiting.";
+              fi
+              sleep 5
           env:
             - name: POD_NAMESPACE
               valueFrom:

@@ -20,6 +20,25 @@ rules:
   - apiGroups: ["apps"]
     resources: ["daemonsets"]
     verbs: ["delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-uninstaller-clusterrole
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/resource-policy: keep
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -36,4 +55,22 @@ subjects:
 roleRef:
   kind: Role
   name: {{ include "cedana-helm.fullname" . }}-uninstaller-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-uninstaller-crb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/resource-policy: keep
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "cedana-helm.fullname" . }}-uninstaller-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "cedana-helm.fullname" . }}-uninstaller-clusterrole
   apiGroup: rbac.authorization.k8s.io
