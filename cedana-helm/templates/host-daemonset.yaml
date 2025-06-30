@@ -78,6 +78,16 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.cedanaSecretName" . }}
                   key: cedana-auth-token
+            - name: CEDANA_REGISTRY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                  key: cedana-registry-user
+            - name: CEDANA_REGISTRY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                  key: cedana-registry-password
             - name: CEDANA_URL
               valueFrom:
                 configMapKeyRef:

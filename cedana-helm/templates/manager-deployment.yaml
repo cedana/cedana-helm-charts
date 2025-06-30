@@ -38,6 +38,16 @@ spec:
             configMapKeyRef:
               name: {{ template "cedana-helm.cedanaConfigMapName" . }}
               key: cedana-sqs-queue-url
+        - name: CEDANA_REGISTRY_USER
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: cedana-registry-user
+        - name: CEDANA_REGISTRY_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: cedana-registry-password
         - name: CEDANA_CLUSTER_NAME
           valueFrom:
             configMapKeyRef:

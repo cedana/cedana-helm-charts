@@ -11,6 +11,10 @@ cedanaConfig:
   cedanaClusterName: ""
   cedanaSqsQueueUrl: ""
 
+  # Specify the image registry username and password to push rootfs checkpoint images
+  cedanaRegistryUser: ""
+  cedanaRegistryPassword: ""
+
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   checkpointStreams: 4
