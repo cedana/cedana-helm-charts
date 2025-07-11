@@ -78,8 +78,14 @@ rules:
   - get
   - list
   - watch
-  - create
-  - delete
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - get
+  - list
+  - watch
   - patch
   - update
 - apiGroups: [""]
