@@ -62,6 +62,10 @@ kubectl apply -f cedana-helm-charts/shm-config.yaml
 
 See https://docs.cedana.ai/get-started/using-the-cedana-platform for usage instructions with the Cedana Platform!
 
+### Examples
+
+You can find samples on the Cedana Platform or check out the [cedana-samples](https://github.com/cedana/cedana-samples) for example spec files.
+
 ### Security
 
 If you want to use our tools, but have specific security requirements reach out and let us know
