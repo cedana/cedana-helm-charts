@@ -70,6 +70,18 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+  - patch
+  - update
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: ["list", "watch"]
