@@ -53,22 +53,29 @@ spec:
               SELECTOR="app.kubernetes.io/component=uninstaller";
               POD_NAME=$(hostname);
               echo "Waiting for all DaemonSet pods to be Ready...";
-              until [ "$(kubectl get pods -l $SELECTOR -n $POD_NAMESPACE -o json | jq '[.items[] | select(.status.phase=="Running")] | length')" -eq "$(kubectl get nodes --no-headers | wc -l)" ]; do
+              while true; do
+                TOTAL_NODES=$(kubectl get nodes --no-headers | wc -l)
+                READY_PODS=$(kubectl get pods -l $SELECTOR -n $POD_NAMESPACE -o json | jq '[.items[] | select(.status.phase=="Running")] | length')
+                if [ "$READY_PODS" -eq "$TOTAL_NODES" ]; then
+                  break
+                fi
                 echo "Not all pods ready yet...";
                 sleep 2;
               done;
 
-              echo "All pods are ready. Determining leader...";
-              LEADER=$(kubectl get pods -l $SELECTOR -n $POD_NAMESPACE -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | sort | head -n 1);
+              # Small sleep to avoid races after all are ready
+              sleep 2
 
-              echo "Leader determined: $LEADER";
-              echo "Current pod: $POD_NAME";
+              echo "All pods are ready. Determining leader...";
+              LEADER=$(kubectl get pods -l $SELECTOR -n $POD_NAMESPACE --sort-by=.metadata.name -o jsonpath='{.items[0].metadata.name}')
+              echo "Leader determined: $LEADER"
+              echo "Current pod: $POD_NAME"
 
               if [ "$POD_NAME" = "$LEADER" ]; then
-              echo "I am the leader ($POD_NAME), deleting the DaemonSet...";
-              kubectl delete daemonset cedana-uninstaller -n $POD_NAMESPACE;
+                echo "I am the leader ($POD_NAME), deleting the DaemonSet...";
+                kubectl delete daemonset cedana-uninstaller -n $POD_NAMESPACE --wait=false || echo "DaemonSet probably already deleted";
               else
-              echo "Not the leader ($POD_NAME), exiting.";
+                echo "Not the leader ($POD_NAME), exiting.";
               fi
               sleep 5
           env:
