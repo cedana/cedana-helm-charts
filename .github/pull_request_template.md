@@ -2,16 +2,6 @@
 
 <!-- Please explain the changes you made here. -->
 
-## Caveats (if any)
-
-<!-- Please explain what might be possible caveats in the PR (if any). -->
-<!-- Eg, makes certain feature slower, can be brittle and break easily with misconfiguration, etc. -->
-
-## Issue Ticket ID
-
-<!-- For example, "Fixes CED-001" -->
-<!-- linear-bot will auto link the issue ticket. -->
-
 ### Checklist before requesting a review
 
 - [ ] Code compiles correctly.
