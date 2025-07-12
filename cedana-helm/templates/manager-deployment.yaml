@@ -59,7 +59,11 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        {{- if .Values.controllerManager.manager.image.digest }}
+        image: {{ .Values.controllerManager.manager.image.repository }}@{{ .Values.controllerManager.manager.image.digest }}
+        {{- else }}
         image: {{ .Values.controllerManager.manager.image.repository }}:{{ .Values.controllerManager.manager.image.tag }}
+        {{- end }}
         imagePullPolicy: {{ .Values.controllerManager.manager.image.imagePullPolicy }}
         livenessProbe:
           httpGet:

@@ -43,7 +43,8 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.251
+    tag: v0.9.252
+    digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
@@ -87,7 +88,8 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.4.6
+      tag: v0.4.7
+      digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
       # empty to ensure minimal resource
