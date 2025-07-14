@@ -17,10 +17,6 @@ concurrency:
   group: pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-env:
-  CEDANA_URL: ${{ vars.CEDANA_URL }}
-  CEDANA_AUTH_TOKEN: ${{ secrets.CEDANA_AUTH_TOKEN }}
-
 jobs:
   check:
     name: Check
