@@ -1,118 +1,88 @@
 name: Release
 
+permissions:
+  contents: write
+  packages: write
+  actions: read
+  id-token: write
+  pull-requests: write
+  checks: write
+
 on:
   push:
     tags:
-      - v*
+      - "*"
+  workflow_dispatch:
+    inputs:
+      debug_test:
+        type: boolean
+        description: "Run tests with debugging enabled"
+        required: false
+        default: false
+      debug_publish:
+        type: boolean
+        description: "Run publish with debugging enabled"
+        required: false
+        default: false
 
 concurrency:
   group: release-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  dockerhub:
-    name: DockerHub
+  check:
+    name: Check
+    uses: ./.github/workflows/check.yml
+    secrets: inherit
+    with:
+      helm: true
+      version: true
+
+  prepare:
+    name: Prepare
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Write release version
-        id: version
-        run: |
-          VERSION=${{ github.head_ref || github.ref_name }}
-          # strip v
-          echo Version: ${VERSION#v}
-          echo "VERSION=${VERSION#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Check helm versions
-        run: |
-          grep -qF '${{ steps.version.outputs.VERSION }}' cedana-helm/Chart.yaml || (echo "update the version field in cedana-helm/Chart.yaml"; exit 1)
-
-      - name: Lint helm chart
-        run: |
-          helm lint cedana-helm
-
-      - name: Push helm chart
-        uses: appany/helm-oci-chart-releaser@v0.4.2
-        with:
-          name: cedana-helm
-          repository: cedana
-          tag: ${{ steps.version.outputs.VERSION }}
-          registry: registry.hub.docker.com
-          path: cedana-helm
-          registry_username: ${{ vars.DOCKER_USERNAME }}
-          registry_password: ${{ secrets.DOCKER_TOKEN }}
-
-  github:
-    name: GitHub
-    needs: dockerhub
-    runs-on: ubuntu-latest
-    steps:
-      - uses: runs-on/action@v1
-
-      - name: Create release
-        id: create-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.head_ref || github.ref_name }}
-        run: |
-          gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="$tag" \
-              --generate-notes
-
-  post-summary:
-    name: Post Summary
-    runs-on: ubuntu-latest
-    needs: ["github", "dockerhub"]
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
-          fetch-tags: true
 
-      - name: Get tag
-        id: tag
-        run: |
-          echo ::set-output name=tag::$(git tag --sort=-creatordate | sed -n '1p')
-
-      - name: Get previous tag
-        id: previous-tag
-        run: |
-          echo ::set-output name=tag::$(git tag --sort=-creatordate | sed -n '2p')
-
-      - name: Get release info
-        id: release-info
-        uses: pozetroninc/github-action-get-latest-release@master
+      - name: Upload helm chart
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ github.token }}
-          excludes: draft
-          repository: ${{ github.repository }}
+          name: helm-chart
+          path: cedana-helm
 
-      - name: Generate summary
-        id: summary
-        env:
-          RELEASE_TITLE: "cedana-helm-charts"
-          RELEASE_DESCRIPTION: "**${{ steps.tag.outputs.tag }}**"
-          RELEASE_NOTES_URL: https://github.com/${{ github.repository }}/releases/${{ steps.tag.outputs.tag }}
-          RELEASE_BODY: "${{ steps.release-info.outputs.description }}"
-          TAG: ${{ steps.tag.outputs.tag }}
-          PREVIOUS_TAG: ${{ steps.previous-tag.outputs.tag }}
-        run: |
-          echo $RELEASE_BODY > $GITHUB_STEP_SUMMARY
-          echo ::set-output name=slack-summary::$(scripts/ci/release-summary-slack)
+  download:
+    name: Download
+    uses: cedana/cedana/.github/workflows/download.yml@main
+    needs: check
+    secrets: inherit
+    with:
+      cedana_version: release
+      criu_version: release
+      gpu_version: release
+      streamer_version: release
+      controller_version: release
+      runtime_shim_version: release
 
-      - name: Post summary
-        id: slack-patch
-        uses: slackapi/slack-github-action@v1.26.0
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-        with:
-          payload: |
-            ${{ steps.summary.outputs.slack-summary }}
+  test:
+    name: Test
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    needs: [prepare, download]
+    secrets: inherit
+    with:
+      ref: main
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug_test }}
+      post_summary: false
+
+  publish:
+    name: Publish
+    uses: ./.github/workflows/publish.yml
+    needs: [test]
+    secrets: inherit
+    with:
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug_publish }}
+      github: true
+      dockerhub: true
+      post_summary: true

@@ -26,7 +26,11 @@ spec:
       hostIPC: true
       initContainers:
         - name: uninstaller
+          {{- if .Values.daemonHelper.image.digest }}
+          image: {{ .Values.daemonHelper.image.repository }}@{{ .Values.daemonHelper.image.digest }}
+          {{- else }}
           image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
+          {{- end }}
           imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
           securityContext:
             privileged: true
@@ -72,8 +76,8 @@ spec:
               echo "Current pod: $POD_NAME"
 
               if [ "$POD_NAME" = "$LEADER" ]; then
-                echo "I am the leader ($POD_NAME), deleting the DaemonSet...";
-                kubectl delete daemonset cedana-uninstaller -n $POD_NAMESPACE --wait=false || echo "DaemonSet probably already deleted";
+                echo "I am the leader ($POD_NAME), deleting the namespace ($POD_NAMESPACE)...";
+                kubectl delete namespace $POD_NAMESPACE --wait=true;
               else
                 echo "Not the leader ($POD_NAME), exiting.";
               fi

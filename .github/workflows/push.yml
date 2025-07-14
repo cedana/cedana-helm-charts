@@ -1,8 +1,7 @@
-name: PR
+name: Push
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
     branches:
       - main
   workflow_dispatch:
@@ -14,19 +13,10 @@ on:
         default: false
 
 concurrency:
-  group: pr-${{ github.event.pull_request.number }}
+  group: push-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: Check
-    uses: ./.github/workflows/check.yml
-    secrets: inherit
-    with:
-      pr_title: true
-      helm: true
-      version: false
-
   prepare:
     name: Prepare
     needs: check
@@ -44,7 +34,6 @@ jobs:
 
   download:
     name: Download
-    needs: check
     uses: cedana/cedana/.github/workflows/download.yml@main
     secrets: inherit
     with:
@@ -63,4 +52,4 @@ jobs:
     with:
       ref: main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
-      post_summary: true
+      post_summary: false

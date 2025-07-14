@@ -31,7 +31,11 @@ spec:
       {{- if .Values.shmConfig.enabled }}
       initContainers:
         - name: shm-config
+          {{- if .Values.daemonHelper.image.digest }}
+          image: {{ .Values.daemonHelper.image.repository }}@{{ .Values.daemonHelper.image.digest }}
+          {{- else }}
           image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
+          {{- end }}
           imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
           securityContext:
             privileged: true
@@ -48,7 +52,11 @@ spec:
       {{- end }}
       containers:
         - name: binary-container
+          {{- if .Values.daemonHelper.image.digest }}
+          image: {{ .Values.daemonHelper.image.repository }}@{{ .Values.daemonHelper.image.digest }}
+          {{- else }}
           image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
+          {{- end }}
           imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
           securityContext:
             privileged: true
