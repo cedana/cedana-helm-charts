@@ -45,10 +45,10 @@ jobs:
   download:
     name: Download
     needs: check
-    uses: cedana/cedana/.github/workflows/download.yml@feat/ced-1201
+    uses: cedana/cedana/.github/workflows/download.yml@main
     secrets: inherit
     with:
-      cedana_version: feat/ced-1201
+      cedana_version: main
       criu_version: release
       gpu_version: main
       streamer_version: main
@@ -57,10 +57,10 @@ jobs:
 
   test:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@feat/ced-1201
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
     with:
-      ref: feat/ced-1201
+      ref: main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       post_summary: true
