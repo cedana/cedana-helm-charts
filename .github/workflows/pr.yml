@@ -29,7 +29,6 @@ jobs:
 
   prepare:
     name: Prepare
-    needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +43,6 @@ jobs:
 
   download:
     name: Download
-    needs: check
     uses: cedana/cedana/.github/workflows/download.yml@main
     secrets: inherit
     with:
