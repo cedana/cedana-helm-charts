@@ -1,8 +1,7 @@
-name: PR
+name: Push
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
     branches:
       - main
   workflow_dispatch:
@@ -14,23 +13,10 @@ on:
         default: false
 
 concurrency:
-  group: pr-${{ github.event.pull_request.number }}
+  group: push-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  CEDANA_URL: ${{ vars.CEDANA_URL }}
-  CEDANA_AUTH_TOKEN: ${{ secrets.CEDANA_AUTH_TOKEN }}
-
 jobs:
-  check:
-    name: Check
-    uses: ./.github/workflows/check.yml
-    secrets: inherit
-    with:
-      pr_title: true
-      helm: true
-      version: false
-
   prepare:
     name: Prepare
     needs: check
@@ -48,11 +34,10 @@ jobs:
 
   download:
     name: Download
-    needs: check
-    uses: cedana/cedana/.github/workflows/download.yml@feat/ced-1201
+    uses: cedana/cedana/.github/workflows/download.yml@main
     secrets: inherit
     with:
-      cedana_version: feat/ced-1201
+      cedana_version: main
       criu_version: release
       gpu_version: main
       streamer_version: main
@@ -61,10 +46,10 @@ jobs:
 
   test:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@feat/ced-1201
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
     with:
-      ref: feat/ced-1201
+      ref: main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
-      post_summary: true
+      post_summary: false
