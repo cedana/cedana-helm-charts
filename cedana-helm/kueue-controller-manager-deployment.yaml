@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2025-05-29T22:27:08Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: kueue
+    control-plane: controller-manager
+  name: kueue-controller-manager
+  namespace: kueue-system
+  resourceVersion: "1748557629232399017"
+  uid: 713e108d-e253-4ab1-b397-bbd6e0111d33
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/name: kueue
+        control-plane: controller-manager
+    spec:
+      containers:
+      - args:
+        - --config=/controller_manager_config.yaml
+        - --zap-log-level=2
+        command:
+        - /manager
+        image: registry.k8s.io/kueue/kueue:v0.12.1
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: manager
+        ports:
+        - containerPort: 8443
+          name: metrics
+          protocol: TCP
+        - containerPort: 8082
+          name: visibility
+          protocol: TCP
+        - containerPort: 9443
+          name: webhook-server
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: "2"
+            memory: 512Mi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /visibility
+          name: visibility
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: cert
+          readOnly: true
+        - mountPath: /controller_manager_config.yaml
+          name: manager-config
+          subPath: controller_manager_config.yaml
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccount: kueue-controller-manager
+      serviceAccountName: kueue-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - emptyDir: {}
+        name: visibility
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: kueue-webhook-server-cert
+      - configMap:
+          defaultMode: 420
+          name: kueue-manager-config
+        name: manager-config
+status:
+  conditions:
+  - lastTransitionTime: "2025-05-29T22:27:09Z"
+    lastUpdateTime: "2025-05-29T22:27:09Z"
+    message: Deployment does not have minimum availability.
+    reason: MinimumReplicasUnavailable
+    status: "False"
+    type: Available
+  - lastTransitionTime: "2025-05-29T22:27:08Z"
+    lastUpdateTime: "2025-05-29T22:27:09Z"
+    message: ReplicaSet "kueue-controller-manager-6db7fb5fcb" is progressing.
+    reason: ReplicaSetUpdated
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  replicas: 1
+  unavailableReplicas: 1
+  updatedReplicas: 1

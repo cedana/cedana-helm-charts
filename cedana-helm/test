@@ -1,0 +1,12 @@
+helm install cedana . --create-namespace -n cedana-system \
+--set cedanaConfig.cedanaUrl=$CEDANA_URL \
+--set cedanaConfig.cedanaAuthToken=$CEDANA_AUTH_TOKEN \
+--set cedanaConfig.cedanaClusterName=1 \
+--set controllerManager.manager.image.repository=cedana/cedana-controller-test \
+--set controllerManager.manager.image.tag=feat-1335-cr-pvc-attached \
+--set controllerManager.manager.image.imagePullPolicy=Always \
+--set daemonHelper.image.repository=cedana/cedana-helper \
+--set daemonHelper.image.tag=v0.9.252 \
+--set cedanaConfig.checkpointStreams=0 \
+--set cedanaConfig.checkpointCompression=none \
+--set cedanaConfig.logLevel=debug
