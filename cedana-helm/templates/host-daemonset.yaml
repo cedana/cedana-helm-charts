@@ -138,6 +138,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: plugins-builds
+            - name: CEDANA_CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: cedana-cluster-name
             - name: CEDANA_PLUGINS_NATIVE_VERSION
               valueFrom:
                 configMapKeyRef:
