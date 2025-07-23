@@ -43,7 +43,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.252
+    tag: v0.9.253
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -88,7 +88,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.4.7
+      tag: v0.4.8
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
