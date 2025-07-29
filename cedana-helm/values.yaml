@@ -87,8 +87,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.4.8
+      repository: cedana/cedana-controller-test
+      tag: staging
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
