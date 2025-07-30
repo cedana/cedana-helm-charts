@@ -59,6 +59,7 @@ jobs:
     needs: check
     secrets: inherit
     with:
+      # TODO: Instead match the versions on the helm chart
       cedana_version: release
       criu_version: release
       gpu_version: release
