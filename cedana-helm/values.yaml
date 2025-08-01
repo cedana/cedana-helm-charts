@@ -27,7 +27,7 @@ cedanaConfig:
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1-cedana.01"
   pluginsRuntimeShimVersion: "v0.6.1"
-  pluginsGpuVersion: "v0.5.5"
+  pluginsGpuVersion: "v0.5.6"
   pluginsStreamerVersion: "v0.0.8"
 
   profilingEnabled: true
@@ -43,7 +43,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.253
+    tag: v0.9.255
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:

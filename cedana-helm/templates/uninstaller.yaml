@@ -63,7 +63,7 @@ spec:
                 if [ "$READY_PODS" -eq "$TOTAL_NODES" ]; then
                   break
                 fi
-                echo "Not all pods ready yet...";
+                echo "Not all pods ready yet. Total Nodes: $TOTAL_NODES, Ready Pods: $READY_PODS";
                 sleep 2;
               done;
 
