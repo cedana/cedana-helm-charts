@@ -13,6 +13,25 @@ on:
         description: "The branch, tag, or SHA to run on"
         required: false
         default: ""
+    outputs:
+      cedana_version:
+        description: "Cedana version"
+        value: ${{ jobs.versions.outputs.cedana_version }}
+      controller_version:
+        description: "Controller version"
+        value: ${{ jobs.versions.outputs.controller_version }}
+      criu_version:
+        description: "CRIU version"
+        value: ${{ jobs.versions.outputs.criu_version }}
+      runtime_shim_version:
+        description: "Runtime Shim version"
+        value: ${{ jobs.versions.outputs.runtime_shim_version }}
+      gpu_version:
+        description: "GPU version"
+        value: ${{ jobs.versions.outputs.gpu_version }}
+      streamer_version:
+        description: "Streamer version"
+        value: ${{ jobs.versions.outputs.streamer_version }}
 
 jobs:
   chart:
