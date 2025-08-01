@@ -19,29 +19,21 @@ concurrency:
 jobs:
   prepare:
     name: Prepare
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Upload helm chart
-        uses: actions/upload-artifact@v4
-        with:
-          name: helm-chart
-          path: cedana-helm
+    uses: ./.github/workflows/prepare.yml
+    secrets: inherit
 
   download:
     name: Download
     uses: cedana/cedana/.github/workflows/download.yml@main
+    needs: prepare
     secrets: inherit
     with:
-      cedana_version: main
-      criu_version: release
-      gpu_version: main
-      streamer_version: main
-      controller_version: staging
-      runtime_shim_version: release
+      cedana_version: ${{ needs.prepare.outputs.cedana_version }}
+      controller_version: ${{ needs.prepare.outputs.controller_version }}
+      runtime_shim_version: ${{ needs.prepare.outputs.runtime_shim_version }}
+      criu_version: ${{ needs.prepare.outputs.criu_version }}
+      gpu_version: ${{ needs.prepare.outputs.gpu_version }}
+      streamer_version: ${{ needs.prepare.outputs.streamer_version }}
 
   test:
     name: Test

@@ -40,32 +40,22 @@ jobs:
 
   prepare:
     name: Prepare
+    uses: ./.github/workflows/prepare.yml
     needs: check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Upload helm chart
-        uses: actions/upload-artifact@v4
-        with:
-          name: helm-chart
-          path: cedana-helm
+    secrets: inherit
 
   download:
     name: Download
     uses: cedana/cedana/.github/workflows/download.yml@main
-    needs: check
+    needs: prepare
     secrets: inherit
     with:
-      # TODO: Instead match the versions on the helm chart
-      cedana_version: release
-      criu_version: release
-      gpu_version: release
-      streamer_version: release
-      controller_version: release
-      runtime_shim_version: release
+      cedana_version: ${{ needs.prepare.outputs.cedana_version }}
+      controller_version: ${{ needs.prepare.outputs.controller_version }}
+      runtime_shim_version: ${{ needs.prepare.outputs.runtime_shim_version }}
+      criu_version: ${{ needs.prepare.outputs.criu_version }}
+      gpu_version: ${{ needs.prepare.outputs.gpu_version }}
+      streamer_version: ${{ needs.prepare.outputs.streamer_version }}
 
   test:
     name: Test
