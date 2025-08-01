@@ -17,7 +17,6 @@ on:
 jobs:
   chart:
     name: Chart
-    needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +31,6 @@ jobs:
 
   versions:
     name: Versions
-    needs: check
     runs-on: ubuntu-latest
     outputs:
       cedana_version: ${{ steps.extract_version.outputs.cedana_version }}
