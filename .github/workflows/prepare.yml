@@ -75,11 +75,11 @@ jobs:
           echo "cedana_version=${value}" >> $GITHUB_OUTPUT
           value=$(yq '.controllerManager.manager.image.tag' ./cedana-helm/values.yaml)
           echo "controller_version=${value}" >> $GITHUB_OUTPUT
-          value=$(yq '.cedanaConfig.pluginsCriuVersion' ./cedana-helm/values.yaml)
+          value=$(yq '.config.pluginsCriuVersion' ./cedana-helm/values.yaml)
           echo "criu_version=${value}" >> $GITHUB_OUTPUT
-          value=$(yq '.cedanaConfig.pluginsRuntimeShimVersion' ./cedana-helm/values.yaml)
+          value=$(yq '.config.pluginsRuntimeShimVersion' ./cedana-helm/values.yaml)
           echo "runtime_shim_version=${value}" >> $GITHUB_OUTPUT
-          value=$(yq '.cedanaConfig.pluginsGpuVersion' ./cedana-helm/values.yaml)
+          value=$(yq '.config.pluginsGpuVersion' ./cedana-helm/values.yaml)
           echo "gpu_version=${value}" >> $GITHUB_OUTPUT
-          value=$(yq '.cedanaConfig.pluginsStreamerVersion' ./cedana-helm/values.yaml)
+          value=$(yq '.config.pluginsStreamerVersion' ./cedana-helm/values.yaml)
           echo "streamer_version=${value}" >> $GITHUB_OUTPUT
