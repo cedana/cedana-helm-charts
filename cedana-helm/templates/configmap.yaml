@@ -1,4 +1,4 @@
-{{- if not .Values.cedanaConfig.preExistingConfigMap -}}
+{{- if not .Values.config.preExistingConfigMap -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,22 +9,23 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 data:
-  cedana-cluster-name: "{{ .Values.cedanaConfig.cedanaClusterName }}"
-  cedana-url: "{{ .Values.cedanaConfig.cedanaUrl }}"
-  cedana-sqs-queue-url: "{{ .Values.cedanaConfig.cedanaSqsQueueUrl }}"
-  checkpoint-streams: "{{ .Values.cedanaConfig.checkpointStreams }}"
-  checkpoint-compression: "{{ .Values.cedanaConfig.checkpointCompression }}"
-  gpu-pool-size: "{{ .Values.cedanaConfig.gpuPoolSize }}"
-  gpu-freeze-type: "{{ .Values.cedanaConfig.gpuFreezeType }}"
-  gpu-shm-size: "{{ .Values.cedanaConfig.gpuShmSize }}"
-  gpu-ld-lib-path: "{{ .Values.cedanaConfig.gpuLdLibPath }}"
-  plugins-builds: "{{ .Values.cedanaConfig.pluginsBuilds }}"
-  plugins-native-version: "{{ .Values.cedanaConfig.pluginsNativeVersion }}"
-  plugins-criu-version: "{{ .Values.cedanaConfig.pluginsCriuVersion }}"
-  plugins-runtime-shim-version: "{{ .Values.cedanaConfig.pluginsRuntimeShimVersion }}"
-  plugins-gpu-version: "{{ .Values.cedanaConfig.pluginsGpuVersion }}"
-  plugins-streamer-version: "{{ .Values.cedanaConfig.pluginsStreamerVersion }}"
-  metrics-otel: "{{ .Values.cedanaConfig.metricsOtel }}"
-  profiling-enabled: "{{ .Values.cedanaConfig.profilingEnabled }}"
-  log-level: "{{ .Values.cedanaConfig.logLevel }}"
+  cluster-name: "{{ .Values.config.clusterName }}"
+  url: "{{ .Values.config.url }}"
+  sqs-queue-url: "{{ .Values.config.sqsQueueUrl }}"
+  checkpoint-dir: "{{ .Values.config.checkpointDir }}"
+  checkpoint-streams: "{{ .Values.config.checkpointStreams }}"
+  checkpoint-compression: "{{ .Values.config.checkpointCompression }}"
+  gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
+  gpu-freeze-type: "{{ .Values.config.gpuFreezeType }}"
+  gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
+  gpu-ld-lib-path: "{{ .Values.config.gpuLdLibPath }}"
+  plugins-builds: "{{ .Values.config.pluginsBuilds }}"
+  plugins-native-version: "{{ .Values.config.pluginsNativeVersion }}"
+  plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
+  plugins-runtime-shim-version: "{{ .Values.config.pluginsRuntimeShimVersion }}"
+  plugins-gpu-version: "{{ .Values.config.pluginsGpuVersion }}"
+  plugins-streamer-version: "{{ .Values.config.pluginsStreamerVersion }}"
+  metrics-otel: "{{ .Values.config.metricsOtel }}"
+  profiling-enabled: "{{ .Values.config.profilingEnabled }}"
+  log-level: "{{ .Values.config.logLevel }}"
 {{- end }}

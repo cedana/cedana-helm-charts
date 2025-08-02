@@ -5,18 +5,23 @@ fullnameOverride: "cedana"
 # kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.10.1/manifests.yaml
 installKueue: false
 
-cedanaConfig:
-  cedanaAuthToken: ""
-  cedanaUrl: ""
-  cedanaClusterName: ""
-  cedanaSqsQueueUrl: ""
+config:
+  authToken: ""
+  url: ""
+  clusterName: ""
+  sqsQueueUrl: ""
 
+  # Specify path to directory for storing checkpoints.
+  # - "cedana://<path>" for Cedana-managed global storage (recommended)
+  # - "s3://<path>" for your S3 storage
+  # - "<path>" for node-local storage
+  checkpointDir: "cedana://"
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   checkpointStreams: 4
   checkpointCompression: "lz4" # Options: "none", "tar", "lz4", "gzip", "zlib"
 
-  gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time.
+  gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuFreezeType: "IPC" # Default freeze type for GPU workloads. Options: "IPC", "NCCL"
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
   gpuLdLibPath: "/run/nvidia/driver/usr/lib/x86_64-linux-gnu" # Additional LD_LIBRARY_PATH to look for CUDA libraries
