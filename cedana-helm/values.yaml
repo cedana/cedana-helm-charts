@@ -48,7 +48,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper-test
-    tag: feature-ced-1388-s3-storage-plugin
+    tag: feature-ced-1388-s3-storage-plugin # TODO: revert before merge
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
