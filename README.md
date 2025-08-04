@@ -31,6 +31,26 @@ helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-names
 
 ### Configuration Options
 
+#### Dedicated Node for Controller
+
+To run the Cedana Controller exclusively on a specific node:
+
+- Taint the node to prevent general workloads:
+```bash
+kubectl taint node <node-name> dedicated=cedana-manager:NoSchedule
+```
+
+- Label the node to target it for scheduling:
+```bash
+kubectl label node <node-name> dedicated=cedana-manager
+```
+
+Helm values.yaml uses:
+- tolerations to allow scheduling on tainted nodes.
+- affinity to restrict placement to labeled nodes.
+
+**Note**: Do not forget to uncomment the tolerations and affinity code blocks before performing the helm install.
+
 #### Shared Memory (SHM) Configuration
 
 For workloads that require large shared memory, you can optionally increase the `/dev/shm` size on all nodes:
