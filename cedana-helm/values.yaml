@@ -114,12 +114,12 @@ controllerManager:
       #   memory: 64Mi
   tolerations:
     # Run the command below to deploy the controller on a dedicated node
-    # This will evict all the pods scheduled on the node running the controller pod
-    # kubectl taint node <node-name> dedicated=cedana-manager:NoExecute
+    # This will not allow shceduling of new pods on the node running the controller pod
+    # kubectl taint node <node-name> dedicated=cedana-manager:NoSchedule
     key: "dedicated"
     operator: "Equal"
     value: "cedana-manager"
-    effect: "NoExecute"
+    effect: "NoSchedule"
   affinity: {}
 
 kubernetesClusterDomain: cluster.local
