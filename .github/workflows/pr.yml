@@ -47,10 +47,10 @@ jobs:
 
   test:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1388-s3-storage-plugin # TODO: revert before merge
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
     with:
-      ref: feature/ced-1388-s3-storage-plugin # TODO: revert before merge
+      ref: main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       post_summary: true
