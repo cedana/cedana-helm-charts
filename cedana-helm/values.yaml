@@ -49,7 +49,7 @@ daemonHelper:
   updateStrategy:
     maxSurge: 0
     maxUnavailable: 1
-  tolerations: []
+
   affinity: {}
 
 serviceAccount:
@@ -112,6 +112,14 @@ controllerManager:
       # requests:
       #   cpu: 10m
       #   memory: 64Mi
+  tolerations: 
+    # Run the command below to deploy the controller on a dedicated node
+    # This will evict all the pods scheduled on the node running the controller pod
+    # kubectl taint node <node-name> dedicated=cedana-manager:NoExecute
+    key: "dedicated"
+    operator: "Equal"
+    value: "cedana-manager"
+    effect: "NoExecute"
   tolerations: []
   affinity: {}
 
