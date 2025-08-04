@@ -116,21 +116,21 @@ controllerManager:
     # Run the command below to deploy the controller on a dedicated node
     # This will not allow shceduling of new pods on the node running the controller pod
     # kubectl taint node <node-name> dedicated=cedana-manager:NoSchedule
-    - key: "dedicated"
-      operator: "Equal"
-      value: "cedana-manager"
-      effect: "NoSchedule"
+    # - key: "dedicated"
+    #   operator: "Equal"
+    #   value: "cedana-manager"
+    #   effect: "NoSchedule"
   affinity:
     # Allow scheduling of controller pod on the labeled node only
     # kubectl label nodes <node-name> dedicated=cedana-manager
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: "dedicated"
-                operator: "In"
-                values:
-                  - "cedana-manager"
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #           - key: "dedicated"
+    #             operator: "In"
+    #             values:
+    #               - "cedana-manager"
 
 kubernetesClusterDomain: cluster.local
 
