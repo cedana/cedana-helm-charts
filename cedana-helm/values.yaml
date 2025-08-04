@@ -12,9 +12,9 @@ config:
   sqsQueueUrl: ""
 
   # Specify path to directory for storing checkpoints.
-  # - "cedana://<path>" for Cedana-managed global storage (recommended)
-  # - "s3://<path>" for your S3 storage
-  # - "<path>" for node-local storage
+  # - `cedana://<path>` for Cedana-managed global storage (recommended)
+  # - `s3://<bucket>/<path>` for your S3 storage
+  # - `<path>` for node-local storage
   checkpointDir: "cedana://"
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
@@ -39,7 +39,7 @@ config:
   metricsOtel: true
   logLevel: "info"
 
-  awsAccessKeyId: "" # AWS access key ID if using S3 storage (if s3://<path> in checkpointDir)
+  awsAccessKeyId: "" # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
   awsSecretAccessKey: "" # AWS secret access key if using S3 storage
   awsRegion: "" # AWS region if using S3 storage (uses default region if not set)
 
