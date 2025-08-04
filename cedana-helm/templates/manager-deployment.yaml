@@ -36,23 +36,23 @@ spec:
         - name: CEDANA_SQS_QUEUE_URL
           valueFrom:
             configMapKeyRef:
-              name: {{ template "cedana-helm.cedanaConfigMapName" . }}
-              key: cedana-sqs-queue-url
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: sqs-queue-url
         - name: CEDANA_CLUSTER_NAME
           valueFrom:
             configMapKeyRef:
-              name: {{ template "cedana-helm.cedanaConfigMapName" . }}
-              key: cedana-cluster-name
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: cluster-name
         - name: CEDANA_AUTH_TOKEN
           valueFrom:
             secretKeyRef:
-              name: {{ template "cedana-helm.cedanaSecretName" . }}
-              key: cedana-auth-token
+              name: {{ template "cedana-helm.secretName" . }}
+              key: auth-token
         - name: CEDANA_URL
           valueFrom:
             configMapKeyRef:
-              name: {{ template "cedana-helm.cedanaConfigMapName" . }}
-              key: cedana-url
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: url
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
         - name: CONTROLLER_NAMESPACE

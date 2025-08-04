@@ -92,99 +92,119 @@ spec:
             - name: CEDANA_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
-                  key: cedana-auth-token
+                  name: {{ template "cedana-helm.secretName" . }}
+                  key: auth-token
             - name: CEDANA_URL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
-                  key: cedana-url
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: url
             - name: CEDANA_ADDRESS
               value: 0.0.0.0:8080
             - name: CEDANA_PROTOCOL
               value: tcp
+            - name: CEDANA_CHECKPOINT_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: checkpoint-dir
             - name: CEDANA_CHECKPOINT_STREAMS
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: checkpoint-streams
             - name: CEDANA_CHECKPOINT_COMPRESSION
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: checkpoint-compression
             - name: CEDANA_GPU_POOL_SIZE
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-pool-size
             - name: CEDANA_GPU_FREEZE_TYPE
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-freeze-type
             - name: CEDANA_GPU_SHM_SIZE
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-shm-size
             - name: CEDANA_GPU_LD_LIB_PATH
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-ld-lib-path
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-builds
             - name: CEDANA_PLUGINS_NATIVE_VERSION
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-native-version
             - name: CEDANA_PLUGINS_CRIU_VERSION
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-criu-version
             - name: CEDANA_PLUGINS_K8S_RUNTIME_SHIM_VERSION
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-runtime-shim-version
             - name: CEDANA_PLUGINS_GPU_VERSION
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-gpu-version
             - name: CEDANA_PLUGINS_STREAMER_VERSION
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-streamer-version
             - name: CEDANA_PROFILING_ENABLED
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: profiling-enabled
             - name: CEDANA_METRICS_OTEL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: metrics-otel
             - name: CEDANA_LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: log-level
             - name: CEDANA_LOG_LEVEL_NO_SERVER
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  name: {{ template "cedana-helm.configMapName" . }}
                   key: log-level
             - name: CEDANA_CONTROLLER_SERVICE
               value: {{ include "cedana-helm.fullname" . }}-manager-service
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.secretName" . }}
+                  key: aws-secret-access-key
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: aws-region
       volumes:
         - name: varlog
           hostPath:

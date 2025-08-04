@@ -64,11 +64,11 @@ Create the name of the service account to use
 {{/*
 Return secret name to be used based on provided values.
 */}}
-{{- define "cedana-helm.cedanaSecretName" -}}
-{{- default "cedana-secrets" .Values.cedanaConfig.preExistingSecret -}}
+{{- define "cedana-helm.secretName" -}}
+{{- default "cedana-secrets" .Values.config.preExistingSecret -}}
 {{- end -}}
 
 # Config map helper
-{{- define "cedana-helm.cedanaConfigMapName" -}}
-{{- default "cedana-config" .Values.cedanaConfig.preExistingSecret -}}
+{{- define "cedana-helm.configMapName" -}}
+{{- default "cedana-config" .Values.config.preExistingSecret -}}
 {{- end -}}
