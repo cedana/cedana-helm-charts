@@ -5,18 +5,23 @@ fullnameOverride: "cedana"
 # kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.10.1/manifests.yaml
 installKueue: false
 
-cedanaConfig:
-  cedanaAuthToken: ""
-  cedanaUrl: ""
-  cedanaClusterName: ""
-  cedanaSqsQueueUrl: ""
+config:
+  authToken: ""
+  url: ""
+  clusterName: ""
+  sqsQueueUrl: ""
 
+  # Specify path to directory for storing checkpoints.
+  # - `cedana://<path>` for Cedana-managed global storage (recommended)
+  # - `s3://<bucket>/<path>` for your S3 storage
+  # - `<path>` for node-local storage
+  checkpointDir: "cedana://"
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   checkpointStreams: 4
   checkpointCompression: "lz4" # Options: "none", "tar", "lz4", "gzip", "zlib"
 
-  gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time.
+  gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuFreezeType: "IPC" # Default freeze type for GPU workloads. Options: "IPC", "NCCL"
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
   gpuLdLibPath: "/run/nvidia/driver/usr/lib/x86_64-linux-gnu" # Additional LD_LIBRARY_PATH to look for CUDA libraries
@@ -34,6 +39,10 @@ cedanaConfig:
   metricsOtel: true
   logLevel: "info"
 
+  awsAccessKeyId: "" # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
+  awsSecretAccessKey: "" # AWS secret access key if using S3 storage
+  awsRegion: "" # AWS region if using S3 storage (uses default region if not set)
+
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
@@ -42,8 +51,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: v0.9.255
+    repository: cedana/cedana-helper-test
+    tag: feature-ced-1388-s3-storage-plugin # TODO: revert before merge
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -87,8 +96,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.4.9
+      repository: cedana/cedana-controller-test
+      tag: staging
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
