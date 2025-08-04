@@ -39,6 +39,10 @@ config:
   metricsOtel: true
   logLevel: "info"
 
+  awsAccessKeyId: "" # AWS access key ID if using S3 storage (if s3://<path> in checkpointDir)
+  awsSecretAccessKey: "" # AWS secret access key if using S3 storage
+  awsRegion: "" # AWS region if using S3 storage (uses default region if not set)
+
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 

@@ -28,4 +28,7 @@ data:
   metrics-otel: "{{ .Values.config.metricsOtel }}"
   profiling-enabled: "{{ .Values.config.profilingEnabled }}"
   log-level: "{{ .Values.config.logLevel }}"
+
+  aws-access-key-id: "{{ .Values.config.awsAccessKeyId }}"
+  aws-region: "{{ .Values.config.awsRegion }}"
 {{- end }}

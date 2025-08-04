@@ -190,6 +190,21 @@ spec:
                   key: log-level
             - name: CEDANA_CONTROLLER_SERVICE
               value: {{ include "cedana-helm.fullname" . }}-manager-service
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.secretName" . }}
+                  key: aws-secret-access-key
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: aws-region
       volumes:
         - name: varlog
           hostPath:
