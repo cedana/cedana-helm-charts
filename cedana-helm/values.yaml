@@ -148,7 +148,7 @@ kubernetesClusterDomain: cluster.local
 shmConfig:
   enabled: false # Set to true to enable /dev/shm size increase
   size: "10G" # Size to set for /dev/shm (e.g., "10G", "20G")
-  minBytes: "10737418240" # Minimum size in bytes to trigger remount (default: 10GB)
+  minSize: "10G" # Minimum size to trigger remount (e.g., "10G", "20G")
 
 metricsService:
   ports:
