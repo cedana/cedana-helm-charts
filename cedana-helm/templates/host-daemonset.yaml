@@ -182,7 +182,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
-                  key: shm-config
+                  key: shm-config-enabled
             - name: SHM_CONFIG_SIZE
               valueFrom:
                 configMapKeyRef:
