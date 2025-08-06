@@ -72,16 +72,6 @@ helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedan
 --set shmConfig.size="20G"
 ```
 
-Alternatively, you can apply the standalone SHM configuration:
-
-```bash
-kubectl apply -f cedana-helm-charts/shm-config.yaml
-```
-
-**Note**: The SHM configuration requires privileged access and will modify the host's `/etc/fstab` for persistence.
-
-**Important**: The SHM configuration uses `/shm-scripts` mount path to avoid conflicts with the Cedana daemon's expected `/scripts/host` directory structure.
-
 ### Usage
 
 See https://docs.cedana.ai/get-started/using-the-cedana-platform for usage instructions with the Cedana Platform!
