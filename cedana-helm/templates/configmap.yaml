@@ -10,7 +10,7 @@ metadata:
     heritage: "{{ .Release.Service }}"
 data:
   cluster-name: "{{ required "Please provide --set config.clusterName=<cluster-name>" .Values.config.clusterName }}"
-  url: "{{ required "Please provide --set config.url=<cedana-url>".Values.config.url }}"
+  url: "{{ required "Please provide --set config.url=<cedana-url>" .Values.config.url }}"
   sqs-queue-url: "{{ .Values.config.sqsQueueUrl }}"
   checkpoint-dir: "{{ .Values.config.checkpointDir }}"
   checkpoint-streams: "{{ .Values.config.checkpointStreams }}"
