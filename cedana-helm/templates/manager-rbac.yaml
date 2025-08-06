@@ -76,7 +76,7 @@ rules:
 - apiGroups:
   - "core.cedana.ai"
   resources:
-  - cedanajobs
+  - cedanaworkloads
   verbs:
   - get
   - list
@@ -88,7 +88,7 @@ rules:
 - apiGroups:
   - "core.cedana.ai"
   resources:
-  - cedanajobs/status
+  - cedanaworkloads/status
   verbs:
   - get
   - update
@@ -96,7 +96,7 @@ rules:
 - apiGroups:
   - "core.cedana.ai"
   resources:
-  - cedanajobs/finalizers
+  - cedanaworkloads/finalizers
   verbs:
   - update
 ---
