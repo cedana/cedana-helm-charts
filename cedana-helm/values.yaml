@@ -9,31 +9,6 @@ cedanaConfig:
   cedanaAuthToken: ""
   cedanaUrl: ""
   cedanaClusterName: ""
-  cedanaSqsQueueUrl: ""
-
-  # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
-  # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
-  checkpointStreams: 4
-  checkpointCompression: "lz4" # Options: "none", "tar", "lz4", "gzip", "zlib"
-
-  gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time.
-  gpuFreezeType: "IPC" # Default freeze type for GPU workloads. Options: "IPC", "NCCL"
-  gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
-  gpuLdLibPath: "/run/nvidia/driver/usr/lib/x86_64-linux-gnu" # Additional LD_LIBRARY_PATH to look for CUDA libraries
-
-  # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
-  # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: "release"
-  pluginsNativeVersion: "latest"
-  pluginsCriuVersion: "v4.1-cedana.01"
-  pluginsRuntimeShimVersion: "v0.6.1"
-  pluginsGpuVersion: "v0.5.5"
-  pluginsStreamerVersion: "v0.0.8"
-
-  profilingEnabled: true
-  metricsOtel: true
-  logLevel: "info"
-
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
@@ -42,9 +17,9 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: v0.9.252
-    imagePullPolicy: IfNotPresent
+    repository: cedana/cedana-helper-test
+    tag: ignore-pr
+    imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
     maxUnavailable: 1
@@ -86,9 +61,9 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.4.6
-      imagePullPolicy: IfNotPresent
+      repository: cedana/cedana-controller-test
+      tag: feat-clusterinfo
+      imagePullPolicy: Always
     resources:
       # empty to ensure minimal resource
       # usage on demo/test deployments

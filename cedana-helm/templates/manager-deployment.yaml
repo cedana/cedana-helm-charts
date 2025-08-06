@@ -33,15 +33,15 @@ spec:
         command:
         - /manager
         env:
-        - name: CEDANA_SQS_QUEUE_URL
+        - name: SIGNOZ_ACCESS_TOKEN
           valueFrom:
-            configMapKeyRef:
-              name: {{ template "cedana-helm.cedanaConfigMapName" . }}
-              key: cedana-sqs-queue-url
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
+              key: signoz-access-token
         - name: CEDANA_CLUSTER_NAME
           valueFrom:
-            configMapKeyRef:
-              name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+            secretKeyRef:
+              name: {{ template "cedana-helm.cedanaSecretName" . }}
               key: cedana-cluster-name
         - name: CEDANA_AUTH_TOKEN
           valueFrom:
