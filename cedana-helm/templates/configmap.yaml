@@ -1,0 +1,30 @@
+{{- if not .Values.cedanaConfig.preExistingConfigMap -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedana-config
+  labels:
+    app: cedana-config
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+  cedana-cluster-name: "{{ .Values.cedanaConfig.cedanaClusterName }}"
+  cedana-url: "{{ .Values.cedanaConfig.cedanaUrl }}"
+  cedana-sqs-queue-url: "{{ .Values.cedanaConfig.cedanaSqsQueueUrl }}"
+  checkpoint-streams: "{{ .Values.cedanaConfig.checkpointStreams }}"
+  checkpoint-compression: "{{ .Values.cedanaConfig.checkpointCompression }}"
+  gpu-pool-size: "{{ .Values.cedanaConfig.gpuPoolSize }}"
+  gpu-freeze-type: "{{ .Values.cedanaConfig.gpuFreezeType }}"
+  gpu-shm-size: "{{ .Values.cedanaConfig.gpuShmSize }}"
+  gpu-ld-lib-path: "{{ .Values.cedanaConfig.gpuLdLibPath }}"
+  plugins-builds: "{{ .Values.cedanaConfig.pluginsBuilds }}"
+  plugins-native-version: "{{ .Values.cedanaConfig.pluginsNativeVersion }}"
+  plugins-criu-version: "{{ .Values.cedanaConfig.pluginsCriuVersion }}"
+  plugins-runtime-shim-version: "{{ .Values.cedanaConfig.pluginsRuntimeShimVersion }}"
+  plugins-gpu-version: "{{ .Values.cedanaConfig.pluginsGpuVersion }}"
+  plugins-streamer-version: "{{ .Values.cedanaConfig.pluginsStreamerVersion }}"
+  metrics-otel: "{{ .Values.cedanaConfig.metricsOtel }}"
+  profiling-enabled: "{{ .Values.cedanaConfig.profilingEnabled }}"
+  log-level: "{{ .Values.cedanaConfig.logLevel }}"
+{{- end }}

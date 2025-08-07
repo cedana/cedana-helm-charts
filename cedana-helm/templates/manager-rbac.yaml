@@ -5,6 +5,30 @@ metadata:
   labels:
   {{- include "cedana-helm.labels" . | nindent 4 }}
 rules:
+{{ if .Values.installKueue }}
+- apiGroups:
+  - "kueue.x-k8s.io"
+  resources:
+  - workloads
+  - localqueues
+  - clusterqueues
+  - resourceflavours
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "kueue.x-k8s.io/v1beta1"
+  resources:
+  - workloads
+  - localqueues
+  - clusterqueues
+  - resourceflavours
+  verbs:
+  - get
+  - list
+  - watch
+{{ end }}
 - apiGroups:
   - ""
   resources:
@@ -26,6 +50,45 @@ rules:
   - update
   - watch
   - deletecollection
+- apiGroups:
+  - "apps"
+  resources:
+  - deployments
+  - daemonsets
+  - statefulsets
+  verbs:
+  - list
+  - watch
+  - get
+- apiGroups:
+  - "batch"
+  resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+  - update
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: ["list", "watch", "get"]

@@ -1,0 +1,96 @@
+---
+# Standalone configuration to increase /dev/shm size on Kubernetes nodes
+# This can be applied independently: kubectl apply -f shm-config.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedana-shm-config
+  namespace: default
+  labels:
+    app: cedana-shm-config
+data:
+  shm-size: "10G"
+  min-bytes: "10737418240"
+  configure-shm.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    
+    # Configure /dev/shm size
+    # This script increases the shared memory size on the host node
+    
+    SHM_PATH="/host/dev/shm"
+    FSTAB="/host/etc/fstab"
+    SIZE_G="10G"
+    MIN_BYTES="10737418240"
+    
+    echo "Configuring /dev/shm with size $SIZE_G..."
+    
+    # 1. Remount if current size is too small
+    if [ "$(df --output=size -B 1 "$SHM_PATH" | tail -n 1)" -lt "$MIN_BYTES" ]; then
+        echo "Remounting $SHM_PATH with size $SIZE_G..."
+        mount -o remount,size=$SIZE_G "$SHM_PATH"
+    else
+        echo "$SHM_PATH already has sufficient size"
+    fi
+    
+    # 2. Ensure fstab is correct for persistence
+    FSTAB_ENTRY="tmpfs /dev/shm tmpfs defaults,size=$SIZE_G 0 0"
+    if [ -f "$FSTAB" ] && grep -qE "^\s*[^#]\s*tmpfs\s+/dev/shm" "$FSTAB"; then
+        echo "Updating existing fstab entry for /dev/shm..."
+        sed -i.bak -E "s|^\s*[^#]\s*tmpfs\s+/dev/shm.*|$FSTAB_ENTRY|" "$FSTAB"
+    elif [ -f "$FSTAB" ]; then
+        echo "Adding new fstab entry for /dev/shm..."
+        echo "$FSTAB_ENTRY" >> "$FSTAB"
+    fi
+    
+    echo "/dev/shm configuration complete."
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cedana-shm-config
+  namespace: default
+  labels:
+    app: cedana-shm-config
+spec:
+  selector:
+    matchLabels:
+      app: cedana-shm-config
+  template:
+    metadata:
+      labels:
+        app: cedana-shm-config
+    spec:
+      hostPID: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      hostIPC: true
+      containers:
+        - name: shm-config
+          image: busybox:latest
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: host-volume
+              mountPath: /host
+              readOnly: false
+            - name: shm-config
+              mountPath: /shm-scripts
+              readOnly: true
+          command: ["/bin/sh"]
+          args: ["/shm-scripts/configure-shm.sh"]
+          # Run once and exit
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "chmod +x /shm-scripts/configure-shm.sh"]
+      volumes:
+        - name: host-volume
+          hostPath:
+            path: /
+        - name: shm-config
+          configMap:
+            name: cedana-shm-config 

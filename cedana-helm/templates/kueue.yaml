@@ -1,0 +1,35 @@
+{{ if .Values.installKueue }}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: default
+spec: {}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: "cluster-queue"
+spec:
+  namespaceSelector: {} # match all.
+  resourceGroups:
+  - coveredResources: ["cpu", "memory", "pods"]
+    flavors:
+    - name: "default"
+      resources:
+      - name: "cpu"
+        nominalQuota: 3500
+      - name: "memory"
+        nominalQuota: 2000Gi
+      - name: "pods"
+        nominalQuota: 3000
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  name: user-queue
+  namespace: cedana
+spec:
+  clusterQueue: cluster-queue
+---
+{{ end }}

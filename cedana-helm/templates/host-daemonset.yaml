@@ -28,6 +28,24 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       hostIPC: true
+      {{- if .Values.shmConfig.enabled }}
+      initContainers:
+        - name: shm-config
+          image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
+          imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: host-volume
+              mountPath: /host
+              readOnly: false
+            - name: shm-config
+              mountPath: /shm-scripts
+              readOnly: true
+          command: ["/bin/bash"]
+          args: ["/shm-scripts/configure-shm.sh"]
+      {{- end }}
       containers:
         - name: binary-container
           image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
@@ -39,22 +57,30 @@ spec:
             - name: host-volume
               mountPath: /host
               readOnly: false
+            {{- if .Values.shmConfig.enabled }}
+            - name: shm-config
+              mountPath: /shm-scripts
+              readOnly: true
+            {{- end }}
           command: ["/bin/sh", "-c"]
           {{ if .Values.daemonHelper.upgradeAndRestart }}
-          args: ["cedana k8s-helper --restart true --start-otelcol {{ .Values.startOtelcol }} && sleep infinity"]
+          args: ["cedana k8s-helper --restart true && sleep infinity"]
           {{ else }}
-          args: ["cedana k8s-helper --setup-host true --start-otelcol {{ .Values.startOtelcol }} && sleep infinity"]
+          args: ["cedana k8s-helper --setup-host true && sleep infinity"]
           {{ end }}
           ports:
             - name: grpc
               containerPort: 8080
               protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 20
+            successThreshold: 1
+            timeoutSeconds: 5
           env:
-            - name: SIGNOZ_ACCESS_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
-                  key: signoz-access-token
             - name: CEDANA_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -62,9 +88,93 @@ spec:
                   key: cedana-auth-token
             - name: CEDANA_URL
               valueFrom:
-                secretKeyRef:
-                  name: {{ template "cedana-helm.cedanaSecretName" . }}
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
                   key: cedana-url
+            - name: CEDANA_ADDRESS
+              value: 0.0.0.0:8080
+            - name: CEDANA_PROTOCOL
+              value: tcp
+            - name: CEDANA_CHECKPOINT_STREAMS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: checkpoint-streams
+            - name: CEDANA_CHECKPOINT_COMPRESSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: checkpoint-compression
+            - name: CEDANA_GPU_POOL_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: gpu-pool-size
+            - name: CEDANA_GPU_FREEZE_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: gpu-freeze-type
+            - name: CEDANA_GPU_SHM_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: gpu-shm-size
+            - name: CEDANA_GPU_LD_LIB_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: gpu-ld-lib-path
+            - name: CEDANA_PLUGINS_BUILDS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: plugins-builds
+            - name: CEDANA_PLUGINS_NATIVE_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: plugins-native-version
+            - name: CEDANA_PLUGINS_CRIU_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: plugins-criu-version
+            - name: CEDANA_PLUGINS_K8S_RUNTIME_SHIM_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: plugins-runtime-shim-version
+            - name: CEDANA_PLUGINS_GPU_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: plugins-gpu-version
+            - name: CEDANA_PLUGINS_STREAMER_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: plugins-streamer-version
+            - name: CEDANA_PROFILING_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: profiling-enabled
+            - name: CEDANA_METRICS_OTEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: metrics-otel
+            - name: CEDANA_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: log-level
+            - name: CEDANA_LOG_LEVEL_NO_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.cedanaConfigMapName" . }}
+                  key: log-level
             - name: CEDANA_CONTROLLER_SERVICE
               value: {{ include "cedana-helm.fullname" . }}-manager-service
       volumes:
@@ -74,6 +184,11 @@ spec:
         - name: host-volume
           hostPath:
             path: /
+        {{- if .Values.shmConfig.enabled }}
+        - name: shm-config
+          configMap:
+            name: {{ include "cedana-helm.fullname" . }}-shm-config
+        {{- end }}
       {{- with .Values.daemonHelper.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
