@@ -9,7 +9,7 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 data:
-  cedana-cluster-id: "{{ required "Please provide --set config.clusterId=<cluster-id>" .Values.config.clusterId }}"
+  cluster-id: "{{ required "Please provide --set config.clusterId=<cluster-id>" .Values.config.clusterId }}"
   url: "{{ required "Please provide --set config.url=<cedana-url>" .Values.config.url }}"
   sqs-queue-url: "{{ .Values.config.sqsQueueUrl }}"
   checkpoint-dir: "{{ .Values.config.checkpointDir }}"

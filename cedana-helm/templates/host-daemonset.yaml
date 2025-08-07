@@ -71,7 +71,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
-                  key: cedana-cluster-id
+                  key: cluster-id
             - name: CEDANA_URL
               valueFrom:
                 configMapKeyRef:
