@@ -38,6 +38,11 @@ spec:
             configMapKeyRef:
               name: {{ template "cedana-helm.configMapName" . }}
               key: sqs-queue-url
+        - name: CEDANA_CLUSTER_ID
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: cedana-cluster-id
         - name: CEDANA_CLUSTER_NAME
           valueFrom:
             configMapKeyRef:
