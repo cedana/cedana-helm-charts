@@ -51,6 +51,6 @@ jobs:
     needs: [prepare, download]
     secrets: inherit
     with:
-      ref: main
+      ref: fix/tests-for-new-helm-stuff # TODO: revert
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       post_summary: true
