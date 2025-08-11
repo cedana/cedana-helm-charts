@@ -53,6 +53,11 @@ spec:
             configMapKeyRef:
               name: {{ template "cedana-helm.configMapName" . }}
               key: url
+        - name: CEDANA_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: log-level
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
         - name: CONTROLLER_NAMESPACE
