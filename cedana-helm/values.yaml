@@ -30,7 +30,7 @@ config:
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
-  pluginsCriuVersion: "v4.1-cedana.01"
+  pluginsCriuVersion: "v4.1.1-cedana.00"
   pluginsRuntimeShimVersion: "v0.6.1"
   pluginsGpuVersion: "v0.5.6"
   pluginsStreamerVersion: "v0.0.8"
