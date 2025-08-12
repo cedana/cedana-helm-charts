@@ -35,8 +35,8 @@ config:
   pluginsGpuVersion: "v0.5.6"
   pluginsStreamerVersion: "v0.0.8"
 
-  profilingEnabled: true
-  metricsOtel: true
+  profiling: true
+  metrics: true
   logLevel: "info"
 
   awsAccessKeyId: "" # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
@@ -52,7 +52,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.258
+    tag: v0.9.259
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
