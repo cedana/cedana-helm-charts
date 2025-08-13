@@ -25,8 +25,8 @@ data:
   plugins-runtime-shim-version: "{{ .Values.config.pluginsRuntimeShimVersion }}"
   plugins-gpu-version: "{{ .Values.config.pluginsGpuVersion }}"
   plugins-streamer-version: "{{ .Values.config.pluginsStreamerVersion }}"
-  metrics-otel: "{{ .Values.config.metricsOtel }}"
-  profiling-enabled: "{{ .Values.config.profilingEnabled }}"
+  metrics: "{{ .Values.config.metrics }}"
+  profiling: "{{ .Values.config.profiling }}"
   log-level: "{{ .Values.config.logLevel }}"
 
   aws-access-key-id: "{{ .Values.config.awsAccessKeyId }}"

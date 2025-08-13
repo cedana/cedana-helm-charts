@@ -35,8 +35,8 @@ config:
   pluginsGpuVersion: "v0.5.6"
   pluginsStreamerVersion: "v0.0.8"
 
-  profilingEnabled: true
-  metricsOtel: true
+  profiling: true
+  metrics: true
   logLevel: "info"
 
   awsAccessKeyId: "" # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
