@@ -73,9 +73,15 @@ spec:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: url
             - name: CEDANA_ADDRESS
-              value: 0.0.0.0:8080
+              valueFrom: 
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: address-with-port
             - name: CEDANA_PROTOCOL
-              value: tcp
+              valueFrom: 
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: protocol
             - name: CEDANA_CHECKPOINT_DIR
               valueFrom:
                 configMapKeyRef:
