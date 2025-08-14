@@ -76,7 +76,7 @@ spec:
               valueFrom: 
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
-                  key: address-with-port
+                  key: address
             - name: CEDANA_PROTOCOL
               valueFrom: 
                 configMapKeyRef:

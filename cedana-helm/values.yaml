@@ -16,10 +16,14 @@ config:
   # Address has to be 0.0.0.0 for the service to be externally addressable,
   # if you don't want it to be feel free to update, it ideally won't affect stability
   # 
-  # Default: 8080 (other addresses might not be supported properly, update with caution)
-  addressWithPort: 0.0.0.0:8080
+  # Default: 0.0.0.0:8080
+  address: 0.0.0.0:8080
   # Specify the protocol to use for daemon service
   # Default: tcp (other protocols might not be supported properly, update with caution)
+  # Options:
+  # - tcp: TCP socket
+  # - unix: Unix Socket
+  # - vsock: VSock for VM and hypervisor communication, useful for supporting VM based migrations
   protocol: tcp
 
   # Specify path to directory for storing checkpoints.
