@@ -11,6 +11,21 @@ config:
   clusterId: ""
   sqsQueueUrl: ""
 
+  # Specify the address and port to bind the daemon on
+  # 
+  # Address has to be 0.0.0.0 for the service to be externally addressable,
+  # if you don't want it to be feel free to update, it ideally won't affect stability
+  # 
+  # Default: 0.0.0.0:8080
+  address: 0.0.0.0:8080
+  # Specify the protocol to use for daemon service
+  # Default: tcp (other protocols might not be supported properly, update with caution)
+  # Options:
+  # - tcp: TCP socket
+  # - unix: Unix Socket
+  # - vsock: VSock for VM and hypervisor communication, useful for supporting VM based migrations
+  protocol: tcp
+
   # Specify path to directory for storing checkpoints.
   # - `cedana://<path>` for Cedana-managed global storage (recommended)
   # - `s3://<bucket>/<path>` for your S3 storage
