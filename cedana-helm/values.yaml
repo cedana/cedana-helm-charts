@@ -8,7 +8,7 @@ installKueue: false
 config:
   authToken: ""
   url: ""
-  clusterName: ""
+  clusterId: ""
   sqsQueueUrl: ""
 
   # Specify path to directory for storing checkpoints.
