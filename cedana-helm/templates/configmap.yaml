@@ -9,7 +9,7 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 data:
-  cluster-name: "{{ required "Please provide --set config.clusterName=<cluster-name>" .Values.config.clusterName }}"
+  cluster-id: "{{ required "Please provide --set config.clusterId=<cluster-id>" .Values.config.clusterId }}"
   url: "{{ required "Please provide --set config.url=<cedana-url>" .Values.config.url }}"
   address: "{{ required "Please provide --set config.address=<daemon-address>" .Values.config.address }}"
   protocol: "{{ required "Please provide --set config.protocol=<daemon-protocol>" .Values.config.protocol }}"

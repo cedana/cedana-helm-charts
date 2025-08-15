@@ -8,7 +8,7 @@ installKueue: false
 config:
   authToken: ""
   url: ""
-  clusterName: ""
+  clusterId: ""
   sqsQueueUrl: ""
 
   # Specify the address and port to bind the daemon on

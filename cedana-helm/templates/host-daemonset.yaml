@@ -67,6 +67,11 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.secretName" . }}
                   key: auth-token
+            - name: CEDANA_CLUSTER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: cluster-id
             - name: CEDANA_URL
               valueFrom:
                 configMapKeyRef:
