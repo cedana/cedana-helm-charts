@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/component: manager
     app.kubernetes.io/created-by: cedana-helm
     app.kubernetes.io/part-of: cedana-helm
-  {{- include "cedana-helm.labels" . | nindent 4 }}
+    {{- include "cedana-helm.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.controllerManager.autoscaling.enabled }}
   replicas: {{ .Values.controllerManager.autoscaling.replicaCount }}
@@ -19,6 +19,7 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/config: {{ include "cedana-helm.configmap.checksum" . | sha256sum }}
         kubectl.kubernetes.io/default-container: manager
       {{- with .Values.controllerManager.podAnnotations }}
         {{- toYaml . | nindent 8 }}

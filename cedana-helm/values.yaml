@@ -61,6 +61,13 @@ config:
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
+# Optional configuration to increase /dev/shm size on nodes
+# This is useful for workloads that require large shared memory
+shmConfig:
+  enabled: false # Set to true to enable /dev/shm size increase
+  size: "10G" # Size to set for /dev/shm (e.g., "10G", "20G")
+  minSize: "10G" # Minimum size to trigger remount (e.g., "10G", "20G")
+
 daemonHelper:
   upgradeAndRestart: false
   service:
@@ -157,13 +164,6 @@ controllerManager:
     #               - "cedana-manager"
 
 kubernetesClusterDomain: cluster.local
-
-# Optional configuration to increase /dev/shm size on nodes
-# This is useful for workloads that require large shared memory
-shmConfig:
-  enabled: false # Set to true to enable /dev/shm size increase
-  size: "10G" # Size to set for /dev/shm (e.g., "10G", "20G")
-  minSize: "10G" # Minimum size to trigger remount (e.g., "10G", "20G")
 
 metricsService:
   ports:

@@ -23,6 +23,8 @@ spec:
       labels:
         app.kubernetes.io/component: helper
         {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include "cedana-helm.configmap.checksum" . | sha256sum }}
     spec:
       hostPID: true
       hostNetwork: true
