@@ -19,7 +19,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include "cedana-helm.configmap.checksum" . | sha256sum }}
+        checksum/config: {{ include "cedana-helm.manager.config.checksum" . | sha256sum }}
         kubectl.kubernetes.io/default-container: manager
       {{- with .Values.controllerManager.podAnnotations }}
         {{- toYaml . | nindent 8 }}

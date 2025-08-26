@@ -1,13 +1,13 @@
-{{- define "cedana-helm.configmap.checksum" -}}
+{{- define "cedana-helm.helper.config.checksum" -}}
 {{- $config := dict -}}
 
 {{- /* Direct values from .Values.config */ -}}
 {{- $configKeysFromValuesConfig := list
   "clusterId"
   "url"
+  "authToken"
   "address"
   "protocol"
-  "sqsQueueUrl"
   "checkpointDir"
   "checkpointStreams"
   "checkpointCompression"
