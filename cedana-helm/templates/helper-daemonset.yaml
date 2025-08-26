@@ -27,9 +27,9 @@ spec:
         checksum/config: {{ include "cedana-helm.helper.config.checksum" . | sha256sum }}
     spec:
       hostPID: true
+      hostIPC: true
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      hostIPC: true
       containers:
         - name: helper
           {{- if .Values.daemonHelper.image.digest }}

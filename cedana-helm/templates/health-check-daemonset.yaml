@@ -26,6 +26,8 @@ spec:
       annotations:
         checksum/config: {{ include "cedana-helm.helper.config.checksum" . | sha256sum }}
     spec:
+      hostPID: true
+      hostIPC: true
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
@@ -36,17 +38,21 @@ spec:
           image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
           {{- end }}
           imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
           command: ["/bin/bash", "-c"]
           args: 
           - |
             while true; do
               if cedana daemon check --full; then
                 touch /ready;
+                echo -e "\n--------------------------------\n";
+                sleep 300;
               else
                 rm -f /ready;
+                sleep 10;
               fi;
-              sleep 300;
-              echo -e "\n--------------------------------\n";
             done
           readinessProbe:
             exec:

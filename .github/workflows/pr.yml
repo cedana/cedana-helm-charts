@@ -45,12 +45,36 @@ jobs:
       gpu_version: ${{ needs.prepare.outputs.gpu_version }}
       streamer_version: ${{ needs.prepare.outputs.streamer_version }}
 
-  test:
-    name: Test
+  k3s:
+    name: Kubernetes
     uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
     with:
       ref: main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
+      post_summary: true
+
+  eks:
+    name: Kubernetes
+    uses: ./.github/workflows/test_k8s.yml
+    needs: [prepare, download]
+    secrets: inherit
+    concurrency: test-k8s-eks # Since the cluster is reused
+    with:
+      ref: main
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
+      platform: EKS
+      post_summary: true
+
+  gke:
+    name: Kubernetes
+    uses: ./.github/workflows/test_k8s.yml
+    needs: [prepare, download]
+    secrets: inherit
+    concurrency: test-k8s-gke # Since the cluster is reused
+    with:
+      ref: main
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
+      platform: GKE
       post_summary: true
