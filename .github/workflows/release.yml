@@ -57,8 +57,8 @@ jobs:
       gpu_version: ${{ needs.prepare.outputs.gpu_version }}
       streamer_version: ${{ needs.prepare.outputs.streamer_version }}
 
-  k3s:
-    name: Kubernetes
+  test_k3s:
+    name: Test
     uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
@@ -67,8 +67,8 @@ jobs:
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       post_summary: true
 
-  eks:
-    name: Kubernetes
+  test_eks:
+    name: Test
     uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
@@ -79,8 +79,8 @@ jobs:
       platform: EKS
       post_summary: true
 
-  gke:
-    name: Kubernetes
+  test_gke:
+    name: Test
     uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
@@ -94,7 +94,7 @@ jobs:
   publish:
     name: Publish
     uses: ./.github/workflows/publish.yml
-    needs: [test]
+    needs: [test_k3s, test_eks, test_gke]
     secrets: inherit
     with:
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug_publish }}
