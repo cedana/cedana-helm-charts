@@ -118,7 +118,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller-test
-      tag: staging
+      tag: main
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
