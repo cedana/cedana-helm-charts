@@ -57,7 +57,7 @@ jobs:
 
   eks:
     name: Kubernetes
-    uses: ./.github/workflows/test_k8s.yml
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
     concurrency: test-k8s-eks # Since the cluster is reused
@@ -69,7 +69,7 @@ jobs:
 
   gke:
     name: Kubernetes
-    uses: ./.github/workflows/test_k8s.yml
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
     secrets: inherit
     concurrency: test-k8s-gke # Since the cluster is reused
