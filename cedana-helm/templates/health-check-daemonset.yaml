@@ -46,6 +46,7 @@ spec:
                 rm -f /ready;
               fi;
               sleep 120;
+              echo -e "\n--------------------------------\n";
             done
           readinessProbe:
             exec:
