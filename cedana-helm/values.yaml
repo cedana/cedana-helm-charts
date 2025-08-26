@@ -69,7 +69,6 @@ shmConfig:
   minSize: "10G" # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
-  upgradeAndRestart: false
   service:
     annotations: {}
   image:
@@ -79,7 +78,7 @@ daemonHelper:
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
-    maxUnavailable: 1
+    maxUnavailable: 99999
   tolerations: []
   affinity: {}
 
