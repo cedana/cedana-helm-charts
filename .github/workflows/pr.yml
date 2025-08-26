@@ -47,7 +47,7 @@ jobs:
 
   test_k3s:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1483-fix-runrestore-signoz-logging-for-no-server
     needs: [prepare, download]
     secrets: inherit
     with:
@@ -57,7 +57,7 @@ jobs:
 
   test_eks:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1483-fix-runrestore-signoz-logging-for-no-server
     needs: [prepare, download]
     secrets: inherit
     concurrency: test-k8s-eks # Since the cluster is reused
@@ -69,7 +69,7 @@ jobs:
 
   test_gke:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1483-fix-runrestore-signoz-logging-for-no-server
     needs: [prepare, download]
     secrets: inherit
     concurrency: test-k8s-gke # Since the cluster is reused
