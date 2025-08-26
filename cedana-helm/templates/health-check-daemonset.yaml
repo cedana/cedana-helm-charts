@@ -45,7 +45,7 @@ spec:
               else
                 rm -f /ready;
               fi;
-              sleep 120;
+              sleep 300;
               echo -e "\n--------------------------------\n";
             done
           readinessProbe:
