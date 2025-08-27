@@ -47,7 +47,7 @@ config:
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.00"
   pluginsRuntimeShimVersion: "v0.6.1"
-  pluginsGpuVersion: "v0.5.8"
+  pluginsGpuVersion: "v0.5.9"
   pluginsStreamerVersion: "v0.0.8"
 
   profiling: true
@@ -69,17 +69,16 @@ shmConfig:
   minSize: "10G" # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
-  upgradeAndRestart: false
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: v0.9.259
+    repository: cedana/cedana-helper-test
+    tag: feature-ced-1483-fix-runrestore-signoz-logging-for-no-server
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
-    maxUnavailable: 1
+    maxUnavailable: 99999
   tolerations: []
   affinity: {}
 
@@ -118,8 +117,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.5.2
+      repository: cedana/cedana-controller-test
+      tag: main
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:

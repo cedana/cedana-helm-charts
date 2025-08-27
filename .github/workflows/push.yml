@@ -35,7 +35,7 @@ jobs:
       gpu_version: ${{ needs.prepare.outputs.gpu_version }}
       streamer_version: ${{ needs.prepare.outputs.streamer_version }}
 
-  test:
+  test_k3s:
     name: Test
     uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
@@ -43,4 +43,28 @@ jobs:
     with:
       ref: main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
-      post_summary: false
+      post_summary: true
+
+  test_eks:
+    name: Test
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    needs: [prepare, download]
+    secrets: inherit
+    concurrency: test-k8s-eks # Since the cluster is reused
+    with:
+      ref: main
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
+      platform: EKS
+      post_summary: true
+
+  test_gke:
+    name: Test
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    needs: [prepare, download]
+    secrets: inherit
+    concurrency: test-k8s-gke # Since the cluster is reused
+    with:
+      ref: main
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
+      platform: GKE
+      post_summary: true
