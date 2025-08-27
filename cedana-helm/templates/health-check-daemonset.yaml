@@ -51,13 +51,13 @@ spec:
                 sleep 300;
               else
                 rm -f /ready;
-                sleep 10;
+                sleep 5;
               fi;
             done
           readinessProbe:
             exec:
               command: ["cat", "/ready"]
-            initialDelaySeconds: 0
+            initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 1
