@@ -57,10 +57,10 @@ spec:
           readinessProbe:
             exec:
               command: ["cat", "/ready"]
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 5
+            failureThreshold: 20
             timeoutSeconds: 5
-            failureThreshold: 1
           env:
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
@@ -204,6 +204,10 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: shm-config-min-size
+      {{- with .Values.daemonHelper.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.daemonHelper.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
