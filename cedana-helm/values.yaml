@@ -72,8 +72,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper-test
-    tag: feature-ced-1483-fix-runrestore-signoz-logging-for-no-server
+    repository: cedana/cedana-helper
+    tag: v0.9.260
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -117,8 +117,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller-test
-      tag: main
+      repository: cedana/cedana-controller
+      tag: v0.5.3
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
