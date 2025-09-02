@@ -30,6 +30,18 @@ spec:
       hostIPC: true
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      {{- with .Values.daemonHelper.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonHelper.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonHelper.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: health-check
           {{- if .Values.daemonHelper.image.digest }}
@@ -204,11 +216,3 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: shm-config-min-size
-      {{- with .Values.daemonHelper.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.daemonHelper.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
