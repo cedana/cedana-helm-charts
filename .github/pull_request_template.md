@@ -1,22 +1,9 @@
 ## Describe your changes
 
-<!-- Please explain the changes you made here. -->
+## Checklist before requesting a review
 
-## Caveats (if any)
-
-<!-- Please explain what might be possible caveats in the PR (if any). -->
-<!-- Eg, makes certain feature slower, can be brittle and break easily with misconfiguration, etc. -->
-
-## Issue Ticket ID
-
-<!-- For example, "Fixes CED-001" -->
-<!-- linear-bot will auto link the issue ticket. -->
-
-### Checklist before requesting a review
-
-- [ ] Code compiles correctly.
-- [ ] Self-review to ensure, the PR only introduces the changes it's intended to? E.g. No extraneous formatting changes.
-- [ ] Created tests which fail without the change (if possible).
-- [ ] Rest of the tests are passing.
+- [ ] Have I performed a self-review?
+- [ ] Have I added regression or unit tests (where it makes sense) for my changes?
+- [ ] Have I updated the docs if changes have resulted in it being out of date?
+- [ ] Have I checked to ensure my PR only introduces the changes it's intended to? E.g. No extraneous formatting changes.
 - [ ] Is this a breaking change? If yes, please describe areas affected and request reviews from developer stakeholders.
-- [ ] Extended the README / documentation, if changes have resulted in it being out of date?

@@ -2,48 +2,79 @@ name: PR
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      debug:
+        type: boolean
+        description: "Run with debugging enabled"
+        required: false
+        default: false
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  check:
+    name: Check
+    uses: ./.github/workflows/check.yml
+    secrets: inherit
+    with:
+      pr_title: true
+      helm: true
+      version: false
 
-      - name: Lint helm chart
-        run: |
-          helm lint cedana-helm
+  prepare:
+    name: Prepare
+    uses: ./.github/workflows/prepare.yml
+    secrets: inherit
 
-  test:
+  download:
+    name: Download
+    uses: cedana/cedana/.github/workflows/download.yml@main
+    needs: prepare
+    secrets: inherit
+    with:
+      cedana_version: ${{ needs.prepare.outputs.cedana_version }}
+      controller_version: ${{ needs.prepare.outputs.controller_version }}
+      runtime_shim_version: ${{ needs.prepare.outputs.runtime_shim_version }}
+      criu_version: ${{ needs.prepare.outputs.criu_version }}
+      gpu_version: ${{ needs.prepare.outputs.gpu_version }}
+      streamer_version: ${{ needs.prepare.outputs.streamer_version }}
+
+  test_k3s:
     name: Test
-    runs-on: ubuntu-latest
-    env:
-      CEDANA_URL: ${{ vars.CEDANA_URL }}
-      CEDANA_AUTH_TOKEN: ${{ secrets.CEDANA_AUTH_TOKEN }}
-    steps:
-      - uses: actions/checkout@v3
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    needs: [prepare, download]
+    secrets: inherit
+    with:
+      ref: main
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
+      post_summary: true
 
-      - name: Use Docker
-        uses: actions-hub/docker/cli@master
-        env:
-          SKIP_LOGIN: true
+  test_eks:
+    name: Test
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    needs: [prepare, download]
+    secrets: inherit
+    concurrency: test-k8s-eks # Since the cluster is reused
+    with:
+      ref: main
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
+      platform: EKS
+      post_summary: true
 
-      - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1
-        with:
-          cluster_name: kind
-
-      - name: Install and test
-        run: |
-          helm install cedana ./cedana-helm --create-namespace -n cedana-operator-system \
-              --set cedanaConfig.cedanaUrl="${CEDANA_URL}" \
-              --set cedanaConfig.cedanaAuthToken="${CEDANA_AUTH_TOKEN}"
-          kubectl wait --for=jsonpath='{.status.phase}'=Running --all pod -n cedana-operator-system
+  test_gke:
+    name: Test
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    needs: [prepare, download]
+    secrets: inherit
+    concurrency: test-k8s-gke # Since the cluster is reused
+    with:
+      ref: main
+      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
+      platform: GKE
+      post_summary: true

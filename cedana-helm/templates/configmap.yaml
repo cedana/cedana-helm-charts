@@ -1,4 +1,4 @@
-{{- if not .Values.cedanaConfig.preExistingConfigMap -}}
+{{- if not .Values.config.preExistingConfigMap -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,22 +9,32 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 data:
-  cedana-cluster-name: "{{ .Values.cedanaConfig.cedanaClusterName }}"
-  cedana-url: "{{ .Values.cedanaConfig.cedanaUrl }}"
-  cedana-sqs-queue-url: "{{ .Values.cedanaConfig.cedanaSqsQueueUrl }}"
-  checkpoint-streams: "{{ .Values.cedanaConfig.checkpointStreams }}"
-  checkpoint-compression: "{{ .Values.cedanaConfig.checkpointCompression }}"
-  gpu-pool-size: "{{ .Values.cedanaConfig.gpuPoolSize }}"
-  gpu-freeze-type: "{{ .Values.cedanaConfig.gpuFreezeType }}"
-  gpu-shm-size: "{{ .Values.cedanaConfig.gpuShmSize }}"
-  gpu-ld-lib-path: "{{ .Values.cedanaConfig.gpuLdLibPath }}"
-  plugins-builds: "{{ .Values.cedanaConfig.pluginsBuilds }}"
-  plugins-native-version: "{{ .Values.cedanaConfig.pluginsNativeVersion }}"
-  plugins-criu-version: "{{ .Values.cedanaConfig.pluginsCriuVersion }}"
-  plugins-runtime-shim-version: "{{ .Values.cedanaConfig.pluginsRuntimeShimVersion }}"
-  plugins-gpu-version: "{{ .Values.cedanaConfig.pluginsGpuVersion }}"
-  plugins-streamer-version: "{{ .Values.cedanaConfig.pluginsStreamerVersion }}"
-  metrics-otel: "{{ .Values.cedanaConfig.metricsOtel }}"
-  profiling-enabled: "{{ .Values.cedanaConfig.profilingEnabled }}"
-  log-level: "{{ .Values.cedanaConfig.logLevel }}"
+  cluster-id: "{{ required "Please provide --set config.clusterId=<cluster-id>" .Values.config.clusterId }}"
+  url: "{{ required "Please provide --set config.url=<cedana-url>" .Values.config.url }}"
+  address: "{{ required "Please provide --set config.address=<daemon-address>" .Values.config.address }}"
+  protocol: "{{ required "Please provide --set config.protocol=<daemon-protocol>" .Values.config.protocol }}"
+  sqs-queue-url: "{{ .Values.config.sqsQueueUrl }}"
+  checkpoint-dir: "{{ .Values.config.checkpointDir }}"
+  checkpoint-streams: "{{ .Values.config.checkpointStreams }}"
+  checkpoint-compression: "{{ .Values.config.checkpointCompression }}"
+  gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
+  gpu-freeze-type: "{{ .Values.config.gpuFreezeType }}"
+  gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
+  gpu-ld-lib-path: "{{ .Values.config.gpuLdLibPath }}"
+  plugins-builds: "{{ .Values.config.pluginsBuilds }}"
+  plugins-native-version: "{{ .Values.config.pluginsNativeVersion }}"
+  plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
+  plugins-runtime-shim-version: "{{ .Values.config.pluginsRuntimeShimVersion }}"
+  plugins-gpu-version: "{{ .Values.config.pluginsGpuVersion }}"
+  plugins-streamer-version: "{{ .Values.config.pluginsStreamerVersion }}"
+  metrics: "{{ .Values.config.metrics }}"
+  profiling: "{{ .Values.config.profiling }}"
+  log-level: "{{ .Values.config.logLevel }}"
+
+  aws-access-key-id: "{{ .Values.config.awsAccessKeyId }}"
+  aws-region: "{{ .Values.config.awsRegion }}"
+
+  shm-config-enabled: "{{ .Values.shmConfig.enabled }}"
+  shm-config-size: "{{ .Values.shmConfig.size }}"
+  shm-config-min-size: "{{ .Values.shmConfig.minSize }}"
 {{- end }}

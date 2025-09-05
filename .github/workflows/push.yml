@@ -1,47 +1,25 @@
-name: Release
-
-permissions:
-  contents: write
-  packages: write
-  actions: read
-  id-token: write
-  pull-requests: write
-  checks: write
+name: Push
 
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - main
   workflow_dispatch:
     inputs:
-      debug_test:
+      debug:
         type: boolean
-        description: "Run tests with debugging enabled"
-        required: false
-        default: false
-      debug_publish:
-        type: boolean
-        description: "Run publish with debugging enabled"
+        description: "Run with debugging enabled"
         required: false
         default: false
 
 concurrency:
-  group: release-${{ github.event.pull_request.number || github.ref }}
+  group: push-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: Check
-    uses: ./.github/workflows/check.yml
-    secrets: inherit
-    with:
-      helm: true
-      version: true
-
   prepare:
     name: Prepare
     uses: ./.github/workflows/prepare.yml
-    needs: check
     secrets: inherit
 
   download:
@@ -89,15 +67,4 @@ jobs:
       ref: main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       platform: GKE
-      post_summary: true
-
-  publish:
-    name: Publish
-    uses: ./.github/workflows/publish.yml
-    needs: [test_k3s, test_eks, test_gke]
-    secrets: inherit
-    with:
-      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug_publish }}
-      github: true
-      dockerhub: true
       post_summary: true

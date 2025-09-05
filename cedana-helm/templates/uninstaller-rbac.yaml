@@ -17,15 +17,9 @@ metadata:
     helm.sh/hook: pre-delete
     helm.sh/resource-policy: keep
 rules:
-  - apiGroups: ["apps"]
-    resources: ["daemonsets"]
-    verbs: ["delete"]
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["list"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -39,6 +33,9 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["list"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["delete"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1

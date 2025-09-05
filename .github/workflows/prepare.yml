@@ -1,0 +1,85 @@
+name: Prepare
+
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        description: "The branch, tag, or SHA to run on"
+        required: false
+        default: ""
+    outputs:
+      cedana_version:
+        description: "Cedana version"
+        value: ${{ jobs.versions.outputs.cedana_version }}
+      controller_version:
+        description: "Controller version"
+        value: ${{ jobs.versions.outputs.controller_version }}
+      criu_version:
+        description: "CRIU version"
+        value: ${{ jobs.versions.outputs.criu_version }}
+      runtime_shim_version:
+        description: "Runtime Shim version"
+        value: ${{ jobs.versions.outputs.runtime_shim_version }}
+      gpu_version:
+        description: "GPU version"
+        value: ${{ jobs.versions.outputs.gpu_version }}
+      streamer_version:
+        description: "Streamer version"
+        value: ${{ jobs.versions.outputs.streamer_version }}
+
+jobs:
+  chart:
+    name: Chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Upload helm chart
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart
+          path: cedana-helm
+
+  versions:
+    name: Versions
+    runs-on: ubuntu-latest
+    outputs:
+      cedana_version: ${{ steps.extract_version.outputs.cedana_version }}
+      controller_version: ${{ steps.extract_version.outputs.controller_version }}
+      criu_version: ${{ steps.extract_version.outputs.criu_version }}
+      runtime_shim_version: ${{ steps.extract_version.outputs.runtime_shim_version }}
+      gpu_version: ${{ steps.extract_version.outputs.gpu_version }}
+      streamer_version: ${{ steps.extract_version.outputs.streamer_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.47.1/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Extract versions from values.yaml
+        id: extract_version
+        run: |
+          value=$(yq '.daemonHelper.image.tag' ./cedana-helm/values.yaml)
+          echo "cedana_version=${value}" >> $GITHUB_OUTPUT
+          value=$(yq '.controllerManager.manager.image.tag' ./cedana-helm/values.yaml)
+          echo "controller_version=${value}" >> $GITHUB_OUTPUT
+          value=$(yq '.config.pluginsCriuVersion' ./cedana-helm/values.yaml)
+          echo "criu_version=${value}" >> $GITHUB_OUTPUT
+          value=$(yq '.config.pluginsRuntimeShimVersion' ./cedana-helm/values.yaml)
+          echo "runtime_shim_version=${value}" >> $GITHUB_OUTPUT
+          value=$(yq '.config.pluginsGpuVersion' ./cedana-helm/values.yaml)
+          echo "gpu_version=${value}" >> $GITHUB_OUTPUT
+          value=$(yq '.config.pluginsStreamerVersion' ./cedana-helm/values.yaml)
+          echo "streamer_version=${value}" >> $GITHUB_OUTPUT
