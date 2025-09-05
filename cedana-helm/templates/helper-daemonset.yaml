@@ -56,7 +56,7 @@ spec:
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
-            failureThreshold: 20
+            failureThreshold: 1
             successThreshold: 1
             timeoutSeconds: 5
           env:
