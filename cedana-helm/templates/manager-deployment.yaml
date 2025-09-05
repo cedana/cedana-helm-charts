@@ -34,7 +34,7 @@ spec:
         command:
         - /manager
         env:
-        - name: SIGNOZ_ACCESS_TOKEN
+        - name: CEDANA_SQS_QUEUE_URL
           valueFrom:
             configMapKeyRef:
               name: {{ template "cedana-helm.configMapName" . }}
