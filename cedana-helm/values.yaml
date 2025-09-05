@@ -81,6 +81,7 @@ daemonHelper:
     maxUnavailable: 99999
   tolerations: []
   affinity: {}
+  nodeSelector: {}
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -161,6 +162,7 @@ controllerManager:
     #             operator: "In"
     #             values:
     #               - "cedana-manager"
+  nodeSelector: {}
 
 kubernetesClusterDomain: cluster.local
 
