@@ -58,6 +58,8 @@ config:
   awsSecretAccessKey: "" # AWS secret access key if using S3 storage
   awsRegion: "" # AWS region if using S3 storage (uses default region if not set)
 
+  containerdAddress: "/run/containerd/containerd.sock" # Path to containerd socket
+
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 

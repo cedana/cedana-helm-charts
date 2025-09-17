@@ -26,6 +26,7 @@
   "logLevel"
   "awsAccessKeyId"
   "awsRegion"
+  "containerdAddress"
 -}}
 {{- range $key := $configKeysFromValuesConfig -}}
   {{- if hasKey $.Values.config $key -}}

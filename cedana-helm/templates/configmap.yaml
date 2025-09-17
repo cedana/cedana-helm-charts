@@ -34,6 +34,8 @@ data:
   aws-access-key-id: "{{ .Values.config.awsAccessKeyId }}"
   aws-region: "{{ .Values.config.awsRegion }}"
 
+  containerd-address: "{{ .Values.config.containerdAddress }}"
+
   shm-config-enabled: "{{ .Values.shmConfig.enabled }}"
   shm-config-size: "{{ .Values.shmConfig.size }}"
   shm-config-min-size: "{{ .Values.shmConfig.minSize }}"

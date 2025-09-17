@@ -40,7 +40,7 @@ spec:
               mountPath: /host
               readOnly: false
           command: ["/bin/sh", "-c"]
-          args: ["cedana k8s-helper destroy"]
+          args: ["cedana k8s destroy"]
       volumes:
         - name: varlog
           hostPath:
