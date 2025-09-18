@@ -77,7 +77,7 @@ daemonHelper:
     # repository: cedana/cedana-helper
     # tag: v0.9.262
     repository: cedana/cedana-helper-test
-    tag: feature/ced-1505-handle-multi-container-checkpoints-for-pods
+    tag: feature-ced-1505-handle-multi-container-checkpoints-for-pods
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
