@@ -50,7 +50,7 @@ spec:
             path: /
       containers:
         - name: cleanup
-          image: bitnami/kubectl:latest
+          image: alpine/k8s:1.34.0
           command: ["/bin/sh", "-c"]
           args:
             - |
