@@ -23,7 +23,6 @@ jobs:
     uses: ./.github/workflows/check.yml
     secrets: inherit
     with:
-      pr_title: true
       helm: true
       version: false
 

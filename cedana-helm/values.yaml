@@ -43,10 +43,10 @@ config:
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: "release"
+  pluginsBuilds: "alpha"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.00"
-  pluginsRuntimeShimVersion: "v0.6.1"
+  pluginsRuntimeShimVersion: feature/ced-1507-improve-k8s-restore-design-remove-controller-requirement
   pluginsGpuVersion: "v0.6.1"
   pluginsStreamerVersion: "v0.0.8"
 
