@@ -1,13 +1,11 @@
 name: Check
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:
-      pr_title:
-        type: boolean
-        description: "Pull request title"
-        required: false
-        default: false
       helm:
         type: boolean
         description: "Check helm charts"
@@ -18,9 +16,6 @@ on:
         description: "Check version"
         required: false
         default: false
-
-permissions:
-  contents: read
 
 jobs:
   helm:
@@ -33,20 +28,6 @@ jobs:
       - name: Lint helm chart
         run: |
           helm lint cedana-helm
-
-  pr-title:
-    name: PR Title
-    if: inputs.pr_title
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate PR title
-        run: |
-          TITLE="${{ github.event.pull_request.title }}"
-          echo "PR Title: $TITLE"
-          if [[ ! "$TITLE" =~ ^[Cc][Ee][Dd]-[0-9]+:\  ]]; then
-            echo "❌ PR title must start with 'CED-<number>: ' or 'ced-<number>: ' (note the colon and space)"
-            exit 1
-          fi
 
   version:
     name: Version

@@ -58,17 +58,33 @@ spec:
               mountPath: /host
               readOnly: false
           command: ["/bin/sh", "-c"]
-          args: ["cedana k8s-helper --setup-host true && sleep infinity"]
+          args: ["cedana k8s setup"]
           ports:
             - name: grpc
               containerPort: 8080
               protocol: TCP
-          readinessProbe:
-            tcpSocket:
+          startupProbe:
+            grpc:
               port: 8080
-            initialDelaySeconds: 10
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            failureThreshold: 12
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            grpc:
+              port: 8080
+            initialDelaySeconds: 0
             periodSeconds: 5
             failureThreshold: 1
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            grpc:
+              port: 8080
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            failureThreshold: 6
             successThreshold: 1
             timeoutSeconds: 5
           env:
@@ -192,6 +208,11 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.secretName" . }}
                   key: aws-secret-access-key
+            - name: CONTAINERD_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: containerd-address
             - name: AWS_REGION
               valueFrom:
                 configMapKeyRef:

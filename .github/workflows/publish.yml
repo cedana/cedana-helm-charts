@@ -1,5 +1,13 @@
 name: Publish
 
+permissions:
+  contents: write
+  packages: write
+  actions: read
+  id-token: write
+  pull-requests: write
+  checks: write
+
 on:
   workflow_call:
     inputs:
@@ -28,14 +36,6 @@ on:
         description: "Post summary to Slack"
         required: false
         default: false
-
-permissions:
-  contents: write
-  packages: write
-  actions: read
-  id-token: write
-  pull-requests: write
-  checks: write
 
 jobs:
   github:

@@ -46,7 +46,7 @@ config:
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.00"
-  pluginsRuntimeShimVersion: "v0.6.1"
+  pluginsRuntimeShimVersion: "v0.6.3"
   pluginsGpuVersion: "v0.6.1"
   pluginsStreamerVersion: "v0.0.8"
 
@@ -57,6 +57,8 @@ config:
   awsAccessKeyId: "" # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
   awsSecretAccessKey: "" # AWS secret access key if using S3 storage
   awsRegion: "" # AWS region if using S3 storage (uses default region if not set)
+
+  containerdAddress: "/run/containerd/containerd.sock" # Path to containerd socket
 
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
