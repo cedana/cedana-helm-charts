@@ -46,8 +46,8 @@ config:
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.00"
-  pluginsRuntimeShimVersion: "v0.6.3"
-  pluginsGpuVersion: "v0.6.1"
+  pluginsRuntimeShimVersion: "v0.6.4"
+  pluginsGpuVersion: "v0.6.2"
   pluginsStreamerVersion: "v0.0.8"
 
   profiling: true
@@ -74,8 +74,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper-test
-    tag: main
+    repository: cedana/cedana-helper
+    tag: v0.9.263
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -120,8 +120,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller-test
-      tag: main
+      repository: cedana/cedana-controller
+      tag: v0.5.5
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
