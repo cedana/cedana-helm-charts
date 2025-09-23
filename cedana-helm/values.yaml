@@ -74,10 +74,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    # repository: cedana/cedana-helper
-    # tag: v0.9.262
-    repository: cedana/cedana-helper-test
-    tag: feature-ced-1505-handle-multi-container-checkpoints-for-pods
+    repository: cedana/cedana-helper
+    tag: v0.9.262
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -122,10 +120,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      # repository: cedana/cedana-controller
-      # tag: v0.5.4
-      repository: cedana/cedana-controller-test
-      tag: feature-ced-1507-improve-k8s-restore-design-remove-controller-requirement
+      repository: cedana/cedana-controller
+      tag: v0.5.4
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
