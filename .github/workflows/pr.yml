@@ -46,11 +46,11 @@ jobs:
 
   test_k3s:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature-ced-1560-gpu-freeze-times-out-in-k8s # TODO: revert
     needs: [prepare, download]
     secrets: inherit
     with:
-      ref: main
+      ref: feature-ced-1560-gpu-freeze-times-out-in-k8s # TODO: revert
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       post_summary: true
 
