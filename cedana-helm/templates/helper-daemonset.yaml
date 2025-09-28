@@ -58,7 +58,11 @@ spec:
               mountPath: /host
               readOnly: false
           command: ["/bin/sh", "-c"]
+          {{- if .Values.daemonHelper.forceCleanup }}
+          args: ["cedana k8s destroy && cedana k8s setup"]
+          {{- else }}
           args: ["cedana k8s setup"]
+          {{- end }}
           ports:
             - name: grpc
               containerPort: 8080
