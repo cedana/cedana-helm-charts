@@ -5,4 +5,4 @@ type: application
 version: 0.5.5
 # The appVersion is the version of the Cedana API this chart
 # should best work with.
-appVersion: 2.0.0.8
+appVersion: 2.0.0.9
