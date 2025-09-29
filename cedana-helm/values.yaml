@@ -46,8 +46,8 @@ config:
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.00"
-  pluginsRuntimeShimVersion: "v0.6.4"
-  pluginsGpuVersion: "v0.6.2"
+  pluginsRuntimeShimVersion: "v0.6.5"
+  pluginsGpuVersion: "v0.6.3"
   pluginsStreamerVersion: "v0.0.8"
 
   profiling: true
@@ -71,11 +71,14 @@ shmConfig:
   minSize: "10G" # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
+  # Force cleanup of helper daemonset on every upgrade.
+  # Note that this might cause running workloads that are using Cedana to fail/restart.
+  forceCleanup: false
   service:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.263
+    tag: v0.9.264
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
