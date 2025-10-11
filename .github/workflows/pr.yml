@@ -33,47 +33,47 @@ jobs:
 
   download:
     name: Download
-    uses: cedana/cedana/.github/workflows/download.yml@main
+    uses: cedana/cedana/.github/workflows/download.yml@feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
     needs: prepare
     secrets: inherit
     with:
       cedana_version: ${{ needs.prepare.outputs.cedana_version }}
       controller_version: ${{ needs.prepare.outputs.controller_version }}
-      runtime_shim_version: ${{ needs.prepare.outputs.runtime_shim_version }}
+      containerd_runtime_version: ${{ needs.prepare.outputs.containerd_runtime_version }}
       criu_version: ${{ needs.prepare.outputs.criu_version }}
       gpu_version: ${{ needs.prepare.outputs.gpu_version }}
       streamer_version: ${{ needs.prepare.outputs.streamer_version }}
 
   test_k3s:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
     needs: [prepare, download]
     secrets: inherit
     with:
-      ref: main
+      ref: feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       post_summary: true
 
   test_eks:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
     needs: [prepare, download]
     secrets: inherit
     concurrency: test-k8s-eks # Since the cluster is reused
     with:
-      ref: main
+      ref: feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       platform: EKS
       post_summary: true
 
   test_gke:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
     needs: [prepare, download]
     secrets: inherit
     concurrency: test-k8s-gke # Since the cluster is reused
     with:
-      ref: main
+      ref: feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       platform: GKE
       post_summary: true
