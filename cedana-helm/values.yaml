@@ -78,7 +78,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper-test # TODO: revert to cedana-helper
-    tag: feature-ced-1488-enhance-gpu-debugging-capabilities
+    tag: feature/ced-1605-install-only-required-plugins-on-a-k8s-host
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:

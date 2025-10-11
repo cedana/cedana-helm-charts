@@ -33,7 +33,7 @@ jobs:
 
   download:
     name: Download
-    uses: cedana/cedana/.github/workflows/download.yml@feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
+    uses: cedana/cedana/.github/workflows/download.yml@feature/ced-1605-install-only-required-plugins-on-a-k8s-host # TODO change back to main
     needs: prepare
     secrets: inherit
     with:
@@ -46,34 +46,34 @@ jobs:
 
   test_k3s:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1605-install-only-required-plugins-on-a-k8s-host # TODO change back to main
     needs: [prepare, download]
     secrets: inherit
     with:
-      ref: feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
+      ref: feature/ced-1605-install-only-required-plugins-on-a-k8s-host # TODO change back to main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       post_summary: true
 
   test_eks:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1605-install-only-required-plugins-on-a-k8s-host # TODO change back to main
     needs: [prepare, download]
     secrets: inherit
     concurrency: test-k8s-eks # Since the cluster is reused
     with:
-      ref: feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
+      ref: feature/ced-1605-install-only-required-plugins-on-a-k8s-host # TODO change back to main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       platform: EKS
       post_summary: true
 
   test_gke:
     name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
+    uses: cedana/cedana/.github/workflows/test_k8s.yml@featur/ced-1605-install-only-required-plugins-on-a-k8s-host # TODO change back to main
     needs: [prepare, download]
     secrets: inherit
     concurrency: test-k8s-gke # Since the cluster is reused
     with:
-      ref: feature/ced-1488-enhance-gpu-debugging-capabilities # TODO change back to main
+      ref: feature/ced-1605-install-only-required-plugins-on-a-k8s-host # TODO change back to main
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
       platform: GKE
       post_summary: true
