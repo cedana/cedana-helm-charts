@@ -46,7 +46,7 @@ config:
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.01"
-  pluginsRuntimeShimVersion: "v0.6.5"
+  pluginsContainerdRuntimeVersion: "v0.6.5"
   pluginsGpuVersion: "v0.6.4"
   pluginsStreamerVersion: "v0.0.8"
 
