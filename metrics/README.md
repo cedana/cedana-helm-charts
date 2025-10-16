@@ -15,7 +15,7 @@ helm uninstall prometheus -n prometheus
 ```
 
 ## Vector Installation
-Vector will help us push the scraped prometheus metrics to our remote s3 bucket. You will have to configure s3 credentials in values.yaml
+Vector will help us push the scraped prometheus metrics to our remote s3 bucket. You will have to give pod identity access to vector service account for the s3 access.
 
 To install vector statefulset run the following
 ```

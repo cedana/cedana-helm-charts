@@ -325,23 +325,35 @@ dataDir: ""
 # customConfig -- Override Vector's default configs, if used **all** options need to be specified. This section supports
 # using helm templates to populate dynamic values. See Vector's [configuration documentation](https://vector.dev/docs/reference/configuration/)
 # for all options.
-customConfig: {}
-  # data_dir: /vector-data-dir
-  # api:
-  #   enabled: true
-  #   address: 127.0.0.1:8686
-  #   playground: false
-  # sources:
-  #   vector:
-  #     address: 0.0.0.0:6000
-  #     type: vector
-  #     version: "2"
-  # sinks:
-  #   stdout:
-  #     type: console
-  #     inputs: [vector]
-  #     encoding:
-  #       codec: json
+customConfig:
+  data_dir: /vector-data-dir
+  api:
+    enabled: true
+    address: 127.0.0.1:8686
+    playground: false
+  sources:
+    prometheus:
+      type: prometheus_scrape
+      endpoints:
+        - http://prometheus-server.prometheus.svc.cluster.local:80/metrics
+  sinks:
+    s3_sink:
+      type: aws_s3
+      inputs: [prometheus]
+      bucket: "customer-simulation"
+      region: "us-east-1"
+      encoding:
+        codec: "json"
+      batch:
+        max_bytes: 10485760 # 10MB
+        timeout_secs: 60
+      key_prefix: "vector/data/date=%Y-%m-%d/"
+      filename_time_format: "%s"
+    stdout:
+      type: console
+      inputs: [prometheus]
+      encoding:
+        codec: json
 
 # defaultVolumes -- Default volumes that are mounted into pods. In most cases, these should not be changed.
 # Use `extraVolumes`/`extraVolumeMounts` for additional custom volumes.
