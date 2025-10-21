@@ -152,11 +152,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-criu-version
-            - name: CEDANA_PLUGINS_K8S_RUNTIME_SHIM_VERSION
+            - name: CEDANA_PLUGINS_CONTAINERD_RUNTIME_VERSION
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
-                  key: plugins-runtime-shim-version
+                  key: plugins-containerd-runtime-version
             - name: CEDANA_PLUGINS_GPU_VERSION
               valueFrom:
                 configMapKeyRef:
