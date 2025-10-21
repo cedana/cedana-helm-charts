@@ -18,7 +18,7 @@
   "pluginsBuilds"
   "pluginsNativeVersion"
   "pluginsCriuVersion"
-  "pluginsRuntimeShimVersion"
+  "pluginsContainerdRuntimeVersion"
   "pluginsGpuVersion"
   "pluginsStreamerVersion"
   "metrics"

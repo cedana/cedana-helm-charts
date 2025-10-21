@@ -30,7 +30,7 @@ jobs:
     with:
       cedana_version: ${{ needs.prepare.outputs.cedana_version }}
       controller_version: ${{ needs.prepare.outputs.controller_version }}
-      runtime_shim_version: ${{ needs.prepare.outputs.runtime_shim_version }}
+      containerd_runtime_version: ${{ needs.prepare.outputs.runtime_shim_version }}
       criu_version: ${{ needs.prepare.outputs.criu_version }}
       gpu_version: ${{ needs.prepare.outputs.gpu_version }}
       streamer_version: ${{ needs.prepare.outputs.streamer_version }}

@@ -24,7 +24,7 @@ data:
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-native-version: "{{ .Values.config.pluginsNativeVersion }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
-  plugins-runtime-shim-version: "{{ .Values.config.pluginsRuntimeShimVersion }}"
+  plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"
   plugins-gpu-version: "{{ .Values.config.pluginsGpuVersion }}"
   plugins-streamer-version: "{{ .Values.config.pluginsStreamerVersion }}"
   metrics: "{{ .Values.config.metrics }}"

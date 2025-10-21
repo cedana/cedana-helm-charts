@@ -34,7 +34,7 @@ config:
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   checkpointStreams: 4
-  checkpointCompression: "lz4" # Options: "none", "tar", "lz4", "gzip", "zlib"
+  checkpointCompression: "gzip" # Options: "none", "tar", "lz4", "gzip", "zlib"
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuFreezeType: "IPC" # Default freeze type for GPU workloads. Options: "IPC", "NCCL"
@@ -46,8 +46,8 @@ config:
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.01"
-  pluginsRuntimeShimVersion: "v0.6.5"
-  pluginsGpuVersion: "v0.6.4"
+  pluginsContainerdRuntimeVersion: "v0.6.6"
+  pluginsGpuVersion: "v0.6.5"
   pluginsStreamerVersion: "v0.0.8"
 
   profiling: true
@@ -78,7 +78,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.266
+    tag: v0.9.268-hotfix.2
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
