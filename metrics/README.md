@@ -25,3 +25,16 @@ To uninstall vector
 ```
 helm uninstall vector -n prometheus 
 ```
+
+## DCGM Exporter Installation
+
+```
+helm repo add gpu-helm-charts https://nvidia.github.io/dcgm-exporter/helm-charts
+helm repo update
+helm install dcgm-exporters gpu-helm-charts/dcgm-exporter --namespace prometheus
+```
+
+To uninstall dcgm-exporters
+```
+helm uninstall dcgm-exporters -n prometheus
+```

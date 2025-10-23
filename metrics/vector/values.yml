@@ -332,16 +332,25 @@ customConfig:
     address: 127.0.0.1:8686
     playground: false
   sources:
-    prometheus:
+    kube-state-metrics:
       type: prometheus_scrape
       endpoints:
-        - http://prometheus-server.prometheus.svc.cluster.local:80/metrics
+        - http://prometheus-kube-state-metrics.prometheus.svc.cluster.local:8080/metrics
+    dcgm-exporter:
+      type: prometheus_scrape
+      endpoints:
+        - http://dcgm-exporters.prometheus.svc.cluster.local:9400/metrics
+    node-exporter:
+      type: prometheus_scrape
+      endpoints:
+        - http://prometheus-prometheus-node-exporter.prometheus.svc.cluster.local:9100/metrics
   sinks:
     s3_sink:
       type: aws_s3
-      inputs: [prometheus]
+      inputs: [kube-state-metrics,dcgm-exporter,node-exporter]
       bucket: "customer-simulation"
       region: "us-east-1"
+      compression: "none"
       encoding:
         codec: "json"
       batch:
@@ -351,7 +360,7 @@ customConfig:
       filename_time_format: "%s"
     stdout:
       type: console
-      inputs: [prometheus]
+      inputs: [kube-state-metrics,dcgm-exporter,node-exporter]
       encoding:
         codec: json
 
