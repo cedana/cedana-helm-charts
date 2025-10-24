@@ -47,7 +47,7 @@ config:
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.01"
   pluginsContainerdRuntimeVersion: "v0.6.6"
-  pluginsGpuVersion: "v0.6.5"
+  pluginsGpuVersion: "v0.6.6"
   pluginsStreamerVersion: "v0.0.8"
 
   profiling: true
