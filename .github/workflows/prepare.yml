@@ -23,9 +23,9 @@ on:
       criu_version:
         description: "CRIU version"
         value: ${{ jobs.versions.outputs.criu_version }}
-      runtime_shim_version:
-        description: "Runtime Shim version"
-        value: ${{ jobs.versions.outputs.runtime_shim_version }}
+      containerd_runtime_version:
+        description: "Containerd runtime version"
+        value: ${{ jobs.versions.outputs.containerd_runtime_version }}
       gpu_version:
         description: "GPU version"
         value: ${{ jobs.versions.outputs.gpu_version }}
@@ -55,7 +55,7 @@ jobs:
       cedana_version: ${{ steps.extract_version.outputs.cedana_version }}
       controller_version: ${{ steps.extract_version.outputs.controller_version }}
       criu_version: ${{ steps.extract_version.outputs.criu_version }}
-      runtime_shim_version: ${{ steps.extract_version.outputs.runtime_shim_version }}
+      containerd_runtime_version: ${{ steps.extract_version.outputs.containerd_runtime_version }}
       gpu_version: ${{ steps.extract_version.outputs.gpu_version }}
       streamer_version: ${{ steps.extract_version.outputs.streamer_version }}
     steps:
@@ -77,8 +77,8 @@ jobs:
           echo "controller_version=${value}" >> $GITHUB_OUTPUT
           value=$(yq '.config.pluginsCriuVersion' ./cedana-helm/values.yaml)
           echo "criu_version=${value}" >> $GITHUB_OUTPUT
-          value=$(yq '.config.pluginsRuntimeShimVersion' ./cedana-helm/values.yaml)
-          echo "runtime_shim_version=${value}" >> $GITHUB_OUTPUT
+          value=$(yq '.config.pluginsContainerdRuntimeVersion' ./cedana-helm/values.yaml)
+          echo "containerd_runtime_version=${value}" >> $GITHUB_OUTPUT
           value=$(yq '.config.pluginsGpuVersion' ./cedana-helm/values.yaml)
           echo "gpu_version=${value}" >> $GITHUB_OUTPUT
           value=$(yq '.config.pluginsStreamerVersion' ./cedana-helm/values.yaml)
