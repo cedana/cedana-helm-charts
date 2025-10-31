@@ -222,6 +222,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: aws-region
+            - name: AWS_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: aws-endpoint
             - name: SHM_CONFIG_ENABLED
               valueFrom:
                 configMapKeyRef:
