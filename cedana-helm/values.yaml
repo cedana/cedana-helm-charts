@@ -57,6 +57,7 @@ config:
   awsAccessKeyId: "" # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
   awsSecretAccessKey: "" # AWS secret access key if using S3 storage
   awsRegion: "" # AWS region if using S3 storage (uses default region if not set)
+  awsEndpoint: "" # AWS endpoint if using S3-compatible storage 
 
   containerdAddress: "/run/containerd/containerd.sock" # Path to containerd socket
 

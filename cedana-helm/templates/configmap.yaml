@@ -33,6 +33,7 @@ data:
 
   aws-access-key-id: "{{ .Values.config.awsAccessKeyId }}"
   aws-region: "{{ .Values.config.awsRegion }}"
+  aws-endpoint: "{{ .Values.config.awsEndpoint }}"
 
   containerd-address: "{{ .Values.config.containerdAddress }}"
 
