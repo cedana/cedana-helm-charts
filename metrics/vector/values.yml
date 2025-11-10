@@ -344,10 +344,30 @@ customConfig:
       type: prometheus_scrape
       endpoints:
         - http://prometheus-prometheus-node-exporter.prometheus.svc.cluster.local:9100/metrics
+  transforms:
+    filter:
+      type: remap
+      inputs: ["kube-state-metrics"]
+      source: |
+        if .name != "kube_node_status_capacity" && .name != "kube_node_status_allocatable" { 
+          abort 
+        }
+        if !exists(.tags.resource) || !exists(.tags.node) { 
+          abort 
+        }
+        if .tags.resource != "cpu" && .tags.resource != "memory" { 
+          abort 
+        }
+        .node = to_string!(.tags.node)
+        .resource = to_string!(.tags.resource)
+        .metric_type = to_string!(.name)
+        .value = to_float!(.gauge.value)
+        .unit = to_string!(.tags.unit)
+        .timestamp = .timestamp
   sinks:
     s3_sink:
       type: aws_s3
-      inputs: [kube-state-metrics,dcgm-exporter,node-exporter]
+      inputs: [filter] # [kube-state-metrics,dcgm-exporter,node-exporter]
       bucket: "customer-simulation"
       region: "us-east-1"
       compression: "none"
@@ -355,12 +375,12 @@ customConfig:
         codec: "json"
       batch:
         max_bytes: 10485760 # 10MB
-        timeout_secs: 60
+        timeout_secs: 10
       key_prefix: "vector/data/date=%Y-%m-%d/"
       filename_time_format: "%s"
     stdout:
       type: console
-      inputs: [kube-state-metrics,dcgm-exporter,node-exporter]
+      inputs: [filter]  # [kube-state-metrics,dcgm-exporter,node-exporter]
       encoding:
         codec: json
 
