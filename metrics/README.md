@@ -15,15 +15,39 @@ helm uninstall prometheus -n prometheus
 ```
 
 ## Vector Installation
-Vector will help us push the scraped prometheus metrics to our remote s3 bucket. You will have to give pod identity access to vector service account for the s3 access.
+Vector collects Prometheus metrics, DCGM metrics, and Kubernetes pod logs, then exports them to S3.
 
-To install vector statefulset run the following
-```
+### Prerequisites
+Configure S3 access using one of these methods:
+
+**Option A: IRSA (IAM Roles for Service Accounts) - Recommended for EKS**
+1. Create an IAM role with S3 write permissions to your bucket
+2. Update `vector/values.yml` with your IAM role ARN in `serviceAccount.annotations`
+3. Ensure your EKS cluster has IRSA enabled
+
+**Option B: Explicit AWS Credentials**
+1. Create a Kubernetes secret with AWS credentials:
+   ```bash
+   kubectl create secret generic vector-aws-credentials \
+     --from-literal=AWS_ACCESS_KEY_ID=<your-key> \
+     --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret> \
+     -n prometheus
+   ```
+2. Uncomment the `env` section in `vector/values.yml`
+
+### Install Vector
+Vector runs as a DaemonSet to collect logs from all nodes:
+```bash
 helm install vector vector/vector --namespace prometheus --values ./vector/values.yml
 ```
-To uninstall vector
-```
-helm uninstall vector -n prometheus 
+
+### Data Organization in S3
+- Metrics: `vector/metrics/date=YYYY-MM-DD/`
+- Logs: `vector/logs/date=YYYY-MM-DD/` (gzip compressed)
+
+### Uninstall
+```bash
+helm uninstall vector -n prometheus
 ```
 
 ## DCGM Exporter Installation

@@ -15,7 +15,7 @@ fullnameOverride: ""
 # Agent = DaemonSet
 # Aggregator = StatefulSet
 # Stateless-Aggregator = Deployment
-role: "Aggregator"
+role: "Agent"
 
 # rollWorkload -- Add a checksum of the generated ConfigMap to workload annotations.
 rollWorkload: true
@@ -138,7 +138,12 @@ serviceAccount:
   # serviceAccount.create -- If true, create a ServiceAccount for Vector.
   create: true
   # serviceAccount.annotations -- Annotations to add to Vector's ServiceAccount.
-  annotations: {}
+  annotations:
+    # For AWS EKS with IRSA (IAM Roles for Service Accounts)
+    # Replace with your actual IAM role ARN that has S3 access
+    eks.amazonaws.com/role-arn: "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
+    # For GKE with Workload Identity, use:
+    # iam.gke.io/gcp-service-account: <SERVICE_ACCOUNT_EMAIL>
   # serviceAccount.name -- The name of the ServiceAccount to use. If not set and serviceAccount.create is true, a name
   # is generated using the fullname template.
   name:
@@ -179,16 +184,23 @@ args:
 
 # env -- Set environment variables for Vector containers.
 env: []
-  # - name: MY_VARIABLE
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: vector
-  #       key: my_variable
+  # Option B: Use explicit AWS credentials from a Secret (if not using IRSA)
+  # First create the secret:
+  # kubectl create secret generic vector-aws-credentials \
+  #   --from-literal=AWS_ACCESS_KEY_ID=<your-key> \
+  #   --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret> \
+  #   -n prometheus
+  # Then uncomment the following:
   # - name: AWS_ACCESS_KEY_ID
   #   valueFrom:
   #     secretKeyRef:
-  #       name: vector
-  #       key: awsAccessKeyId
+  #       name: vector-aws-credentials
+  #       key: AWS_ACCESS_KEY_ID
+  # - name: AWS_SECRET_ACCESS_KEY
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: vector-aws-credentials
+  #       key: AWS_SECRET_ACCESS_KEY
 
 # envFrom -- Define environment variables from Secrets or ConfigMaps.
 envFrom: []
@@ -344,6 +356,10 @@ customConfig:
       type: prometheus_scrape
       endpoints:
         - http://prometheus-prometheus-node-exporter.prometheus.svc.cluster.local:9100/metrics
+    kubernetes_logs:
+      type: kubernetes_logs
+      # Automatically discovers and tails logs from all pods
+      # Excludes vector's own logs (see podLabels above with vector.dev/exclude: "true")
   transforms:
     filter:
       type: remap
@@ -365,7 +381,7 @@ customConfig:
         .unit = to_string!(.tags.unit)
         .timestamp = .timestamp
   sinks:
-    s3_sink:
+    s3_metrics_sink:
       type: aws_s3
       inputs: [filter] # [kube-state-metrics,dcgm-exporter,node-exporter]
       bucket: "customer-simulation"
@@ -376,7 +392,20 @@ customConfig:
       batch:
         max_bytes: 10485760 # 10MB
         timeout_secs: 10
-      key_prefix: "vector/data/date=%Y-%m-%d/"
+      key_prefix: "vector/metrics/date=%Y-%m-%d/"
+      filename_time_format: "%s"
+    s3_logs_sink:
+      type: aws_s3
+      inputs: [kubernetes_logs]
+      bucket: "customer-simulation"
+      region: "us-east-1"
+      compression: "gzip"
+      encoding:
+        codec: "json"
+      batch:
+        max_bytes: 10485760 # 10MB
+        timeout_secs: 30
+      key_prefix: "vector/logs/date=%Y-%m-%d/"
       filename_time_format: "%s"
     stdout:
       type: console
