@@ -15,9 +15,57 @@ helm uninstall prometheus -n prometheus
 ```
 
 ## Vector Installation
-Vector will help us push the scraped prometheus metrics to our remote s3 bucket. You will have to give pod identity access to vector service account for the s3 access.
+Vector will help us push the scraped prometheus metrics and logs to our remote s3 bucket. You will have to give pod identity access to vector service account for the s3 access.
 
-To install vector statefulset run the following
+To specify the AWS credentials being used for the s3 bucket, refer to secrets section of `./vector/values.yml`
+```yaml
+# Create a Secret resource for Vector to use.
+secrets:
+  # secrets.generic -- Each Key/Value will be added to the Secret's data key, each value should be raw and NOT base64
+  # encoded. Any secrets can be provided here. It's commonly used for credentials and other access related values.
+  # **NOTE: Don't commit unencrypted secrets to git!**
+  generic: {}
+    # my_variable: "my-secret-value"
+    # datadog_api_key: "api-key"
+    # awsAccessKeyId: "access-key"
+    # awsSecretAccessKey: "secret-access-key"
+```
+
+You can specify the s3 bucket name and it's respective region under the customConfig section of `./vector/values.yml`
+```yaml
+# for all options.
+customConfig:
+  data_dir: /vector-data-dir
+  api:
+  ...
+  sinks:
+    s3_sink:
+      type: aws_s3
+      inputs: [filter]
+      bucket: "" # specify s3 bucket name
+      region: "" # specify s3 bucket region
+      compression: "none"
+      encoding:
+        codec: "json"
+      batch:
+        max_bytes: 10485760 # 10MB
+        timeout_secs: 10
+      key_prefix: "vector/data/date=%Y-%m-%d/"
+      filename_time_format: "%s"
+    stdout:
+      type: console
+      inputs: [filter]
+      encoding:
+        codec: json
+    s3_logs_sink:
+      type: aws_s3
+      inputs: [kubernetes_logs]
+      bucket: "" # specify s3 bucket name
+      region: "" # specify s3 bucket region
+      compression: "gzip"
+```
+
+To install vector daemonset run the following
 ```
 helm install vector vector/vector --namespace prometheus --values ./vector/values.yml
 ```

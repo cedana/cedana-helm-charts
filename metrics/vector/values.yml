@@ -371,9 +371,9 @@ customConfig:
   sinks:
     s3_sink:
       type: aws_s3
-      inputs: [filter] # [kube-state-metrics,dcgm-exporter,node-exporter]
-      bucket: "customer-simulation"
-      region: "us-east-1"
+      inputs: [filter]
+      bucket: "" # specify s3 bucket name
+      region: "" # specify s3 bucket region
       compression: "none"
       encoding:
         codec: "json"
@@ -384,14 +384,14 @@ customConfig:
       filename_time_format: "%s"
     stdout:
       type: console
-      inputs: [filter]  # [kube-state-metrics,dcgm-exporter,node-exporter]
+      inputs: [filter]
       encoding:
         codec: json
     s3_logs_sink:
       type: aws_s3
       inputs: [kubernetes_logs]
-      bucket: "customer-simulation"
-      region: "us-east-1"
+      bucket: "" # specify s3 bucket name
+      region: "" # specify s3 bucket region
       compression: "gzip"
       encoding:
         codec: "json"
