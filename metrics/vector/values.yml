@@ -15,7 +15,7 @@ fullnameOverride: ""
 # Agent = DaemonSet
 # Aggregator = StatefulSet
 # Stateless-Aggregator = Deployment
-role: "Aggregator"
+role: "Agent"
 
 # rollWorkload -- Add a checksum of the generated ConfigMap to workload annotations.
 rollWorkload: true
@@ -344,6 +344,10 @@ customConfig:
       type: prometheus_scrape
       endpoints:
         - http://prometheus-prometheus-node-exporter.prometheus.svc.cluster.local:9100/metrics
+    kubernetes_logs:
+      type: kubernetes_logs
+      self_node_name: "${VECTOR_SELF_NODE_NAME}"
+
   transforms:
     filter:
       type: remap
@@ -383,7 +387,19 @@ customConfig:
       inputs: [filter]  # [kube-state-metrics,dcgm-exporter,node-exporter]
       encoding:
         codec: json
-
+    s3_logs_sink:
+      type: aws_s3
+      inputs: [kubernetes_logs]
+      bucket: "customer-simulation"
+      region: "us-east-1"
+      compression: "gzip"
+      encoding:
+        codec: "json"
+      batch:
+        max_bytes: 10485760 # 10MB
+        timeout_secs: 30
+      key_prefix: "vector/logs/date=%Y-%m-%d/"
+      filename_time_format: "%s"
 # defaultVolumes -- Default volumes that are mounted into pods. In most cases, these should not be changed.
 # Use `extraVolumes`/`extraVolumeMounts` for additional custom volumes.
 # @default -- See `values.yaml`
