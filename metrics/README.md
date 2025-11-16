@@ -6,7 +6,9 @@ Prometheus helm install installs the following components
 
 To install, run the following:
 ```
-helm install prometheus oci://ghcr.io/prometheus-community/charts/prometheus -n prometheus --values ./prometheus/values.yml
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm upgrade -i prometheus prometheus-community/prometheus -n prometheus --create-namespace --values ./prometheus/values.yml
 ```
 
 Run the following to uninstall Prometheus:
@@ -67,7 +69,9 @@ customConfig:
 
 To install vector daemonset run the following
 ```
-helm install vector vector/vector --namespace prometheus --values ./vector/values.yml
+helm repo add vector https://helm.vector.dev
+helm repo update
+helm upgrade -i vector vector/vector --namespace prometheus --create-namespace --values ./vector/values.yml
 ```
 To uninstall vector
 ```
@@ -79,7 +83,7 @@ helm uninstall vector -n prometheus
 ```
 helm repo add gpu-helm-charts https://nvidia.github.io/dcgm-exporter/helm-charts
 helm repo update
-helm install dcgm-exporters gpu-helm-charts/dcgm-exporter --namespace prometheus
+helm install dcgm-exporters gpu-helm-charts/dcgm-exporter --namespace prometheus --create-namespace
 ```
 
 To uninstall dcgm-exporters
