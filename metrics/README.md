@@ -52,12 +52,12 @@ customConfig:
       type: aws_s3
       bucket: ""  # Will be set via --set customConfig.sinks.s3_sink.bucket
       region: ""  # Will be set via --set customConfig.sinks.s3_sink.region
-      key_prefix: "vector/data/date=%Y-%m-%d/"  # Will be set via --set to include CEDANA_URL prefix
+      key_prefix: "vector/data/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be set via --set to include CEDANA_URL prefix
     s3_logs_sink:
       type: aws_s3
       bucket: ""  # Will be set via --set customConfig.sinks.s3_logs_sink.bucket
       region: ""  # Will be set via --set customConfig.sinks.s3_logs_sink.region
-      key_prefix: "vector/logs/date=%Y-%m-%d/"  # Will be set via --set to include CEDANA_URL prefix
+      key_prefix: "vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be set via --set to include CEDANA_URL prefix
 ```
 
 To install vector daemonset run the following
@@ -75,10 +75,10 @@ helm upgrade -i vector vector/vector --namespace prometheus --create-namespace \
   --set env[0].value="YOUR_CEDANA_URL" \
   --set customConfig.sinks.s3_sink.bucket="YOUR_S3_BUCKET" \
   --set customConfig.sinks.s3_sink.region="YOUR_AWS_REGION" \
-  --set customConfig.sinks.s3_sink.key_prefix="YOUR_CEDANA_URL/vector/data/date=%Y-%m-%d/" \
+  --set customConfig.sinks.s3_sink.key_prefix="YOUR_CEDANA_URL/vector/data/date=%Y-%m-%d/hour=%H/minute=%M/" \
   --set customConfig.sinks.s3_logs_sink.bucket="YOUR_S3_BUCKET" \
   --set customConfig.sinks.s3_logs_sink.region="YOUR_AWS_REGION" \
-  --set customConfig.sinks.s3_logs_sink.key_prefix="YOUR_CEDANA_URL/vector/logs/date=%Y-%m-%d/"
+  --set customConfig.sinks.s3_logs_sink.key_prefix="YOUR_CEDANA_URL/vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"
 ```
 To uninstall vector
 ```
