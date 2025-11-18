@@ -46,7 +46,7 @@ config:
   pluginsBuilds: "release"
   pluginsNativeVersion: "latest"
   pluginsCriuVersion: "v4.1.1-cedana.01"
-  pluginsContainerdRuntimeVersion: "v0.6.7"
+  pluginsContainerdRuntimeVersion: "v0.6.8"
   pluginsGpuVersion: "v0.6.7"
   pluginsStreamerVersion: "v0.0.8"
 
@@ -57,7 +57,7 @@ config:
   awsAccessKeyId: "" # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
   awsSecretAccessKey: "" # AWS secret access key if using S3 storage
   awsRegion: "" # AWS region if using S3 storage (uses default region if not set)
-  awsEndpoint: "" # AWS endpoint if using S3-compatible storage 
+  awsEndpoint: "" # AWS endpoint if using S3-compatible storage
 
   containerdAddress: "/run/containerd/containerd.sock" # Path to containerd socket
 
