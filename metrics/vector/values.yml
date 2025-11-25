@@ -181,6 +181,10 @@ args:
 env:
   - name: CEDANA_URL
     value: "" # Set this to your cluster's CEDANA_URL (e.g., "customer-name.cedana.ai/v2")
+  - name: SPEC_NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
   # - name: MY_VARIABLE
   #   valueFrom:
   #     secretKeyRef:
@@ -346,34 +350,24 @@ customConfig:
       type: prometheus_scrape
       endpoints:
         - http://prometheus-prometheus-node-exporter.prometheus.svc.cluster.local:9100/metrics
+    host_metrics:
+      type: host_metrics
+      scrape_interval_secs: 60
     kubernetes_logs:
       type: kubernetes_logs
       self_node_name: "${VECTOR_SELF_NODE_NAME}"
 
   transforms:
-    filter:
+    host_filter:
       type: remap
-      inputs: ["kube-state-metrics"]
+      inputs:
+        - host_metrics
       source: |
-        if .name != "kube_node_status_capacity" && .name != "kube_node_status_allocatable" { 
-          abort 
-        }
-        if !exists(.tags.resource) || !exists(.tags.node) { 
-          abort 
-        }
-        if .tags.resource != "cpu" && .tags.resource != "memory" { 
-          abort 
-        }
-        .node = to_string!(.tags.node)
-        .resource = to_string!(.tags.resource)
-        .metric_type = to_string!(.name)
-        .value = to_float!(.gauge.value)
-        .unit = to_string!(.tags.unit)
-        .timestamp = .timestamp
+        .tags.host = get_env_var!("SPEC_NODE_NAME")
   sinks:
     s3_sink:
       type: aws_s3
-      inputs: [filter]
+      inputs: [host_filter]
       bucket: "" # specify s3 bucket name
       region: "" # specify s3 bucket region
       compression: "none"
@@ -382,14 +376,9 @@ customConfig:
       batch:
         max_bytes: 10485760 # 10MB
         timeout_secs: 60
-      key_prefix: "vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be overridden by --set at deployment
+      key_prefix: "vector/data/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be overridden by --set at deployment
       filename_time_format: "%s"
       filename_append_uuid: true
-    stdout:
-      type: console
-      inputs: [filter]
-      encoding:
-        codec: json
     s3_logs_sink:
       type: aws_s3
       inputs: [kubernetes_logs]
