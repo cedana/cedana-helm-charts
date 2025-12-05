@@ -36,6 +36,9 @@ config:
   checkpointStreams: 4
   checkpointCompression: "lz4" # Options: "none", "tar", "lz4", "gzip", "zlib"
 
+  # Specify whether to perform checkpoint async. Recommended if anticipating LARGE checkpoints, which currently take too long to stream directly to a bucket.
+  checkpointAsync: false 
+
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuFreezeType: "IPC" # Default freeze type for GPU workloads. Options: "IPC", "NCCL"
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
