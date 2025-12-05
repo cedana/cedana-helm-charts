@@ -132,6 +132,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: checkpoint-compression
+            - name: CEDANA_CHECKPOINT_ASYNC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: checkpoint-async
             - name: CEDANA_GPU_POOL_SIZE
               valueFrom:
                 configMapKeyRef:

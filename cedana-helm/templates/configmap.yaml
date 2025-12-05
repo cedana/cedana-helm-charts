@@ -17,6 +17,7 @@ data:
   checkpoint-dir: "{{ .Values.config.checkpointDir }}"
   checkpoint-streams: "{{ .Values.config.checkpointStreams }}"
   checkpoint-compression: "{{ .Values.config.checkpointCompression }}"
+  checkpoint-async: "{{ .Values.config.checkpointAsync }}"
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
   gpu-freeze-type: "{{ .Values.config.gpuFreezeType }}"
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
