@@ -12,7 +12,6 @@
   "checkpointStreams"
   "checkpointCompression"
   "gpuPoolSize"
-  "gpuFreezeType"
   "gpuShmSize"
   "gpuLdLibPath"
   "pluginsBuilds"

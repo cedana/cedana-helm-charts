@@ -142,11 +142,6 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-pool-size
-            - name: CEDANA_GPU_FREEZE_TYPE
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: gpu-freeze-type
             - name: CEDANA_GPU_SHM_SIZE
               valueFrom:
                 configMapKeyRef:

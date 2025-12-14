@@ -41,17 +41,16 @@ config:
   checkpointAsync: false
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
-  gpuFreezeType: "IPC" # Default freeze type for GPU workloads. Options: "IPC", "NCCL"
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
   gpuLdLibPath: "/run/nvidia/driver/usr/lib/x86_64-linux-gnu" # Additional LD_LIBRARY_PATH to look for CUDA libraries
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: "release"
+  pluginsBuilds: "alpha"
   pluginsNativeVersion: "latest"
-  pluginsCriuVersion: "v4.1.1-cedana.01"
-  pluginsContainerdRuntimeVersion: "v0.6.9"
-  pluginsGpuVersion: "v0.6.8"
+  pluginsCriuVersion: "7/merge"
+  pluginsContainerdRuntimeVersion: "v0.7.0"
+  pluginsGpuVersion: "v0.6.9"
   pluginsStreamerVersion: "v0.0.8"
 
   profiling: true
@@ -83,7 +82,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.275
+    tag: v0.9.277
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
