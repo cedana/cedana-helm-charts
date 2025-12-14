@@ -129,7 +129,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.5.9
+      tag: v0.5.8
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
