@@ -19,7 +19,7 @@ data:
   checkpoint-compression: "{{ .Values.config.checkpointCompression }}"
   checkpoint-async: "{{ .Values.config.checkpointAsync }}"
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
-  gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
+  gpu-shm-size: "{{ printf "%.0f" .Values.config.gpuShmSize }}"
   gpu-ld-lib-path: "{{ .Values.config.gpuLdLibPath }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-native-version: "{{ .Values.config.pluginsNativeVersion }}"
