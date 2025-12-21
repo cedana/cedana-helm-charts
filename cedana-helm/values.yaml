@@ -75,9 +75,6 @@ shmConfig:
   minSize: 10G # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
-  # Force cleanup of helper daemonset on every upgrade.
-  # Note that this might cause running workloads that are using Cedana to fail/restart.
-  forceCleanup: false
   service:
     annotations: {}
   image:
