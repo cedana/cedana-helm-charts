@@ -7,6 +7,7 @@
   "clusterId"
   "url"
   "authToken"
+  "metrics"
   "logLevel"
 -}}
 {{- range $key := $configKeysFromValuesConfig -}}

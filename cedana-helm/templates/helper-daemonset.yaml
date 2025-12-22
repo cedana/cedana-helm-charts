@@ -183,7 +183,7 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: profiling
-            - name: CEDANA_METRICS
+            - name: CEDANA_METRICS_ENABLED
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}

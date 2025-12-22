@@ -54,6 +54,11 @@ spec:
             configMapKeyRef:
               name: {{ template "cedana-helm.configMapName" . }}
               key: url
+        - name: CEDANA_METRICS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: metrics
         - name: CEDANA_LOG_LEVEL
           valueFrom:
             configMapKeyRef:
