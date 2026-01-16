@@ -37,6 +37,8 @@ rules:
   - get
   - list
   - watch
+  - patch
+  - update
 - apiGroups:
   - ""
   resources:
@@ -91,7 +93,7 @@ rules:
   - update
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["list", "watch", "get"]
+  verbs: ["list", "watch", "get", "patch", "update"]
 - apiGroups: 
   - "apps"
   resources:

@@ -85,7 +85,11 @@ daemonHelper:
   updateStrategy:
     maxSurge: 0
     maxUnavailable: 99999
-  tolerations: []
+  tolerations:
+    # Allow scheduling on nodes that are waiting for Cedana to be ready
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+      effect: "NoSchedule"
   affinity: {}
   nodeSelector: {}
 
@@ -124,8 +128,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.6.1
+      repository: cedana/cedana-controller-test
+      tag: b6c5625217195d599b2a573067e98b2dea8be937
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -150,6 +154,10 @@ controllerManager:
       #   cpu: 10m
       #   memory: 64Mi
   tolerations:
+    # Allow scheduling on nodes that are waiting for Cedana to be ready
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+      effect: "NoSchedule"
     # Run the command below to deploy the controller on a dedicated node
     # This will not allow shceduling of new pods on the node running the controller pod
     # kubectl taint node <node-name> dedicated=cedana-manager:NoSchedule
