@@ -128,8 +128,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller-test
-      tag: b6c5625217195d599b2a573067e98b2dea8be937
+      repository: cedana/cedana-controller
+      tag: v0.6.2
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
