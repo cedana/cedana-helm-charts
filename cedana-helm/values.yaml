@@ -25,6 +25,10 @@ config:
   # - unix: Unix Socket
   # - vsock: VSock for VM and hypervisor communication, useful for supporting VM based migrations
   protocol: tcp
+  
+  # Cedana does not support io-uring based checkpoint restores
+  # Set ioUring to false to disable linux kernel's io-uring option
+  ioUring: false
 
   # Specify path to directory for storing checkpoints.
   # - `cedana://<path>` for Cedana-managed global storage (recommended)
