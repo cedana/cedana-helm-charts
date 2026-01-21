@@ -113,6 +113,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: protocol
+            - name: IO_URING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: io-uring
             - name: CEDANA_CHECKPOINT_DIR
               valueFrom:
                 configMapKeyRef:
