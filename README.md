@@ -61,15 +61,15 @@ helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedan
 --set config.url=$CEDANA_URL \
 --set config.authToken=$CEDANA_AUTH_TOKEN \
 --set config.clusterName=my-cluster \
---set shmConfig.enabled=true
+--set hostConfig.shmConfig.enabled=true
 
 # Customize SHM size (e.g., 20G)
 helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-system \
 --set config.url=$CEDANA_URL \
 --set config.authToken=$CEDANA_AUTH_TOKEN \
 --set config.clusterName=my-cluster \
---set shmConfig.enabled=true \
---set shmConfig.size="20G"
+--set hostConfig.shmConfig.enabled=true \
+--set hostConfig.shmConfig.size="20G"
 ```
 
 ### Usage
