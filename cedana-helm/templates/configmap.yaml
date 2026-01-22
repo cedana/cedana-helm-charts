@@ -13,7 +13,6 @@ data:
   url: "{{ required "Please provide --set config.url=<cedana-url>" .Values.config.url }}"
   address: "{{ required "Please provide --set config.address=<daemon-address>" .Values.config.address }}"
   protocol: "{{ required "Please provide --set config.protocol=<daemon-protocol>" .Values.config.protocol }}"
-  io-uring: "{{ .Values.config.ioUring }}"
   sqs-queue-url: "{{ .Values.config.sqsQueueUrl }}"
   checkpoint-dir: "{{ .Values.config.checkpointDir }}"
   checkpoint-streams: "{{ .Values.config.checkpointStreams }}"
@@ -36,9 +35,9 @@ data:
   aws-region: "{{ .Values.config.awsRegion }}"
   aws-endpoint: "{{ .Values.config.awsEndpoint }}"
 
-  containerd-address: "{{ .Values.config.containerdAddress }}"
-
-  shm-config-enabled: "{{ .Values.shmConfig.enabled }}"
-  shm-config-size: "{{ .Values.shmConfig.size }}"
-  shm-config-min-size: "{{ .Values.shmConfig.minSize }}"
+  containerd-address: "{{ .Values.hostConfig.containerdAddress }}"
+  disable-io-uring: "{{ .Values.hostConfig.disableIoUring }}"
+  shm-config-enabled: "{{ .Values.hostConfig.shmConfig.enabled }}"
+  shm-config-size: "{{ .Values.hostConfig.shmConfig.size }}"
+  shm-config-min-size: "{{ .Values.hostConfig.shmConfig.minSize }}"
 {{- end }}
