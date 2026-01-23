@@ -25,7 +25,7 @@ config:
   # - unix: Unix Socket
   # - vsock: VSock for VM and hypervisor communication, useful for supporting VM based migrations
   protocol: tcp
-
+  
   # Specify path to directory for storing checkpoints.
   # - `cedana://<path>` for Cedana-managed global storage (recommended)
   # - `s3://<bucket>/<path>` for your S3 storage
@@ -62,17 +62,20 @@ config:
   awsRegion: # AWS region if using S3 storage (uses default region if not set)
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
-  containerdAddress: /run/containerd/containerd.sock # Path to containerd socket
-
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
-# Optional configuration to increase /dev/shm size on nodes
-# This is useful for workloads that require large shared memory
-shmConfig:
-  enabled: false # Set to true to enable /dev/shm size increase
-  size: 10G # Size to set for /dev/shm (e.g., "10G", "20G")
-  minSize: 10G # Minimum size to trigger remount (e.g., "10G", "20G")
+hostConfig:
+  containerdAddress: /run/containerd/containerd.sock # Path to containerd socket
+  # Cedana does not support io-uring based checkpoint restores
+  # Set ioUring to false to disable linux kernel's io-uring option
+  disableIoUring: true
+  # Optional configuration to increase /dev/shm size on nodes
+  # This is useful for workloads that require large shared memory
+  shmConfig:
+    enabled: false # Set to true to enable /dev/shm size increase
+    size: 10G # Size to set for /dev/shm (e.g., "10G", "20G")
+    minSize: 10G # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
   service:

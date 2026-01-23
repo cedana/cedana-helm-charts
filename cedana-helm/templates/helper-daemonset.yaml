@@ -113,6 +113,7 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: protocol
+
             - name: CEDANA_CHECKPOINT_DIR
               valueFrom:
                 configMapKeyRef:
@@ -223,6 +224,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: aws-endpoint
+            - name: DISABLE_IO_URING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: disable-io-uring
             - name: SHM_CONFIG_ENABLED
               valueFrom:
                 configMapKeyRef:
