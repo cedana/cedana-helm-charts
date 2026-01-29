@@ -21,6 +21,7 @@ data:
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
   gpu-ld-lib-path: "{{ .Values.config.gpuLdLibPath }}"
+  gpu-skip-nvidia-runtime-hook: "{{ .Values.config.gpuSkipNvidiaRuntimeHook }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-native-version: "{{ .Values.config.pluginsNativeVersion }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"

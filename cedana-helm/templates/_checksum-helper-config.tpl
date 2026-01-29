@@ -14,6 +14,7 @@
   "gpuPoolSize"
   "gpuShmSize"
   "gpuLdLibPath"
+  "gpuSkipNvidiaRuntimeHook"
   "pluginsBuilds"
   "pluginsNativeVersion"
   "pluginsCriuVersion"
