@@ -1,3 +1,55 @@
+# Cedana Monitoring Stack
+
+## Quickstart
+
+Run these commands to set up the full monitoring stack in the `cedana-monitoring` namespace.
+
+**Prerequisites:**
+- kubectl configured for your cluster
+- Helm 3.x installed
+- AWS credentials configured (for S3 access)
+
+```bash
+# Set your environment variables
+export CEDANA_URL="your-cluster.cedana.ai/v2"  # Your cluster's unique identifier
+export S3_BUCKET="your-s3-bucket"               # S3 bucket for metrics/logs
+export AWS_REGION="us-east-1"                   # Your AWS region
+
+# Add helm repos
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add vector https://helm.vector.dev
+helm repo add gpu-helm-charts https://nvidia.github.io/dcgm-exporter/helm-charts
+helm repo update
+
+# 1. Install Prometheus (node-exporter, kube-state-metrics, prometheus-server)
+helm upgrade -i prometheus prometheus-community/prometheus \
+  -n cedana-monitoring --create-namespace \
+  --values ./prometheus/values.yml
+
+# 2. Install Vector (metrics & logs collection to S3)
+helm upgrade -i vector vector/vector \
+  -n cedana-monitoring \
+  --values ./vector/values.yml \
+  --set "env[0].value=${CEDANA_URL}" \
+  --set "customConfig.sinks.s3_sink.bucket=${S3_BUCKET}" \
+  --set "customConfig.sinks.s3_sink.region=${AWS_REGION}" \
+  --set "customConfig.sinks.s3_sink.key_prefix=${CEDANA_URL}/vector/data/date=%Y-%m-%d/hour=%H/minute=%M/" \
+  --set "customConfig.sinks.s3_logs_sink.bucket=${S3_BUCKET}" \
+  --set "customConfig.sinks.s3_logs_sink.region=${AWS_REGION}" \
+  --set "customConfig.sinks.s3_logs_sink.key_prefix=${CEDANA_URL}/vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"
+
+# 3. Install DCGM Exporter (GPU metrics - optional, only if you have NVIDIA GPUs)
+helm upgrade -i dcgm-exporters gpu-helm-charts/dcgm-exporter \
+  -n cedana-monitoring
+```
+
+**Verify installation:**
+```bash
+kubectl get pods -n cedana-monitoring
+```
+
+---
+
 ## Prometheus Install
 Prometheus helm install installs the following components
 - node-exporters daemonset
@@ -8,12 +60,12 @@ To install, run the following:
 ```
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm upgrade -i prometheus prometheus-community/prometheus -n prometheus --create-namespace --values ./prometheus/values.yml
+helm upgrade -i prometheus prometheus-community/prometheus -n cedana-monitoring --create-namespace --values ./prometheus/values.yml
 ```
 
 Run the following to uninstall Prometheus:
 ```
-helm uninstall prometheus -n prometheus
+helm uninstall prometheus -n cedana-monitoring
 ```
 
 ## Vector Installation
@@ -70,7 +122,7 @@ helm repo update
 # - YOUR_S3_BUCKET: Your S3 bucket name
 # - YOUR_AWS_REGION: Your AWS region (e.g., "us-east-1")
 
-helm upgrade -i vector vector/vector --namespace prometheus --create-namespace \
+helm upgrade -i vector vector/vector --namespace cedana-monitoring --create-namespace \
   --values ./vector/values.yml \
   --set env[0].value="YOUR_CEDANA_URL" \
   --set customConfig.sinks.s3_sink.bucket="YOUR_S3_BUCKET" \
@@ -82,7 +134,7 @@ helm upgrade -i vector vector/vector --namespace prometheus --create-namespace \
 ```
 To uninstall vector
 ```
-helm uninstall vector -n prometheus 
+helm uninstall vector -n cedana-monitoring 
 ```
 
 ## DCGM Exporter Installation
@@ -90,10 +142,10 @@ helm uninstall vector -n prometheus
 ```
 helm repo add gpu-helm-charts https://nvidia.github.io/dcgm-exporter/helm-charts
 helm repo update
-helm install dcgm-exporters gpu-helm-charts/dcgm-exporter --namespace prometheus --create-namespace
+helm install dcgm-exporters gpu-helm-charts/dcgm-exporter --namespace cedana-monitoring --create-namespace
 ```
 
 To uninstall dcgm-exporters
 ```
-helm uninstall dcgm-exporters -n prometheus
+helm uninstall dcgm-exporters -n cedana-monitoring
 ```

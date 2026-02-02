@@ -341,15 +341,15 @@ customConfig:
     kube-state-metrics:
       type: prometheus_scrape
       endpoints:
-        - http://prometheus-kube-state-metrics.prometheus.svc.cluster.local:8080/metrics
+        - http://prometheus-kube-state-metrics.cedana-monitoring.svc.cluster.local:8080/metrics
     dcgm-exporter:
       type: prometheus_scrape
       endpoints:
-        - http://dcgm-exporters.prometheus.svc.cluster.local:9400/metrics
+        - http://dcgm-exporters.cedana-monitoring.svc.cluster.local:9400/metrics
     node-exporter:
       type: prometheus_scrape
       endpoints:
-        - http://prometheus-prometheus-node-exporter.prometheus.svc.cluster.local:9100/metrics
+        - http://prometheus-prometheus-node-exporter.cedana-monitoring.svc.cluster.local:9100/metrics
     host_metrics:
       type: host_metrics
       scrape_interval_secs: 60
