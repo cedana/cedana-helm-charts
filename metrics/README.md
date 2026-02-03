@@ -14,6 +14,8 @@ Run these commands to set up the full monitoring stack in the `cedana-monitoring
 export CEDANA_URL="your-cluster.cedana.ai/v2"  # Your cluster's unique identifier
 export S3_BUCKET="your-s3-bucket"               # S3 bucket for metrics/logs
 export AWS_REGION="us-east-1"                   # Your AWS region
+export AWS_ACCESS_KEY_ID="your-access-key"      # AWS access key with S3 write permissions
+export AWS_SECRET_ACCESS_KEY="your-secret-key"  # AWS secret access key
 
 # Add helm repos
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -26,7 +28,14 @@ helm upgrade -i prometheus prometheus-community/prometheus \
   -n cedana-monitoring --create-namespace \
   --values ./prometheus/values.yml
 
-# 2. Install Vector (metrics & logs collection to S3)
+# 2. Create AWS credentials secret for Vector
+kubectl create secret generic vector-aws-credentials \
+  -n cedana-monitoring \
+  --from-literal=awsAccessKeyId="${AWS_ACCESS_KEY_ID}" \
+  --from-literal=awsSecretAccessKey="${AWS_SECRET_ACCESS_KEY}" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# 3. Install Vector (metrics & logs collection to S3)
 helm upgrade -i vector vector/vector \
   -n cedana-monitoring \
   --values ./vector/values.yml \
@@ -121,7 +130,17 @@ helm repo update
 # - YOUR_CEDANA_URL: e.g., "customer-name.cedana.ai/v2"
 # - YOUR_S3_BUCKET: Your S3 bucket name
 # - YOUR_AWS_REGION: Your AWS region (e.g., "us-east-1")
+# - YOUR_AWS_ACCESS_KEY_ID: AWS access key with S3 write permissions
+# - YOUR_AWS_SECRET_ACCESS_KEY: AWS secret access key
 
+# First, create the AWS credentials secret
+kubectl create secret generic vector-aws-credentials \
+  -n cedana-monitoring \
+  --from-literal=awsAccessKeyId="YOUR_AWS_ACCESS_KEY_ID" \
+  --from-literal=awsSecretAccessKey="YOUR_AWS_SECRET_ACCESS_KEY" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Then install Vector
 helm upgrade -i vector vector/vector --namespace cedana-monitoring --create-namespace \
   --values ./vector/values.yml \
   --set env[0].value="YOUR_CEDANA_URL" \

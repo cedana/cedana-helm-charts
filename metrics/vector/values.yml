@@ -185,16 +185,16 @@ env:
     valueFrom:
       fieldRef:
         fieldPath: spec.nodeName
-  # - name: MY_VARIABLE
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: vector
-  #       key: my_variable
-  # - name: AWS_ACCESS_KEY_ID
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: vector
-  #       key: awsAccessKeyId
+  - name: AWS_ACCESS_KEY_ID
+    valueFrom:
+      secretKeyRef:
+        name: vector-aws-credentials
+        key: awsAccessKeyId
+  - name: AWS_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: vector-aws-credentials
+        key: awsSecretAccessKey
 
 # envFrom -- Define environment variables from Secrets or ConfigMaps.
 envFrom: []
@@ -350,6 +350,14 @@ customConfig:
       type: prometheus_scrape
       endpoints:
         - http://prometheus-prometheus-node-exporter.cedana-monitoring.svc.cluster.local:9100/metrics
+    # cAdvisor metrics from Prometheus server - has pod name, namespace, container labels
+    # Use prometheus_remote_write instead - Prometheus pushes to Vector
+    # For now, scrape the federation endpoint with simpler encoding
+    cadvisor:
+      type: prometheus_scrape
+      endpoints:
+        - http://prometheus-server.cedana-monitoring.svc.cluster.local/federate?match[]=container_cpu_usage_seconds_total&match[]=container_memory_working_set_bytes
+      scrape_interval_secs: 60
     host_metrics:
       type: host_metrics
       scrape_interval_secs: 60
@@ -364,10 +372,24 @@ customConfig:
         - host_metrics
       source: |
         .tags.host = get_env_var!("SPEC_NODE_NAME")
+    # Filter and tag cAdvisor metrics - CPU and memory for pods
+    cadvisor_filter:
+      type: filter
+      inputs:
+        - cadvisor
+      condition: |
+        starts_with(string!(.name), "container_cpu_") || starts_with(string!(.name), "container_memory_")
+    cadvisor_tag:
+      type: remap
+      inputs:
+        - cadvisor_filter
+      source: |
+        .tags.host = get_env_var!("SPEC_NODE_NAME")
+        .tags.collector = "cadvisor"
   sinks:
     s3_sink:
       type: aws_s3
-      inputs: [host_filter]
+      inputs: [host_filter, cadvisor_tag]
       bucket: "" # specify s3 bucket name
       region: "" # specify s3 bucket region
       compression: "none"
