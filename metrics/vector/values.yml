@@ -361,6 +361,12 @@ customConfig:
     host_metrics:
       type: host_metrics
       scrape_interval_secs: 60
+    # Kubernetes event exporter metrics - captures pod termination events (preemption, eviction, OOM)
+    event-exporter:
+      type: prometheus_scrape
+      endpoints:
+        - http://kubernetes-event-exporter.cedana-monitoring.svc.cluster.local:2112/metrics
+      scrape_interval_secs: 30
     kubernetes_logs:
       type: kubernetes_logs
       self_node_name: "${VECTOR_SELF_NODE_NAME}"
@@ -386,10 +392,17 @@ customConfig:
       source: |
         .tags.host = get_env_var!("SPEC_NODE_NAME")
         .tags.collector = "cadvisor"
+    # Tag event-exporter metrics
+    event_exporter_tag:
+      type: remap
+      inputs:
+        - event-exporter
+      source: |
+        .tags.collector = "event-exporter"
   sinks:
     s3_sink:
       type: aws_s3
-      inputs: [host_filter, cadvisor_tag]
+      inputs: [host_filter, cadvisor_tag, event_exporter_tag]
       bucket: "" # specify s3 bucket name
       region: "" # specify s3 bucket region
       compression: "none"

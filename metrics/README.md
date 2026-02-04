@@ -47,7 +47,10 @@ helm upgrade -i vector vector/vector \
   --set "customConfig.sinks.s3_logs_sink.region=${AWS_REGION}" \
   --set "customConfig.sinks.s3_logs_sink.key_prefix=${CEDANA_URL}/vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"
 
-# 3. Install DCGM Exporter (GPU metrics - optional, only if you have NVIDIA GPUs)
+# 4. Install Kubernetes Event Exporter (captures pod termination events for efficiency tracking)
+kubectl apply -f ./event-exporter/deploy.yaml
+
+# 5. Install DCGM Exporter (GPU metrics - optional, only if you have NVIDIA GPUs)
 helm upgrade -i dcgm-exporters gpu-helm-charts/dcgm-exporter \
   -n cedana-monitoring
 ```
@@ -156,15 +159,38 @@ To uninstall vector
 helm uninstall vector -n cedana-monitoring 
 ```
 
+## Kubernetes Event Exporter Installation
+
+The Kubernetes Event Exporter captures cluster events (pod terminations, preemptions, evictions, OOM kills) and exposes them as Prometheus metrics. This enables Cedana to track job efficiency and compute time saved through checkpoint/restore.
+
+Uses the upstream [resmoio/kubernetes-event-exporter](https://github.com/resmoio/kubernetes-event-exporter) image.
+
+```bash
+kubectl apply -f ./event-exporter/deploy.yaml
+```
+
+The event exporter exposes metrics on port 2112, which Vector scrapes and forwards to S3.
+
+Key metrics captured:
+- `event_exporter_events_sent` - Total events processed
+- `event_exporter_events_discarded` - Events older than maxEventAgeSeconds
+- Pod termination events (reason: Killing, Preempting, Evicted, OOMKilling)
+- Job failure events (BackoffLimitExceeded, DeadlineExceeded)
+
+To uninstall:
+```bash
+kubectl delete -f ./event-exporter/deploy.yaml
+```
+
 ## DCGM Exporter Installation
 
-```
+```bash
 helm repo add gpu-helm-charts https://nvidia.github.io/dcgm-exporter/helm-charts
 helm repo update
 helm install dcgm-exporters gpu-helm-charts/dcgm-exporter --namespace cedana-monitoring --create-namespace
 ```
 
-To uninstall dcgm-exporters
-```
+To uninstall dcgm-exporters:
+```bash
 helm uninstall dcgm-exporters -n cedana-monitoring
 ```

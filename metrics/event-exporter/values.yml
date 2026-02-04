@@ -1,0 +1,61 @@
+# Kubernetes Event Exporter values for Cedana monitoring
+# Bitnami chart: https://artifacthub.io/packages/helm/bitnami/kubernetes-event-exporter
+
+# Enable metrics endpoint for Vector/Prometheus scraping
+metrics:
+  enabled: true
+  service:
+    ports:
+      http: 2112
+
+# Configure which events to capture and how to export them
+config:
+  logLevel: info
+  logFormat: json
+  receivers:
+    - name: "dump"
+      file:
+        path: "/dev/stdout"
+        layout:
+          message: "{{ .Message }}"
+          reason: "{{ .Reason }}"
+          type: "{{ .Type }}"
+          count: "{{ .Count }}"
+          kind: "{{ .InvolvedObject.Kind }}"
+          name: "{{ .InvolvedObject.Name }}"
+          namespace: "{{ .Namespace }}"
+          component: "{{ .Source.Component }}"
+          host: "{{ .Source.Host }}"
+          firstTimestamp: "{{ .FirstTimestamp }}"
+          lastTimestamp: "{{ .LastTimestamp }}"
+  route:
+    routes:
+      - match:
+          - receiver: "dump"
+
+# RBAC for reading events
+rbac:
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources: ["events"]
+      verbs: ["get", "watch", "list"]
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list"]
+    - apiGroups: ["batch"]
+      resources: ["jobs"]
+      verbs: ["get", "list"]
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+# Resource limits
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
