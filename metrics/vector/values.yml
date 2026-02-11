@@ -367,9 +367,10 @@ customConfig:
       endpoints:
         - http://kubernetes-event-exporter.cedana-monitoring.svc.cluster.local:2112/metrics
       scrape_interval_secs: 30
-    kubernetes_logs:
-      type: kubernetes_logs
-      self_node_name: "${VECTOR_SELF_NODE_NAME}"
+    # DISABLED: kubernetes_logs - log forwarding disabled to avoid interfering with k9s/kubectl logs
+    # kubernetes_logs:
+    #   type: kubernetes_logs
+    #   self_node_name: "${VECTOR_SELF_NODE_NAME}"
 
   transforms:
     host_filter:
@@ -399,10 +400,48 @@ customConfig:
         - event-exporter
       source: |
         .tags.collector = "event-exporter"
+    # Filter kube-state-metrics to only include pod ownership info
+    # This captures Job, Deployment, StatefulSet, ReplicaSet, DaemonSet owners
+    kube_state_filter:
+      type: filter
+      inputs:
+        - kube-state-metrics
+      condition: |
+        .name == "kube_pod_owner" || .name == "kube_pod_info" || .name == "kube_job_owner"
+    kube_state_tag:
+      type: remap
+      inputs:
+        - kube_state_filter
+      source: |
+        .tags.collector = "kube-state-metrics"
+    # Filter DCGM GPU metrics - core metrics only
+    dcgm_filter:
+      type: filter
+      inputs:
+        - dcgm-exporter
+      condition: |
+        starts_with(string!(.name), "DCGM_FI_DEV_") || starts_with(string!(.name), "DCGM_FI_PROF_")
+    dcgm_tag:
+      type: remap
+      inputs:
+        - dcgm_filter
+      source: |
+        # Use Hostname from DCGM metrics (the actual GPU node), not Vector pod's node
+        .tags.host = if exists(.tags.Hostname) { .tags.Hostname } else { get_env_var!("SPEC_NODE_NAME") }
+        .tags.collector = "dcgm"
+    # Add reverse timestamp for newest-first S3 ordering
+    # S3Queue processes files lexicographically, so 9999999999 - unix_ts
+    # ensures newest files sort FIRST (smaller reverse_ts = newer data)
+    # NOTE: For metrics events, we must add to .tags map, not top-level
+    add_reverse_timestamp:
+      type: remap
+      inputs: [host_filter, cadvisor_tag, event_exporter_tag, kube_state_tag, dcgm_tag]
+      source: |
+        .tags.reverse_ts = to_string(9999999999 - to_unix_timestamp(now()))
   sinks:
     s3_sink:
       type: aws_s3
-      inputs: [host_filter, cadvisor_tag, event_exporter_tag]
+      inputs: [add_reverse_timestamp]
       bucket: "" # specify s3 bucket name
       region: "" # specify s3 bucket region
       compression: "none"
@@ -410,31 +449,36 @@ customConfig:
         codec: "json"
       batch:
         max_bytes: 10485760 # 10MB
-        timeout_secs: 60
-      key_prefix: "vector/data/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be overridden by --set at deployment
+        timeout_secs: 15  # Reduced from 60 for faster data availability
+      # Reverse timestamp prefix ensures newest data sorts FIRST lexicographically
+      # S3Queue with ordered mode will process newest files first
+      # Access tags.reverse_ts since metrics store custom fields in tags map
+      key_prefix: "vector/data/{{ tags.reverse_ts }}/"
       filename_time_format: "%s"
       filename_append_uuid: true
-    s3_logs_sink:
-      type: aws_s3
-      inputs: [kubernetes_logs]
-      bucket: "" # specify s3 bucket name
-      region: "" # specify s3 bucket region
-      compression: "gzip"
-      encoding:
-        codec: "json"
-      batch:
-        max_bytes: 10485760 # 10MB
-        timeout_secs: 30
-      key_prefix: "vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be overridden by --set at deployment
-      filename_time_format: "%s"
-      filename_append_uuid: true
+    # DISABLED: s3_logs_sink - log forwarding disabled to avoid interfering with k9s/kubectl logs
+    # s3_logs_sink:
+    #   type: aws_s3
+    #   inputs: [kubernetes_logs]
+    #   bucket: "" # specify s3 bucket name
+    #   region: "" # specify s3 bucket region
+    #   compression: "gzip"
+    #   encoding:
+    #     codec: "json"
+    #   batch:
+    #     max_bytes: 10485760 # 10MB
+    #     timeout_secs: 30
+    #   key_prefix: "vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be overridden by --set at deployment
+    #   filename_time_format: "%s"
+    #   filename_append_uuid: true
 # defaultVolumes -- Default volumes that are mounted into pods. In most cases, these should not be changed.
 # Use `extraVolumes`/`extraVolumeMounts` for additional custom volumes.
 # @default -- See `values.yaml`
+# NOTE: var-log removed since kubernetes_logs source is disabled
 defaultVolumes:
-  - name: var-log
-    hostPath:
-      path: "/var/log/"
+  # - name: var-log
+  #   hostPath:
+  #     path: "/var/log/"
   - name: var-lib
     hostPath:
       path: "/var/lib/"
@@ -447,10 +491,11 @@ defaultVolumes:
 
 # defaultVolumeMounts -- Default volume mounts. Corresponds to `volumes`.
 # @default -- See `values.yaml`
+# NOTE: var-log removed since kubernetes_logs source is disabled
 defaultVolumeMounts:
-  - name: var-log
-    mountPath: "/var/log/"
-    readOnly: true
+  # - name: var-log
+  #   mountPath: "/var/log/"
+  #   readOnly: true
   - name: var-lib
     mountPath: "/var/lib"
     readOnly: true

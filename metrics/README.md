@@ -35,22 +35,20 @@ kubectl create secret generic vector-aws-credentials \
   --from-literal=awsSecretAccessKey="${AWS_SECRET_ACCESS_KEY}" \
   --dry-run=client -o yaml | kubectl apply -f -
 
-# 3. Install Vector (metrics & logs collection to S3)
+# 3. Install Vector (metrics collection to S3)
 helm upgrade -i vector vector/vector \
   -n cedana-monitoring \
   --values ./vector/values.yml \
   --set "env[0].value=${CEDANA_URL}" \
   --set "customConfig.sinks.s3_sink.bucket=${S3_BUCKET}" \
   --set "customConfig.sinks.s3_sink.region=${AWS_REGION}" \
-  --set "customConfig.sinks.s3_sink.key_prefix=${CEDANA_URL}/vector/data/date=%Y-%m-%d/hour=%H/minute=%M/" \
-  --set "customConfig.sinks.s3_logs_sink.bucket=${S3_BUCKET}" \
-  --set "customConfig.sinks.s3_logs_sink.region=${AWS_REGION}" \
-  --set "customConfig.sinks.s3_logs_sink.key_prefix=${CEDANA_URL}/vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"
+  --set 'customConfig.sinks.s3_sink.key_prefix=${CEDANA_URL}/vector/data/{{ "{{" }} tags.reverse_ts {{ "}}" }}/'
 
 # 4. Install Kubernetes Event Exporter (captures pod termination events for efficiency tracking)
 kubectl apply -f ./event-exporter/deploy.yaml
 
-# 5. Install DCGM Exporter (GPU metrics - optional, only if you have NVIDIA GPUs)
+# 5. Install DCGM Exporter (GPU metrics - REQUIRED for GPU clusters)
+# This enables GPU utilization, memory, temperature, and power metrics in the Cedana UI
 helm upgrade -i dcgm-exporters gpu-helm-charts/dcgm-exporter \
   -n cedana-monitoring
 ```
@@ -81,7 +79,7 @@ helm uninstall prometheus -n cedana-monitoring
 ```
 
 ## Vector Installation
-Vector will help us push the scraped prometheus metrics and logs to our remote s3 bucket. You will have to give pod identity access to vector service account for the s3 access.
+Vector will help us push the scraped prometheus metrics to our remote s3 bucket. You will have to give pod identity access to vector service account for the s3 access.
 
 **IMPORTANT**: Set the `CEDANA_URL` environment variable in `./vector/values.yml` to enable multi-tenant data isolation. This prefixes all S3 paths with your cluster's unique identifier.
 
@@ -116,12 +114,7 @@ customConfig:
       type: aws_s3
       bucket: ""  # Will be set via --set customConfig.sinks.s3_sink.bucket
       region: ""  # Will be set via --set customConfig.sinks.s3_sink.region
-      key_prefix: "vector/data/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be set via --set to include CEDANA_URL prefix
-    s3_logs_sink:
-      type: aws_s3
-      bucket: ""  # Will be set via --set customConfig.sinks.s3_logs_sink.bucket
-      region: ""  # Will be set via --set customConfig.sinks.s3_logs_sink.region
-      key_prefix: "vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"  # Will be set via --set to include CEDANA_URL prefix
+      key_prefix: "vector/data/{{ tags.reverse_ts }}/"  # Will be set via --set to include CEDANA_URL prefix
 ```
 
 To install vector daemonset run the following
@@ -149,10 +142,7 @@ helm upgrade -i vector vector/vector --namespace cedana-monitoring --create-name
   --set env[0].value="YOUR_CEDANA_URL" \
   --set customConfig.sinks.s3_sink.bucket="YOUR_S3_BUCKET" \
   --set customConfig.sinks.s3_sink.region="YOUR_AWS_REGION" \
-  --set customConfig.sinks.s3_sink.key_prefix="YOUR_CEDANA_URL/vector/data/date=%Y-%m-%d/hour=%H/minute=%M/" \
-  --set customConfig.sinks.s3_logs_sink.bucket="YOUR_S3_BUCKET" \
-  --set customConfig.sinks.s3_logs_sink.region="YOUR_AWS_REGION" \
-  --set customConfig.sinks.s3_logs_sink.key_prefix="YOUR_CEDANA_URL/vector/logs/date=%Y-%m-%d/hour=%H/minute=%M/"
+  --set 'customConfig.sinks.s3_sink.key_prefix=YOUR_CEDANA_URL/vector/data/{{ "{{" }} tags.reverse_ts {{ "}}" }}/'
 ```
 To uninstall vector
 ```
@@ -182,13 +172,24 @@ To uninstall:
 kubectl delete -f ./event-exporter/deploy.yaml
 ```
 
-## DCGM Exporter Installation
+## DCGM Exporter Installation (Required for GPU Metrics)
+
+DCGM (Data Center GPU Manager) exporter is **required** for GPU metrics in the Cedana UI. It provides:
+- GPU utilization percentage
+- GPU memory usage (used/free)
+- GPU temperature
+- Power consumption
 
 ```bash
 helm repo add gpu-helm-charts https://nvidia.github.io/dcgm-exporter/helm-charts
 helm repo update
-helm install dcgm-exporters gpu-helm-charts/dcgm-exporter --namespace cedana-monitoring --create-namespace
+helm upgrade -i dcgm-exporters gpu-helm-charts/dcgm-exporter \
+  -n cedana-monitoring --create-namespace
 ```
+
+**Note**: DCGM exporter requires NVIDIA GPUs with DCGM drivers installed on the nodes. It will only run on nodes with GPUs.
+
+Vector scrapes DCGM metrics from `dcgm-exporters.cedana-monitoring.svc.cluster.local:9400/metrics` and forwards them to S3 for ClickHouse ingestion.
 
 To uninstall dcgm-exporters:
 ```bash

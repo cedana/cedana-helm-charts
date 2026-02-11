@@ -51,7 +51,7 @@ config:
   pluginsNativeVersion: latest
   pluginsCriuVersion: 7/merge
   pluginsContainerdRuntimeVersion: v0.7.1
-  pluginsGpuVersion: v0.7.0
+  pluginsGpuVersion: feat/ced-1839-perf-llamafactory
   pluginsStreamerVersion: v0.0.8
 
   profiling: true
