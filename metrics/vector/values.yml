@@ -345,7 +345,8 @@ customConfig:
     dcgm-exporter:
       type: prometheus_scrape
       endpoints:
-        - http://dcgm-exporters.cedana-monitoring.svc.cluster.local:9400/metrics
+        # Use GPU Operator's DCGM exporter - don't install separate dcgm-exporters helm chart
+        - http://nvidia-dcgm-exporter.gpu-operator.svc.cluster.local:9400/metrics
     node-exporter:
       type: prometheus_scrape
       endpoints:
@@ -429,19 +430,19 @@ customConfig:
         # Use Hostname from DCGM metrics (the actual GPU node), not Vector pod's node
         .tags.host = if exists(.tags.Hostname) { .tags.Hostname } else { get_env_var!("SPEC_NODE_NAME") }
         .tags.collector = "dcgm"
-    # Add reverse timestamp for newest-first S3 ordering
-    # S3Queue processes files lexicographically, so 9999999999 - unix_ts
-    # ensures newest files sort FIRST (smaller reverse_ts = newer data)
+    # Add timestamp for S3 path partitioning
+    # Normal timestamps ensure newer files sort AFTER older files lexicographically
+    # S3Queue with ordered mode processes old→new and always picks up new arrivals
     # NOTE: For metrics events, we must add to .tags map, not top-level
-    add_reverse_timestamp:
+    add_timestamp:
       type: remap
       inputs: [host_filter, cadvisor_tag, event_exporter_tag, kube_state_tag, dcgm_tag]
       source: |
-        .tags.reverse_ts = to_string(9999999999 - to_unix_timestamp(now()))
+        .tags.ts = to_string(to_unix_timestamp(now()))
   sinks:
     s3_sink:
       type: aws_s3
-      inputs: [add_reverse_timestamp]
+      inputs: [add_timestamp]
       bucket: "" # specify s3 bucket name
       region: "" # specify s3 bucket region
       compression: "none"
@@ -450,10 +451,10 @@ customConfig:
       batch:
         max_bytes: 10485760 # 10MB
         timeout_secs: 15  # Reduced from 60 for faster data availability
-      # Reverse timestamp prefix ensures newest data sorts FIRST lexicographically
-      # S3Queue with ordered mode will process newest files first
-      # Access tags.reverse_ts since metrics store custom fields in tags map
-      key_prefix: "vector/data/{{ tags.reverse_ts }}/"
+      # Normal timestamp prefix ensures newer files sort AFTER older files
+      # S3Queue with ordered mode processes chronologically, always picking up new arrivals
+      # Access tags.ts since metrics store custom fields in tags map
+      key_prefix: "vector/data/{{ tags.ts }}/"
       filename_time_format: "%s"
       filename_append_uuid: true
     # DISABLED: s3_logs_sink - log forwarding disabled to avoid interfering with k9s/kubectl logs
