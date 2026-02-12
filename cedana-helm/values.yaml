@@ -51,7 +51,7 @@ config:
   pluginsNativeVersion: latest
   pluginsCriuVersion: 7/merge
   pluginsContainerdRuntimeVersion: v0.7.1
-  pluginsGpuVersion: feat/ced-1839-perf-llamafactory
+  pluginsGpuVersion: v0.7.0
   pluginsStreamerVersion: v0.0.8
 
   profiling: true
@@ -82,8 +82,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper-test
-    tag: 7a232b7db81752e27c6de9588031104acc038f85
+    repository: cedana/cedana-helper
+    tag: v0.9.283 
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
