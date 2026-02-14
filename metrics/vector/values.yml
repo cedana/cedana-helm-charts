@@ -180,21 +180,14 @@ args:
 # env -- Set environment variables for Vector containers.
 env:
   - name: CEDANA_URL
-    value: "" # Set this to your cluster's CEDANA_URL (e.g., "customer-name.cedana.ai/v2")
+    value: "" # Set this to your cluster's CEDANA_URL (e.g., "https://api.cedana.ai")
   - name: SPEC_NODE_NAME
     valueFrom:
       fieldRef:
         fieldPath: spec.nodeName
-  - name: AWS_ACCESS_KEY_ID
-    valueFrom:
-      secretKeyRef:
-        name: vector-aws-credentials
-        key: awsAccessKeyId
-  - name: AWS_SECRET_ACCESS_KEY
-    valueFrom:
-      secretKeyRef:
-        name: vector-aws-credentials
-        key: awsSecretAccessKey
+  # AWS credentials from cred-refresher sidecar (STS temporary credentials)
+  - name: AWS_SHARED_CREDENTIALS_FILE
+    value: "/credentials/aws-credentials"
 
 # envFrom -- Define environment variables from Secrets or ConfigMaps.
 envFrom: []
@@ -508,10 +501,17 @@ defaultVolumeMounts:
     readOnly: true
 
 # extraVolumes -- Additional Volumes to use with Vector Pods.
-extraVolumes: []
+extraVolumes:
+  # Shared volume for AWS credentials from cred-refresher sidecar
+  - name: aws-credentials
+    emptyDir: {}
 
 # extraVolumeMounts -- Additional Volume to mount into Vector Containers.
-extraVolumeMounts: []
+extraVolumeMounts:
+  # Mount the AWS credentials written by cred-refresher sidecar
+  - name: aws-credentials
+    mountPath: /credentials
+    readOnly: true
 
 # initContainers -- Init Containers to be added to the Vector Pods.
 # This also supports template content, which will eventually be converted to yaml.
@@ -530,18 +530,52 @@ initContainers: []
 
 # extraContainers -- Extra Containers to be added to the Vector Pods.
 # This also supports template content, which will eventually be converted to yaml.
-extraContainers: []
-# extraContainers:
-#   - name: test
-#     command:
-#       - cp
-#     args:
-#       - /bin/sleep
-#       - /test/sleep
-#     image: busybox:latest
-#     volumeMounts:
-#       - name: test
-#         mountPath: /test
+extraContainers:
+  # Sidecar that fetches temporary AWS credentials from Cedana Propagator
+  - name: cred-refresher
+    image: ghcr.io/cedana/cred-refresher:latest
+    imagePullPolicy: Always
+    env:
+      - name: CEDANA_URL
+        value: "" # Set this to your Cedana URL (e.g., "https://api.cedana.ai")
+      - name: CEDANA_AUTH_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: cedana-credentials
+            key: authToken
+      - name: CLUSTER_ID
+        valueFrom:
+          secretKeyRef:
+            name: cedana-credentials
+            key: clusterId
+      - name: REFRESH_INTERVAL
+        value: "45m"
+      - name: CREDENTIALS_FILE
+        value: "/credentials/aws-credentials"
+      - name: HEALTH_PORT
+        value: "8081"
+    volumeMounts:
+      - name: aws-credentials
+        mountPath: /credentials
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        cpu: 50m
+        memory: 32Mi
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8081
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8081
+      initialDelaySeconds: 5
+      periodSeconds: 10
 
 # Configuration for Vector's data persistence.
 persistence:

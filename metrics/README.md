@@ -7,15 +7,15 @@ Run these commands to set up the full monitoring stack in the `cedana-monitoring
 **Prerequisites:**
 - kubectl configured for your cluster
 - Helm 3.x installed
-- AWS credentials configured (for S3 access)
+- Cedana API credentials (auth token and cluster ID)
 
 ```bash
 # Set your environment variables
-export CEDANA_URL="your-cluster.cedana.ai/v2"  # Your cluster's unique identifier
-export S3_BUCKET="your-s3-bucket"               # S3 bucket for metrics/logs
+export CEDANA_URL="https://api.cedana.ai"       # Cedana API URL
+export CEDANA_AUTH_TOKEN="your-auth-token"      # Your Cedana auth token
+export CLUSTER_ID="your-cluster-uuid"           # Your cluster UUID from Cedana
+export S3_BUCKET="your-s3-bucket"               # S3 bucket for metrics/logs (provided by Cedana)
 export AWS_REGION="us-east-1"                   # Your AWS region
-export AWS_ACCESS_KEY_ID="your-access-key"      # AWS access key with S3 write permissions
-export AWS_SECRET_ACCESS_KEY="your-secret-key"  # AWS secret access key
 
 # Add helm repos
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -28,21 +28,22 @@ helm upgrade -i prometheus prometheus-community/prometheus \
   -n cedana-monitoring --create-namespace \
   --values ./prometheus/values.yml
 
-# 2. Create AWS credentials secret for Vector
-kubectl create secret generic vector-aws-credentials \
+# 2. Create Cedana credentials secret (for automatic STS credential refresh)
+kubectl create secret generic cedana-credentials \
   -n cedana-monitoring \
-  --from-literal=awsAccessKeyId="${AWS_ACCESS_KEY_ID}" \
-  --from-literal=awsSecretAccessKey="${AWS_SECRET_ACCESS_KEY}" \
+  --from-literal=authToken="${CEDANA_AUTH_TOKEN}" \
+  --from-literal=clusterId="${CLUSTER_ID}" \
   --dry-run=client -o yaml | kubectl apply -f -
 
-# 3. Install Vector (metrics collection to S3)
+# 3. Install Vector with cred-refresher sidecar (automatic S3 credential management)
 helm upgrade -i vector vector/vector \
   -n cedana-monitoring \
   --values ./vector/values.yml \
   --set "env[0].value=${CEDANA_URL}" \
+  --set "extraContainers[0].env[0].value=${CEDANA_URL}" \
   --set "customConfig.sinks.s3_sink.bucket=${S3_BUCKET}" \
   --set "customConfig.sinks.s3_sink.region=${AWS_REGION}" \
-  --set 'customConfig.sinks.s3_sink.key_prefix=${CEDANA_URL}/vector/data/{{ "{{" }} tags.reverse_ts {{ "}}" }}/'
+  --set 'customConfig.sinks.s3_sink.key_prefix=vector/data/{{ "{{" }} tags.ts {{ "}}" }}/'
 
 # 4. Install Kubernetes Event Exporter (captures pod termination events for efficiency tracking)
 kubectl apply -f ./event-exporter/deploy.yaml
@@ -79,74 +80,74 @@ helm uninstall prometheus -n cedana-monitoring
 ```
 
 ## Vector Installation
-Vector will help us push the scraped prometheus metrics to our remote s3 bucket. You will have to give pod identity access to vector service account for the s3 access.
 
-**IMPORTANT**: Set the `CEDANA_URL` environment variable in `./vector/values.yml` to enable multi-tenant data isolation. This prefixes all S3 paths with your cluster's unique identifier.
+Vector collects Prometheus metrics and pushes them to Cedana's S3 bucket. The monitoring stack uses **automatic STS credential refresh** via a sidecar container, eliminating the need for long-lived AWS credentials.
 
-To specify the AWS credentials being used for the s3 bucket, refer to secrets section of `./vector/values.yml`
-```yaml
-# Set CEDANA_URL to your cluster's unique identifier
-env:
-  - name: CEDANA_URL
-    value: "customer-name.cedana.ai/v2" # REQUIRED: Set this to your cluster's CEDANA_URL value
+### How Credential Refresh Works
 
-# Create a Secret resource for Vector to use.
-secrets:
-  # secrets.generic -- Each Key/Value will be added to the Secret's data key, each value should be raw and NOT base64
-  # encoded. Any secrets can be provided here. It's commonly used for credentials and other access related values.
-  # **NOTE: Don't commit unencrypted secrets to git!**
-  generic: {}
-    # my_variable: "my-secret-value"
-    # datadog_api_key: "api-key"
-    # awsAccessKeyId: "access-key"
-    # awsSecretAccessKey: "secret-access-key"
+1. A `cred-refresher` sidecar runs alongside Vector in each pod
+2. The sidecar authenticates with Cedana's API using your auth token
+3. Cedana issues temporary AWS STS credentials (1-hour validity)
+4. Credentials are automatically refreshed every 45 minutes
+5. Vector reads credentials from a shared file mounted at `/credentials/aws-credentials`
+
+### Required Secrets
+
+Create a Kubernetes secret with your Cedana credentials:
+```bash
+kubectl create secret generic cedana-credentials \
+  -n cedana-monitoring \
+  --from-literal=authToken="YOUR_CEDANA_AUTH_TOKEN" \
+  --from-literal=clusterId="YOUR_CLUSTER_UUID"
 ```
 
-The S3 bucket, region, and CEDANA_URL prefix must be set at deployment time using `--set` flags (see installation command below). While you can edit these values directly in `./vector/values.yml`, it's recommended to use `--set` to avoid committing sensitive configuration to git.
+### Installation
 
-**Note**: The `bucket`, `region`, and `key_prefix` values in `values.yml` are intentionally left empty as placeholders. They will be overridden during helm installation with the `--set` flags.
-
-Example configuration structure in `./vector/values.yml`:
-```yaml
-customConfig:
-  sinks:
-    s3_sink:
-      type: aws_s3
-      bucket: ""  # Will be set via --set customConfig.sinks.s3_sink.bucket
-      region: ""  # Will be set via --set customConfig.sinks.s3_sink.region
-      key_prefix: "vector/data/{{ tags.reverse_ts }}/"  # Will be set via --set to include CEDANA_URL prefix
-```
-
-To install vector daemonset run the following
 ```bash
 helm repo add vector https://helm.vector.dev
 helm repo update
 
-# Replace placeholders with your actual values:
-# - YOUR_CEDANA_URL: e.g., "customer-name.cedana.ai/v2"
-# - YOUR_S3_BUCKET: Your S3 bucket name
-# - YOUR_AWS_REGION: Your AWS region (e.g., "us-east-1")
-# - YOUR_AWS_ACCESS_KEY_ID: AWS access key with S3 write permissions
-# - YOUR_AWS_SECRET_ACCESS_KEY: AWS secret access key
+# Install Vector with cred-refresher sidecar
+helm upgrade -i vector vector/vector --namespace cedana-monitoring --create-namespace \
+  --values ./vector/values.yml \
+  --set "env[0].value=https://api.cedana.ai" \
+  --set "extraContainers[0].env[0].value=https://api.cedana.ai" \
+  --set "customConfig.sinks.s3_sink.bucket=YOUR_S3_BUCKET" \
+  --set "customConfig.sinks.s3_sink.region=YOUR_AWS_REGION" \
+  --set 'customConfig.sinks.s3_sink.key_prefix=vector/data/{{ "{{" }} tags.ts {{ "}}" }}/'
+```
 
-# First, create the AWS credentials secret
+### Verifying Credential Refresh
+
+Check the cred-refresher sidecar logs:
+```bash
+kubectl logs -n cedana-monitoring -l app.kubernetes.io/name=vector -c cred-refresher
+```
+
+You should see output like:
+```
+Starting credentials refresher
+  Cedana URL: https://api.cedana.ai
+  Cluster ID: abc123-...
+  Refresh Interval: 45m
+Credentials written successfully (expires: 2024-01-01T12:00:00Z, bucket: cedana-metrics, prefix: org-xxx/v2/vector/data)
+```
+
+### Manual AWS Credentials (Legacy)
+
+If you prefer to use static AWS credentials instead of STS refresh, you can:
+1. Remove the `extraContainers` section from values.yml
+2. Create the old-style secret and update env vars:
+```bash
 kubectl create secret generic vector-aws-credentials \
   -n cedana-monitoring \
   --from-literal=awsAccessKeyId="YOUR_AWS_ACCESS_KEY_ID" \
-  --from-literal=awsSecretAccessKey="YOUR_AWS_SECRET_ACCESS_KEY" \
-  --dry-run=client -o yaml | kubectl apply -f -
+  --from-literal=awsSecretAccessKey="YOUR_AWS_SECRET_ACCESS_KEY"
+```
 
-# Then install Vector
-helm upgrade -i vector vector/vector --namespace cedana-monitoring --create-namespace \
-  --values ./vector/values.yml \
-  --set env[0].value="YOUR_CEDANA_URL" \
-  --set customConfig.sinks.s3_sink.bucket="YOUR_S3_BUCKET" \
-  --set customConfig.sinks.s3_sink.region="YOUR_AWS_REGION" \
-  --set 'customConfig.sinks.s3_sink.key_prefix=YOUR_CEDANA_URL/vector/data/{{ "{{" }} tags.reverse_ts {{ "}}" }}/'
+To uninstall vector:
 ```
-To uninstall vector
-```
-helm uninstall vector -n cedana-monitoring 
+helm uninstall vector -n cedana-monitoring
 ```
 
 ## Kubernetes Event Exporter Installation
