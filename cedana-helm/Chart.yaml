@@ -2,7 +2,7 @@ apiVersion: v2
 name: cedana-helm
 description: Helm chart for Cedana k8s system
 type: application
-version: 0.7.2
+version: 0.7.3
 # The appVersion is the version of the Cedana API this chart
 # should best work with.
 appVersion: 2.0.2.0
