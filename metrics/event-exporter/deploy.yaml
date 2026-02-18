@@ -1,0 +1,126 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cedana-monitoring
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubernetes-event-exporter
+  namespace: cedana-monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubernetes-event-exporter
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: [""]
+    resources: ["pods", "namespaces"]
+    verbs: ["get", "list"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubernetes-event-exporter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubernetes-event-exporter
+subjects:
+  - kind: ServiceAccount
+    name: kubernetes-event-exporter
+    namespace: cedana-monitoring
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-event-exporter-config
+  namespace: cedana-monitoring
+data:
+  config.yaml: |
+    logLevel: info
+    logFormat: json
+    metricsNamePrefix: event_exporter_
+    receivers:
+      - name: "dump"
+        stdout:
+          layout:
+            message: "{{ .Message }}"
+            reason: "{{ .Reason }}"
+            type: "{{ .Type }}"
+            count: "{{ .Count }}"
+            kind: "{{ .InvolvedObject.Kind }}"
+            name: "{{ .InvolvedObject.Name }}"
+            namespace: "{{ .Namespace }}"
+            component: "{{ .Source.Component }}"
+            host: "{{ .Source.Host }}"
+            firstTimestamp: "{{ .FirstTimestamp }}"
+            lastTimestamp: "{{ .LastTimestamp }}"
+    route:
+      routes:
+        - match:
+            - receiver: "dump"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubernetes-event-exporter
+  namespace: cedana-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubernetes-event-exporter
+  template:
+    metadata:
+      labels:
+        app: kubernetes-event-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "2112"
+    spec:
+      serviceAccountName: kubernetes-event-exporter
+      containers:
+        - name: event-exporter
+          image: ghcr.io/resmoio/kubernetes-event-exporter:v1.7
+          args:
+            - -conf=/data/config.yaml
+          ports:
+            - containerPort: 2112
+              name: metrics
+          volumeMounts:
+            - name: config
+              mountPath: /data
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+      volumes:
+        - name: config
+          configMap:
+            name: kubernetes-event-exporter-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubernetes-event-exporter
+  namespace: cedana-monitoring
+  labels:
+    app: kubernetes-event-exporter
+spec:
+  selector:
+    app: kubernetes-event-exporter
+  ports:
+    - port: 2112
+      targetPort: 2112
+      name: metrics
