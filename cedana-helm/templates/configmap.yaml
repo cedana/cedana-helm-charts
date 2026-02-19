@@ -17,10 +17,11 @@ data:
   checkpoint-dir: "{{ .Values.config.checkpointDir }}"
   checkpoint-streams: "{{ .Values.config.checkpointStreams }}"
   checkpoint-compression: "{{ .Values.config.checkpointCompression }}"
+  checkpoint-async: "{{ .Values.config.checkpointAsync }}"
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
-  gpu-freeze-type: "{{ .Values.config.gpuFreezeType }}"
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
   gpu-ld-lib-path: "{{ .Values.config.gpuLdLibPath }}"
+  gpu-skip-nvidia-runtime-hook: "{{ .Values.config.gpuSkipNvidiaRuntimeHook }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-native-version: "{{ .Values.config.pluginsNativeVersion }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
@@ -35,9 +36,9 @@ data:
   aws-region: "{{ .Values.config.awsRegion }}"
   aws-endpoint: "{{ .Values.config.awsEndpoint }}"
 
-  containerd-address: "{{ .Values.config.containerdAddress }}"
-
-  shm-config-enabled: "{{ .Values.shmConfig.enabled }}"
-  shm-config-size: "{{ .Values.shmConfig.size }}"
-  shm-config-min-size: "{{ .Values.shmConfig.minSize }}"
+  containerd-address: "{{ .Values.hostConfig.containerdAddress }}"
+  disable-io-uring: "{{ .Values.hostConfig.disableIoUring }}"
+  shm-config-enabled: "{{ .Values.hostConfig.shmConfig.enabled }}"
+  shm-config-size: "{{ .Values.hostConfig.shmConfig.size }}"
+  shm-config-min-size: "{{ .Values.hostConfig.shmConfig.minSize }}"
 {{- end }}

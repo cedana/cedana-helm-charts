@@ -20,13 +20,20 @@ git clone https://github.com/cedana/cedana-helm-charts --depth 1
 helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-system \
 --set config.url=$CEDANA_URL \
 --set config.authToken=$CEDANA_AUTH_TOKEN \
---set config.clusterId=my-cluster-id
+--set config.clusterId=$CLUSTER_ID
 
 # alternatively, you can use the OCI repo
 helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-namespace -n cedana-system \
 --set config.url=$CEDANA_URL \
 --set config.authToken=$CEDANA_AUTH_TOKEN \
---set config.clusterId=my-cluster-id
+--set config.clusterId=$CLUSTER_ID
+
+# To install cedana on CPU only nodes
+helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-namespace -n cedana-system \
+--set config.url=$CEDANA_URL \
+--set config.authToken=$CEDANA_AUTH_TOKEN \
+--set config.clusterId=$CLUSTER_ID
+--set config.pluginsGpuVersion=none
 ```
 
 `config.url`, `config.authToken`, and `config.clusterId` are required values.
@@ -62,16 +69,16 @@ For workloads that require large shared memory, you can optionally increase the 
 helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-system \
 --set config.url=$CEDANA_URL \
 --set config.authToken=$CEDANA_AUTH_TOKEN \
---set config.clusterId=my-cluster-id \
---set shmConfig.enabled=true
+--set config.clusterId=$CLUSTER_ID \
+--set hostConfig.shmConfig.enabled=true
 
 # Customize SHM size (e.g., 20G)
 helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-system \
 --set config.url=$CEDANA_URL \
 --set config.authToken=$CEDANA_AUTH_TOKEN \
---set config.clusterId=my-cluster-id \
---set shmConfig.enabled=true \
---set shmConfig.size="20G"
+--set config.clusterId=$CLUSTER_ID \
+--set hostConfig.shmConfig.enabled=true \
+--set hostConfig.shmConfig.size="20G"
 ```
 
 ### Usage

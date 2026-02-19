@@ -1,15 +1,15 @@
-nameOverride: "cedana"
-fullnameOverride: "cedana"
+nameOverride: cedana
+fullnameOverride: cedana
 
 # Install the following CRDs before setting installKueue as true
 # kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.10.1/manifests.yaml
 installKueue: false
 
 config:
-  authToken: ""
-  url: ""
-  clusterId: ""
-  sqsQueueUrl: ""
+  authToken:
+  url:
+  clusterId:
+  sqsQueueUrl:
 
   # Specify the address and port to bind the daemon on
   #
@@ -30,62 +30,70 @@ config:
   # - `cedana://<path>` for Cedana-managed global storage (recommended)
   # - `s3://<bucket>/<path>` for your S3 storage
   # - `<path>` for node-local storage
-  checkpointDir: "cedana://"
+  checkpointDir: cedana://
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   checkpointStreams: 4
-  checkpointCompression: "gzip" # Options: "none", "tar", "lz4", "gzip", "zlib"
+  checkpointCompression: lz4 # Options: "none", "tar", "lz4", "gzip", "zlib"
+  # Specify whether to perform checkpoint compression/upload async. Recommended if anticipating large checkpoints,
+  # which could take too long to stream directly to a bucket. Note that restore will only be possible after upload is complete,
+  # so there might be a delay before a workload can be restored.
+  checkpointAsync: false
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
-  gpuFreezeType: "IPC" # Default freeze type for GPU workloads. Options: "IPC", "NCCL"
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
-  gpuLdLibPath: "/run/nvidia/driver/usr/lib/x86_64-linux-gnu" # Additional LD_LIBRARY_PATH to look for CUDA libraries
+  gpuLdLibPath: /run/nvidia/driver/usr/lib/x86_64-linux-gnu # Additional LD_LIBRARY_PATH to look for CUDA libraries
+  gpuSkipNvidiaRuntimeHook: false # Whether to skip adding the nvidia-container-runtime hook when starting GPU workloads
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: "release"
-  pluginsNativeVersion: "latest"
-  pluginsCriuVersion: "v4.1.1-cedana.01"
-  pluginsContainerdRuntimeVersion: "v0.6.6"
-  pluginsGpuVersion: "v0.6.6"
-  pluginsStreamerVersion: "v0.0.8"
+  pluginsBuilds: alpha
+  pluginsNativeVersion: latest
+  pluginsCriuVersion: 7/merge
+  pluginsContainerdRuntimeVersion: v0.7.1
+  pluginsGpuVersion: v0.7.0
+  pluginsStreamerVersion: v0.0.8
 
   profiling: true
   metrics: true
-  logLevel: "info"
+  logLevel: info
 
-  awsAccessKeyId: "" # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
-  awsSecretAccessKey: "" # AWS secret access key if using S3 storage
-  awsRegion: "" # AWS region if using S3 storage (uses default region if not set)
-  awsEndpoint: "" # AWS endpoint if using S3-compatible storage 
-
-  containerdAddress: "/run/containerd/containerd.sock" # Path to containerd socket
+  awsAccessKeyId: # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
+  awsSecretAccessKey: # AWS secret access key if using S3 storage
+  awsRegion: # AWS region if using S3 storage (uses default region if not set)
+  awsEndpoint: # AWS endpoint if using S3-compatible storage
 
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
-# Optional configuration to increase /dev/shm size on nodes
-# This is useful for workloads that require large shared memory
-shmConfig:
-  enabled: false # Set to true to enable /dev/shm size increase
-  size: "10G" # Size to set for /dev/shm (e.g., "10G", "20G")
-  minSize: "10G" # Minimum size to trigger remount (e.g., "10G", "20G")
+hostConfig:
+  containerdAddress: /run/containerd/containerd.sock # Path to containerd socket
+  # Cedana does not support io-uring based checkpoint restores
+  # Set ioUring to false to disable linux kernel's io-uring option
+  disableIoUring: true
+  # Optional configuration to increase /dev/shm size on nodes
+  # This is useful for workloads that require large shared memory
+  shmConfig:
+    enabled: false # Set to true to enable /dev/shm size increase
+    size: 10G # Size to set for /dev/shm (e.g., "10G", "20G")
+    minSize: 10G # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
-  # Force cleanup of helper daemonset on every upgrade.
-  # Note that this might cause running workloads that are using Cedana to fail/restart.
-  forceCleanup: false
   service:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.271
+    tag: v0.9.284
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
     maxSurge: 0
     maxUnavailable: 99999
-  tolerations: []
+  tolerations:
+    # Allow scheduling on nodes that are waiting for Cedana to be ready
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+      effect: "NoSchedule"
   affinity: {}
   nodeSelector: {}
 
@@ -98,7 +106,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "cedana-controller-manager"
+  name: cedana-controller-manager
 
 controllerManager:
   autoscaling:
@@ -125,7 +133,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.5.7
+      tag: v0.6.2
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -150,6 +158,10 @@ controllerManager:
       #   cpu: 10m
       #   memory: 64Mi
   tolerations:
+    # Allow scheduling on nodes that are waiting for Cedana to be ready
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+      effect: "NoSchedule"
     # Run the command below to deploy the controller on a dedicated node
     # This will not allow shceduling of new pods on the node running the controller pod
     # kubectl taint node <node-name> dedicated=cedana-manager:NoSchedule

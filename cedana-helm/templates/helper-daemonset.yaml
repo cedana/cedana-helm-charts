@@ -58,11 +58,7 @@ spec:
               mountPath: /host
               readOnly: false
           command: ["/bin/sh", "-c"]
-          {{- if .Values.daemonHelper.forceCleanup }}
-          args: ["cedana k8s destroy && cedana k8s setup"]
-          {{- else }}
           args: ["cedana k8s setup"]
-          {{- end }}
           ports:
             - name: grpc
               containerPort: 8080
@@ -117,6 +113,7 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: protocol
+
             - name: CEDANA_CHECKPOINT_DIR
               valueFrom:
                 configMapKeyRef:
@@ -132,16 +129,16 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: checkpoint-compression
+            - name: CEDANA_CHECKPOINT_ASYNC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: checkpoint-async
             - name: CEDANA_GPU_POOL_SIZE
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-pool-size
-            - name: CEDANA_GPU_FREEZE_TYPE
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: gpu-freeze-type
             - name: CEDANA_GPU_SHM_SIZE
               valueFrom:
                 configMapKeyRef:
@@ -152,6 +149,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-ld-lib-path
+            - name: CEDANA_GPU_SKIP_NVIDIA_RUNTIME_HOOK
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-skip-nvidia-runtime-hook
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
@@ -187,7 +189,7 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: profiling
-            - name: CEDANA_METRICS
+            - name: CEDANA_METRICS_ENABLED
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
@@ -227,6 +229,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: aws-endpoint
+            - name: DISABLE_IO_URING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: disable-io-uring
             - name: SHM_CONFIG_ENABLED
               valueFrom:
                 configMapKeyRef:

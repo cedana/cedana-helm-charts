@@ -117,16 +117,16 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: checkpoint-compression
+            - name: CEDANA_CHECKPOINT_ASYNC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: checkpoint-async
             - name: CEDANA_GPU_POOL_SIZE
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-pool-size
-            - name: CEDANA_GPU_FREEZE_TYPE
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: gpu-freeze-type
             - name: CEDANA_GPU_SHM_SIZE
               valueFrom:
                 configMapKeyRef:
@@ -137,6 +137,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-ld-lib-path
+            - name: CEDANA_GPU_SKIP_NVIDIA_RUNTIME_HOOK
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-skip-nvidia-runtime-hook
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
