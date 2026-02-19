@@ -36,6 +36,8 @@ helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-names
 --set config.pluginsGpuVersion=none
 ```
 
+`config.url`, `config.authToken`, and `config.clusterId` are required values.
+
 ### Configuration Options
 
 #### Dedicated Node for Controller
