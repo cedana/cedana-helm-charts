@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cedana-config
+  name: {{ template "cedana-helm.configMapName" . }}
   labels:
-    app: cedana-config
+    app: {{ template "cedana-helm.configMapName" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"

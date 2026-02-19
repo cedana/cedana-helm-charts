@@ -12,10 +12,12 @@ metadata:
 spec:
   selector:
     {{- include "cedana-helm.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: helper 
+    app.kubernetes.io/component: helper
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
-      nodePort: 31000
-  type: NodePort
+      port: {{ .Values.daemonHelper.service.port }}
+      targetPort: {{ .Values.daemonHelper.service.targetPort }}
+      {{- if .Values.daemonHelper.service.nodePort }}
+      nodePort: {{ .Values.daemonHelper.service.nodePort }}
+      {{- end }}
+  type: {{ .Values.daemonHelper.service.type }}

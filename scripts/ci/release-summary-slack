@@ -72,7 +72,14 @@ if PREVIOUS_TAG:
         }
     )
 
-if TAG and PREVIOUS_TAG and BINARIES_DIR and PREVIOUS_BINARIES_DIR:
+if (
+    TAG
+    and PREVIOUS_TAG
+    and BINARIES_DIR
+    and PREVIOUS_BINARIES_DIR
+    and os.path.isdir(BINARIES_DIR)
+    and os.path.isdir(PREVIOUS_BINARIES_DIR)
+):
     binaries = [
         f
         for f in os.listdir(BINARIES_DIR)

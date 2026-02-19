@@ -65,10 +65,15 @@ Create the name of the service account to use
 Return secret name to be used based on provided values.
 */}}
 {{- define "cedana-helm.secretName" -}}
-{{- default "cedana-secrets" .Values.config.preExistingSecret -}}
+{{- default (printf "%s-secrets" .Release.Name | trunc 63 | trimSuffix "-") .Values.config.preExistingSecret -}}
 {{- end -}}
 
 # Config map helper
 {{- define "cedana-helm.configMapName" -}}
-{{- default "cedana-config" .Values.config.preExistingSecret -}}
+{{- default (printf "%s-config" .Release.Name | trunc 63 | trimSuffix "-") .Values.config.preExistingConfigMap -}}
+{{- end -}}
+
+# Runtime class helper
+{{- define "cedana-helm.runtimeClassName" -}}
+{{- default "cedana" .Values.runtimeClass.name -}}
 {{- end -}}

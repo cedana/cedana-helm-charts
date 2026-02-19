@@ -63,6 +63,8 @@ config:
 
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
+  # Uncomment, to use custom pre-existing config map
+  # preExistingConfigMap: cedana-config-user
 
 # Optional configuration to increase /dev/shm size on nodes
 # This is useful for workloads that require large shared memory
@@ -77,6 +79,10 @@ daemonHelper:
   forceCleanup: false
   service:
     annotations: {}
+    type: NodePort
+    port: 8080
+    targetPort: 8080
+    nodePort:
   image:
     repository: cedana/cedana-helper
     tag: v0.9.271
@@ -115,7 +121,7 @@ controllerManager:
     podAnnotations: {}
     args:
       - --health-probe-bind-address=:8081
-      - --metrics-bind-address=127.0.0.1:8080
+      - --metrics-bind-address=:8080
       - --leader-elect
     containerSecurityContext:
       # controller doesn't require any privileges
@@ -174,8 +180,13 @@ kubernetesClusterDomain: cluster.local
 
 metricsService:
   ports:
-    - name: https
-      port: 8443
+    - name: metrics
+      port: 8080
       protocol: TCP
-      targetPort: https
+      targetPort: 8080
   type: ClusterIP
+
+runtimeClass:
+  create: true
+  name: "cedana"
+  handler: "cedana"
