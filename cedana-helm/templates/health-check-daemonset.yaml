@@ -102,6 +102,8 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: protocol
+            - name: CEDANA_DB_REMOTE
+              value: "true"
             - name: CEDANA_CHECKPOINT_DIR
               valueFrom:
                 configMapKeyRef:
