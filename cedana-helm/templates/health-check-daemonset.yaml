@@ -77,6 +77,10 @@ spec:
           env:
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
+            - name: CONTAINERD_CONFIG_PATH
+              value: "/etc/containerd/config.toml"
+            - name: CEDANA_CRIU_MANAGE_CGROUPS
+              value: "cg_none"
             - name: CEDANA_CLUSTER_ID
               valueFrom:
                 configMapKeyRef:
