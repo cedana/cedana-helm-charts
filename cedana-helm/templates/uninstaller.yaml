@@ -76,7 +76,10 @@ spec:
               echo "Current pod: $POD_NAME"
 
               if [ "$POD_NAME" = "$LEADER" ]; then
-                echo "I am the leader ($POD_NAME), deleting the namespace ($POD_NAMESPACE)...";
+                echo "I am the leader ($POD_NAME)";
+                echo "Removing cedana.ai/not-ready:NoSchedule taint from all nodes";
+                kubectl taint nodes --all cedana.ai/not-ready:NoSchedule-;
+                echo "Deleting the namespace ($POD_NAMESPACE)...";
                 kubectl delete namespace $POD_NAMESPACE --wait=true;
               else
                 echo "Not the leader ($POD_NAME), exiting.";
