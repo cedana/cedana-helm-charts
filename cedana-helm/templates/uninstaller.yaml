@@ -21,6 +21,10 @@ spec:
         app.kubernetes.io/component: uninstaller
 {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
     spec:
+      tolerations:
+        - key: "cedana.ai/not-ready"
+          operator: "Exists"
+          effect: "NoSchedule"
       serviceAccountName: {{ include "cedana-helm.fullname" . }}-uninstaller-sa
       hostPID: true
       hostIPC: true
