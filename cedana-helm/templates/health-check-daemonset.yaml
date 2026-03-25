@@ -75,12 +75,6 @@ spec:
             successThreshold: 1
             timeoutSeconds: 3
           env:
-            - name: CEDANA_CLIENT_WAIT_FOR_READY
-              value: "true"
-            - name: CONTAINERD_CONFIG_PATH
-              value: "/etc/containerd/config.toml"
-            - name: CEDANA_CRIU_MANAGE_CGROUPS
-              value: "cg_none"
             - name: CEDANA_CLUSTER_ID
               valueFrom:
                 configMapKeyRef:
@@ -106,8 +100,6 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: protocol
-            - name: CEDANA_DB_REMOTE
-              value: "true"
             - name: CEDANA_CHECKPOINT_DIR
               valueFrom:
                 configMapKeyRef:
@@ -183,7 +175,7 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: profiling
-            - name: CEDANA_METRICS
+            - name: CEDANA_METRICS_ENABLED
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
@@ -198,6 +190,14 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: log-level
+            - name: CEDANA_CRIU_MANAGE_CGROUPS
+              value: "cg_none"
+            - name: CONTAINERD_CONFIG_PATH
+              value: "/etc/containerd/config.toml"
+            - name: CEDANA_CLIENT_WAIT_FOR_READY
+              value: "true"
+            - name: CEDANA_DB_REMOTE
+              value: "true"
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 configMapKeyRef:
@@ -208,6 +208,11 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.secretName" . }}
                   key: aws-secret-access-key
+            - name: CONTAINERD_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: containerd-address
             - name: AWS_REGION
               valueFrom:
                 configMapKeyRef:
@@ -218,6 +223,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: aws-endpoint
+            - name: DISABLE_IO_URING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: disable-io-uring
             - name: SHM_CONFIG_ENABLED
               valueFrom:
                 configMapKeyRef:

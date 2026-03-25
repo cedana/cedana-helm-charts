@@ -7,6 +7,7 @@
   "clusterId"
   "url"
   "authToken"
+  "profiling"
   "metrics"
   "logLevel"
 -}}
