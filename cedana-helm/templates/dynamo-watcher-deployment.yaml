@@ -1,0 +1,80 @@
+{{- if .Values.dynamo.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-dynamo-watcher
+  labels:
+    app.kubernetes.io/component: dynamo-watcher
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dynamo-watcher
+      {{- include "cedana-helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include "cedana-helm.manager.config.checksum" . | sha256sum }}
+      labels:
+        app.kubernetes.io/component: dynamo-watcher
+        {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: dynamo-watcher
+        command:
+        - /dynamo-watcher
+        env:
+        - name: CEDANA_CLUSTER_ID
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: cluster-id
+        - name: CEDANA_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.secretName" . }}
+              key: auth-token
+        - name: CEDANA_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: url
+        - name: CEDANA_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: log-level
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        {{- if .Values.dynamo.image.digest }}
+        image: {{ .Values.dynamo.image.repository }}@{{ .Values.dynamo.image.digest }}
+        {{- else }}
+        image: {{ .Values.dynamo.image.repository }}:{{ .Values.dynamo.image.tag }}
+        {{- end }}
+        imagePullPolicy: {{ .Values.dynamo.image.imagePullPolicy }}
+        resources: {{- toYaml .Values.dynamo.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: {{ include "cedana-helm.serviceAccountName" . }}-dynamo
+      terminationGracePeriodSeconds: 10
+      {{- with .Values.dynamo.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.dynamo.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.dynamo.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

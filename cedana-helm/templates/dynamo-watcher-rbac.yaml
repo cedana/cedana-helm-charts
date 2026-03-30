@@ -1,0 +1,61 @@
+{{- if .Values.dynamo.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "cedana-helm.serviceAccountName" . }}-dynamo
+  labels:
+    app.kubernetes.io/component: dynamo-watcher
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-dynamo-watcher-role
+  labels:
+    app.kubernetes.io/component: dynamo-watcher
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - "nvidia.com"
+  resources:
+  - dynamographdeployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-dynamo-watcher-rolebinding
+  labels:
+    app.kubernetes.io/component: dynamo-watcher
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ include "cedana-helm.fullname" . }}-dynamo-watcher-role'
+subjects:
+- kind: ServiceAccount
+  name: '{{ include "cedana-helm.serviceAccountName" . }}-dynamo'
+  namespace: '{{ .Release.Namespace }}'
+{{- end }}
