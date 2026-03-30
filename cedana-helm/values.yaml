@@ -34,7 +34,7 @@ config:
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   checkpointStreams: 0
-  checkpointCompression: lz4 # Options: "none", "tar", "lz4", "gzip", "zlib"
+  checkpointCompression: none # Options: "none", "tar", "lz4", "gzip", "zlib"
   # Specify whether to perform checkpoint compression/upload async. Recommended if anticipating large checkpoints,
   # which could take too long to stream directly to a bucket. Note that restore will only be possible after upload is complete,
   # so there might be a delay before a workload can be restored.
@@ -132,8 +132,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.6.2
+      repository: cedana/cedana-controller-test
+      tag: 9234eff589584655cabae4b209045687a2c1baa4
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -187,10 +187,10 @@ kubernetesClusterDomain: cluster.local
 # Deploy the dynamo-watcher binary alongside the core controller.
 # Only enable on clusters that have NVIDIA Dynamo (DynamoGraphDeployment CRD) installed.
 dynamo:
-  enabled: false
+  enabled: true
   image:
-    repository: cedana/cedana-dynamo-watcher
-    tag: latest
+    repository: cedana/cedana-dynamo-watcher-test
+    tag: 9234eff589584655cabae4b209045687a2c1baa4
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   resources: {}
