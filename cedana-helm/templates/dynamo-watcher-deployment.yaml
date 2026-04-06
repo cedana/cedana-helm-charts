@@ -47,6 +47,8 @@ spec:
             configMapKeyRef:
               name: {{ template "cedana-helm.configMapName" . }}
               key: log-level
+        - name: CEDANA_DYNAMO_CREATE_LB
+          value: {{ quote .Values.dynamo.createLoadBalancer }}
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
         {{- if .Values.dynamo.image.digest }}

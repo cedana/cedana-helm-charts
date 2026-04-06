@@ -43,6 +43,24 @@ rules:
   - create
   - patch
   - delete
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "nvidia.com"
+  resources:
+  - dynamoworkermetadatas
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
