@@ -38,32 +38,6 @@ helm install cedana cedana/cedana-helm \
 | `config.metrics` | Enable metrics | `true` |
 | `config.profiling` | Enable profiling | `true` |
 
-### File Watching (Dynamo Integration)
-
-Enable file-based checkpoint triggers for frameworks like Dynamo (vLLM, SGLang):
-
-```yaml
-config:
-  fileWatching:
-    enabled: true
-    pollInterval: "1s"
-    triggers:
-      - path: "/tmp/ready-for-checkpoint"
-        action: "checkpoint"
-        onSuccess: "SIGUSR1"
-        onRestore: "SIGCONT"
-        onFailure: "SIGKILL"
-```
-
-**How it works:**
-1. Worker writes `/tmp/ready-for-checkpoint` file
-2. Cedana detects file (polling every 1s)
-3. Checkpoint performed automatically
-4. `SIGUSR1` signal sent on completion
-5. Worker exits gracefully
-
-**Supported signals:** `SIGUSR1`, `SIGUSR2`, `SIGCONT`, `SIGTERM`, `SIGKILL`, `SIGHUP`
-
 ### GPU Configuration
 
 ```yaml
@@ -105,49 +79,6 @@ config:
 ```
 
 ## Examples
-
-### Dynamo (vLLM/SGLang) Integration
-
-Use the provided example values:
-
-```bash
-helm install cedana cedana-helm/ -f cedana-helm/values-dynamo.yaml \
-  --set config.authToken=<your-token> \
-  --set config.clusterId=<cluster-id>
-```
-
-Or customize:
-
-```yaml
-# custom-values.yaml
-config:
-  authToken: "your-token"
-  clusterId: "my-cluster"
-  checkpointDir: "/checkpoints"
-
-  fileWatching:
-    enabled: true
-    pollInterval: "1s"
-    triggers:
-      - path: "/tmp/ready-for-checkpoint"
-        action: "checkpoint"
-        onSuccess: "SIGUSR1"
-        onRestore: "SIGCONT"
-        onFailure: "SIGKILL"
-
-daemonHelper:
-  nodeSelector:
-    nvidia.com/gpu: "true"
-
-hostConfig:
-  shmConfig:
-    enabled: true
-    size: 20G
-```
-
-```bash
-helm install cedana cedana-helm/ -f custom-values.yaml
-```
 
 ### High-Performance Setup
 

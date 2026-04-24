@@ -51,12 +51,12 @@ config:
   pluginsNativeVersion: latest
   pluginsCriuVersion: 7/merge
   pluginsContainerdRuntimeVersion: v0.7.1
-  pluginsGpuVersion: main-debug 
+  pluginsGpuVersion: main-debug
   pluginsStreamerVersion: v0.0.8
 
   profiling: true
   metrics: true
-  logLevel: info
+  logLevel: info 
 
   awsAccessKeyId: # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
   awsSecretAccessKey: # AWS secret access key if using S3 storage
@@ -83,9 +83,9 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper-test 
-    tag: main 
+    tag: main
     digest: # ignores tag if set
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
   updateStrategy:
     maxSurge: 0
     maxUnavailable: 99999
@@ -133,7 +133,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller-test
-      tag: 9234eff589584655cabae4b209045687a2c1baa4
+      tag: main 
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -176,7 +176,7 @@ controllerManager:
     #   requiredDuringSchedulingIgnoredDuringExecution:
     #     nodeSelectorTerms:
     #       - matchExpressions:
-    #           - key: "dedicated"
+    #           - key: "dedicated"4f3ea4bce2e35f402fc934155f0ba0f4adcff68f
     #             operator: "In"
     #             values:
     #               - "cedana-manager"
@@ -188,9 +188,13 @@ kubernetesClusterDomain: cluster.local
 # Only enable on clusters that have NVIDIA Dynamo (DynamoGraphDeployment CRD) installed.
 dynamo:
   enabled: true
+  # createLoadBalancer controls whether the dynamo-watcher automatically creates a
+  # LoadBalancer Service for each DynamoGraphDeployment's frontend component.
+  # Disable if your cluster manages ingress/LB externally.
+  createLoadBalancer: true
   image:
     repository: cedana/cedana-dynamo-watcher-test
-    tag: 9234eff589584655cabae4b209045687a2c1baa4
+    tag: main  
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   resources: {}
