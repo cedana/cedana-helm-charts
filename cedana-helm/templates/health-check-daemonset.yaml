@@ -63,6 +63,7 @@ spec:
                 sleep 300;
               else
                 rm -f /ready;
+                echo -e "\n--------------------------------\n";
                 sleep 5;
               fi;
             done
