@@ -136,11 +136,6 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-builds
-            - name: CEDANA_PLUGINS_NATIVE_VERSION
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: plugins-native-version
             - name: CEDANA_PLUGINS_CRIU_VERSION
               valueFrom:
                 configMapKeyRef:
