@@ -6,28 +6,29 @@
   "clusterId"
   "url"
   "authToken"
+  "sqsQueueUrl"
   "address"
   "protocol"
   "checkpointDir"
   "checkpointStreams"
+  "checkpointStreamMemoryLimit"
   "checkpointCompression"
+  "checkpointAsync"
   "gpuPoolSize"
   "gpuShmSize"
-  "gpuLdLibPath"
-  "gpuSkipNvidiaRuntimeHook"
   "pluginsBuilds"
-  "pluginsNativeVersion"
   "pluginsCriuVersion"
   "pluginsContainerdRuntimeVersion"
   "pluginsGpuVersion"
   "pluginsStreamerVersion"
-  "metrics"
   "profiling"
+  "metrics"
   "logLevel"
   "awsAccessKeyId"
+  "awsSecretAccessKey"
   "awsRegion"
   "awsEndpoint"
-  "containerdAddress"
+  "preExistingSecret"
 -}}
 {{- range $key := $configKeysFromValuesConfig -}}
   {{- if hasKey $.Values.config $key -}}
@@ -35,19 +36,26 @@
   {{- end -}}
 {{- end -}}
 
-{{- /* Values from .Values.shmConfig */ -}}
-{{- if hasKey $.Values "shmConfig" -}}
-  {{- if hasKey $.Values.shmConfig "enabled" -}}
-    {{- $_ := set $config "shm-config-enabled" (get $.Values.shmConfig "enabled") -}}
+{{- /* Values from .Values.hostConfig */ -}}
+{{- if hasKey $.Values "hostConfig" -}}
+  {{- if hasKey $.Values.hostConfig "containerdAddress" -}}
+    {{- $_ := set $config "hostConfig-containerdAddress" (get $.Values.hostConfig "containerdAddress") -}}
   {{- end -}}
-  {{- if hasKey $.Values.shmConfig "size" -}}
-    {{- $_ := set $config "shm-config-size" (get $.Values.shmConfig "size") -}}
+  {{- if hasKey $.Values.hostConfig "disableIoUring" -}}
+    {{- $_ := set $config "hostConfig-disableIoUring" (get $.Values.hostConfig "disableIoUring") -}}
   {{- end -}}
-  {{- if hasKey $.Values.shmConfig "minSize" -}}
-    {{- $_ := set $config "shm-config-min-size" (get $.Values.shmConfig "minSize") -}}
+  {{- if hasKey $.Values.hostConfig "shmConfig" -}}
+    {{- if hasKey $.Values.hostConfig.shmConfig "enabled" -}}
+      {{- $_ := set $config "hostConfig-shmConfig-enabled" (get $.Values.hostConfig.shmConfig "enabled") -}}
+    {{- end -}}
+    {{- if hasKey $.Values.hostConfig.shmConfig "size" -}}
+      {{- $_ := set $config "hostConfig-shmConfig-size" (get $.Values.hostConfig.shmConfig "size") -}}
+    {{- end -}}
+    {{- if hasKey $.Values.hostConfig.shmConfig "minSize" -}}
+      {{- $_ := set $config "hostConfig-shmConfig-minSize" (get $.Values.hostConfig.shmConfig "minSize") -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
 
 {{- sha256sum (toJson $config) -}}
 {{- end -}}
-

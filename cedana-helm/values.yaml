@@ -29,30 +29,31 @@ config:
   # Specify path to directory for storing checkpoints.
   # - `cedana://<path>` for Cedana-managed global storage (recommended)
   # - `s3://<bucket>/<path>` for your S3 storage
-  # - `<path>` for node-local storage
-  checkpointDir: cedana://
+  # - `<path>` for node-local storage (not recommended, as it won't be accessible across nodes)
+  checkpointDir: /tmp
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
-  checkpointStreams: 4
-  checkpointCompression: lz4 # Options: "none", "tar", "lz4", "gzip", "zlib"
+  # Streaming ensures a low footprint by using memory efficiently with no intermediate
+  # disk space required, although performance may be slightly better or worse depending on disk and network read/write speeds.
+  checkpointStreams: 0
+  # Specify the maximum memory (RAM) allowed for checkpoint streaming.
+  checkpointStreamMemoryLimit: 4096 # 4 GiB
+  checkpointCompression: none # Options: "none", "tar", "lz4", "gzip", "zlib"
   # Specify whether to perform checkpoint compression/upload async. Recommended if anticipating large checkpoints,
   # which could take too long to stream directly to a bucket. Note that restore will only be possible after upload is complete,
-  # so there might be a delay before a workload can be restored.
+  # so there might be a delay before a workload can be restored even though the checkpoint shows as complete.
   checkpointAsync: false
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
-  gpuLdLibPath: /run/nvidia/driver/usr/lib/x86_64-linux-gnu # Additional LD_LIBRARY_PATH to look for CUDA libraries
-  gpuSkipNvidiaRuntimeHook: false # Whether to skip adding the nvidia-container-runtime hook when starting GPU workloads
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: alpha
-  pluginsNativeVersion: latest
-  pluginsCriuVersion: 7/merge
-  pluginsContainerdRuntimeVersion: v0.7.1
-  pluginsGpuVersion: v0.7.0
-  pluginsStreamerVersion: v0.0.8
+  pluginsBuilds: release
+  pluginsCriuVersion: v4.2-cedana.01
+  pluginsContainerdRuntimeVersion: v0.7.3
+  pluginsGpuVersion: v0.7.1
+  pluginsStreamerVersion: v0.1.0
 
   profiling: true
   metrics: true
@@ -83,7 +84,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.284
+    tag: v0.9.293
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -133,7 +134,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.6.2
+      tag: v0.6.4
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
