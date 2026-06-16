@@ -131,16 +131,6 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-shm-size
-            - name: CEDANA_GPU_LD_LIB_PATH
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: gpu-ld-lib-path
-            - name: CEDANA_GPU_SKIP_NVIDIA_RUNTIME_HOOK
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: gpu-skip-nvidia-runtime-hook
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
