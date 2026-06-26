@@ -1,0 +1,86 @@
+{{- if .Values.dynamoWatcher.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-dynamo-watcher
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-dynamo-watcher-role
+  labels:
+  {{- include "cedana-helm.labels" . | nindent 4 }}
+rules:
+# NVIDIA Dynamo CRDs: watch DGDs, manage worker-metadata, apply/remove DGDs from
+# RabbitMQ create/delete workload messages.
+- apiGroups:
+  - "nvidia.com"
+  resources:
+  - dynamographdeployments
+  - dynamoworkermetadatas
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+# Pods: worker-metadata reconciler deletes stuck pods; RabbitMQ consumer creates pods.
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+# Services: create/delete LoadBalancer services for dynamo frontends.
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+# PersistentVolumeClaims: RabbitMQ consumer provisions PVCs for restored workloads.
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-dynamo-watcher-rolebinding
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+  {{- include "cedana-helm.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ include "cedana-helm.fullname" . }}-dynamo-watcher-role'
+subjects:
+- kind: ServiceAccount
+  name: '{{ include "cedana-helm.fullname" . }}-dynamo-watcher'
+  namespace: '{{ .Release.Namespace }}'
+{{- end }}
