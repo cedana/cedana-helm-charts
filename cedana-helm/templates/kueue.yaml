@@ -28,7 +28,7 @@ apiVersion: kueue.x-k8s.io/v1beta1
 kind: LocalQueue
 metadata:
   name: user-queue
-  namespace: cedana
+  namespace: {{ .Release.Namespace }}
 spec:
   clusterQueue: cluster-queue
 ---
