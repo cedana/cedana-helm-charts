@@ -1,0 +1,85 @@
+{{- if .Values.dynamoWatcher.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-dynamo-watcher
+  labels:
+    app.kubernetes.io/component: dynamo-watcher
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.dynamoWatcher.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dynamo-watcher
+      {{- include "cedana-helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: dynamo-watcher
+      {{- with .Values.dynamoWatcher.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: dynamo-watcher
+        {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: dynamo-watcher
+        command:
+        - /dynamo-watcher
+        env:
+        - name: CEDANA_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: url
+        - name: CEDANA_CLUSTER_ID
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: cluster-id
+        - name: CEDANA_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "cedana-helm.secretName" . }}
+              key: auth-token
+        - name: CEDANA_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: log-level
+        - name: CEDANA_DYNAMO_CREATE_LB
+          value: {{ .Values.dynamoWatcher.createLoadBalancer | quote }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        - name: CONTROLLER_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        {{- if .Values.dynamoWatcher.image.digest }}
+        image: {{ .Values.dynamoWatcher.image.repository }}@{{ .Values.dynamoWatcher.image.digest }}
+        {{- else }}
+        image: {{ .Values.dynamoWatcher.image.repository }}:{{ .Values.dynamoWatcher.image.tag }}
+        {{- end }}
+        imagePullPolicy: {{ .Values.dynamoWatcher.image.imagePullPolicy }}
+        resources: {{- toYaml .Values.dynamoWatcher.resources | nindent 10 }}
+        securityContext: {{- toYaml .Values.dynamoWatcher.containerSecurityContext | nindent 10 }}
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: {{ include "cedana-helm.fullname" . }}-dynamo-watcher
+      terminationGracePeriodSeconds: 10
+      {{- with .Values.dynamoWatcher.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.dynamoWatcher.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.dynamoWatcher.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
