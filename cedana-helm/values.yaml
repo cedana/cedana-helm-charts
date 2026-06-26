@@ -183,6 +183,36 @@ controllerManager:
     #               - "cedana-manager"
   nodeSelector: {}
 
+# dynamo-watcher: standalone component that watches DynamoGraphDeployments and
+# dynamo Services, syncs their status to the Cedana propagator, and consumes the
+# cluster's RabbitMQ create/delete workload queues. Only relevant on clusters that
+# have NVIDIA Dynamo installed, so it is opt-in (disabled by default).
+dynamoWatcher:
+  enabled: false
+  # Create a LoadBalancer Service for dynamo frontends (sets CEDANA_DYNAMO_CREATE_LB).
+  createLoadBalancer: false
+  replicaCount: 1
+  podAnnotations: {}
+  image:
+    repository: cedana/cedana-dynamo-watcher
+    # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
+    tag: v0.6.4
+    digest: # ignores tag if set
+    imagePullPolicy: IfNotPresent
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  resources: {}
+  nodeSelector: {}
+  tolerations:
+    # Allow scheduling on nodes that are waiting for Cedana to be ready
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+      effect: "NoSchedule"
+  affinity: {}
+
 kubernetesClusterDomain: cluster.local
 
 metricsService:
