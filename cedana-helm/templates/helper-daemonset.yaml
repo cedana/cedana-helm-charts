@@ -57,6 +57,10 @@ spec:
             - name: host-volume
               mountPath: /host
               readOnly: false
+            - name: checkpoint-ram-cache
+              mountPath: /ram-cache
+            - name: checkpoint-disk-cache
+              mountPath: /disk-cache
           command: ["/bin/sh", "-c"]
           args: ["cedana k8s setup"]
           ports:
@@ -193,6 +197,10 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: log-level
+            - name: CEDANA_HELPER_POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
             - name: CEDANA_CRIU_MANAGE_CGROUPS
               value: "cg_none"
             - name: CONTAINERD_CONFIG_PATH
@@ -253,3 +261,10 @@ spec:
         - name: host-volume
           hostPath:
             path: /
+        - name: checkpoint-ram-cache
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+        - name: checkpoint-disk-cache
+          emptyDir:
+            sizeLimit: 1Gi
