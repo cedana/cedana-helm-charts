@@ -128,6 +128,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: checkpoint-stream-memory-limit
+            - name: CEDANA_CRIU_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: criu-log-level
             - name: CEDANA_CHECKPOINT_COMPRESSION
               valueFrom:
                 configMapKeyRef:

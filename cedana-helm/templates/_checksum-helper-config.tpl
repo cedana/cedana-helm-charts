@@ -29,6 +29,7 @@
   "awsRegion"
   "awsEndpoint"
   "preExistingSecret"
+  "criuLogLevel"
 -}}
 {{- range $key := $configKeysFromValuesConfig -}}
   {{- if hasKey $.Values.config $key -}}
