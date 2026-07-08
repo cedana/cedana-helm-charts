@@ -97,6 +97,12 @@ daemonHelper:
       effect: "NoSchedule"
   affinity: {}
   nodeSelector: {}
+  checkpointRamCache:
+    # Size limit for the in-memory checkpoint cache emptyDir volume.
+    sizeLimit: 1Gi
+  checkpointDiskCache:
+    # Size limit for the node-local checkpoint cache emptyDir volume.
+    sizeLimit: 1Gi
 
 serviceAccount:
   # Specifies whether a service account should be created

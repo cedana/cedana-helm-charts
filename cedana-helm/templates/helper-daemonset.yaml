@@ -142,6 +142,10 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: checkpoint-async
+            - name: CEDANA_MEM_CACHE_LIMIT
+              value: {{ .Values.daemonHelper.checkpointRamCache.sizeLimit | quote }}
+            - name: CEDANA_DISK_CACHE_LIMIT
+              value: {{ .Values.daemonHelper.checkpointDiskCache.sizeLimit | quote }}
             - name: CEDANA_GPU_POOL_SIZE
               valueFrom:
                 configMapKeyRef:
@@ -264,7 +268,7 @@ spec:
         - name: checkpoint-ram-cache
           emptyDir:
             medium: Memory
-            sizeLimit: 1Gi
+            sizeLimit: {{ .Values.daemonHelper.checkpointRamCache.sizeLimit | quote }}
         - name: checkpoint-disk-cache
           emptyDir:
-            sizeLimit: 1Gi
+            sizeLimit: {{ .Values.daemonHelper.checkpointDiskCache.sizeLimit | quote }}
