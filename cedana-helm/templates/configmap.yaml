@@ -39,4 +39,6 @@ data:
   shm-config-enabled: "{{ .Values.hostConfig.shmConfig.enabled }}"
   shm-config-size: "{{ .Values.hostConfig.shmConfig.size }}"
   shm-config-min-size: "{{ .Values.hostConfig.shmConfig.minSize }}"
+
+  criu-log-level: "{{ .Values.config.criuLogLevel }}"
 {{- end }}

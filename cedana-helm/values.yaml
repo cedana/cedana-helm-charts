@@ -64,6 +64,7 @@ config:
   awsRegion: # AWS region if using S3 storage (uses default region if not set)
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
+  criuLogLevel: 2
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
