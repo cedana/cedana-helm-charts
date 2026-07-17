@@ -69,6 +69,23 @@ place; it is required for Cedana to function.
 > nodes exclusively to Cedana, see [Dedicated Node for Controller](#dedicated-node-for-controller)
 > below, which additionally taints the node to repel other workloads.
 
+#### Managing Node Taints Yourself
+
+By default the controller manages a `cedana.ai/not-ready:NoSchedule` taint on each
+node: it taints the node while Cedana is starting up there and removes the taint
+once Cedana is ready, gating other workloads off the node until it can
+checkpoint/restore. If you'd rather manage node readiness yourself (via your own
+tooling, GitOps, or an admission controller), disable it:
+
+```bash
+helm install cedana ./cedana-helm \
+  --set controllerManager.taintNodes=false
+```
+
+When disabled, the controller is completely hands-off — it will neither add nor
+remove the `cedana.ai/not-ready` taint — and you are responsible for keeping
+workloads off nodes until Cedana is ready. This is enabled (`true`) by default.
+
 #### Dedicated Node for Controller
 
 To run the Cedana Controller exclusively on a specific node:

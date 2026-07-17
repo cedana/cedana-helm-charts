@@ -123,6 +123,20 @@ serviceAccount:
   name: cedana-controller-manager
 
 controllerManager:
+  # Whether the controller manages the cedana.ai/not-ready taint on nodes.
+  #
+  # When true (default), the controller taints a node cedana.ai/not-ready:NoSchedule
+  # while Cedana is starting up on it, and removes the taint once Cedana is ready.
+  # This gates other workloads off a node until it can actually checkpoint/restore.
+  #
+  # Set to false if you manage node readiness / taints yourself (e.g. via your own
+  # tooling, GitOps, or an admission controller). When false, the controller will
+  # neither add nor remove the cedana.ai/not-ready taint — it stays entirely hands-off,
+  # and you are responsible for keeping workloads off nodes until Cedana is ready.
+  #
+  # Note: the built-in cedana.ai/not-ready toleration on the Cedana pods is harmless
+  # to leave in place either way.
+  taintNodes: true
   autoscaling:
     enabled: false
     replicaCount: 1
