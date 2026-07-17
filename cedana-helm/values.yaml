@@ -97,18 +97,10 @@ daemonHelper:
       operator: "Exists"
       effect: "NoSchedule"
   affinity: {}
-  # Restrict Cedana to a specific set of nodes.
-  #
-  # Label the nodes you want Cedana to run on:
+  # Restrict Cedana to labeled nodes; the controller taints only these nodes.
   #   kubectl label nodes <node-name> cedana.ai/enabled=true
-  # then set the matching selector below (e.g. via --set or a values override):
-  #   nodeSelector:
-  #     cedana.ai/enabled: "true"
-  #
-  # The controller reads this same nodeSelector to decide which nodes to manage,
-  # so it will only apply the cedana.ai/not-ready taint to in-scope nodes. Nodes
-  # outside the selector are left untouched (no permanent not-ready taint). Leave
-  # empty to run on all nodes (default).
+  #   nodeSelector: { cedana.ai/enabled: "true" }
+  # Empty = all nodes (default).
   nodeSelector: {}
 
 serviceAccount:
@@ -123,19 +115,9 @@ serviceAccount:
   name: cedana-controller-manager
 
 controllerManager:
-  # Whether the controller manages the cedana.ai/not-ready taint on nodes.
-  #
-  # When true (default), the controller taints a node cedana.ai/not-ready:NoSchedule
-  # while Cedana is starting up on it, and removes the taint once Cedana is ready.
-  # This gates other workloads off a node until it can actually checkpoint/restore.
-  #
-  # Set to false if you manage node readiness / taints yourself (e.g. via your own
-  # tooling, GitOps, or an admission controller). When false, the controller will
-  # neither add nor remove the cedana.ai/not-ready taint — it stays entirely hands-off,
-  # and you are responsible for keeping workloads off nodes until Cedana is ready.
-  #
-  # Note: the built-in cedana.ai/not-ready toleration on the Cedana pods is harmless
-  # to leave in place either way.
+  # Whether the controller manages the cedana.ai/not-ready taint (gates workloads
+  # off a node until Cedana is ready). Set false to manage node readiness yourself;
+  # the controller then never adds or removes the taint.
   taintNodes: true
   autoscaling:
     enabled: false
