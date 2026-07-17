@@ -97,6 +97,18 @@ daemonHelper:
       operator: "Exists"
       effect: "NoSchedule"
   affinity: {}
+  # Restrict Cedana to a specific set of nodes.
+  #
+  # Label the nodes you want Cedana to run on:
+  #   kubectl label nodes <node-name> cedana.ai/enabled=true
+  # then set the matching selector below (e.g. via --set or a values override):
+  #   nodeSelector:
+  #     cedana.ai/enabled: "true"
+  #
+  # The controller reads this same nodeSelector to decide which nodes to manage,
+  # so it will only apply the cedana.ai/not-ready taint to in-scope nodes. Nodes
+  # outside the selector are left untouched (no permanent not-ready taint). Leave
+  # empty to run on all nodes (default).
   nodeSelector: {}
 
 serviceAccount:
