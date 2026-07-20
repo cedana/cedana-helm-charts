@@ -136,6 +136,16 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-shm-size
+            - name: CEDANA_GPU_DEDUP_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-dedup-enabled
+            - name: CEDANA_GPU_TEMPLATES_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-templates-enabled
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
