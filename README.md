@@ -40,6 +40,52 @@ helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-names
 
 ### Configuration Options
 
+#### Restricting Cedana to Specific Nodes
+
+By default the Cedana helper runs on every node in the cluster. To limit it to a
+specific set of nodes, label those nodes and set a matching `nodeSelector`:
+
+- Label the nodes you want Cedana to run on:
+```bash
+kubectl label nodes <node-name> cedana.ai/enabled=true
+```
+
+- Set the selector at install time (or in a values override):
+```bash
+helm install cedana ./cedana-helm \
+  --set daemonHelper.nodeSelector."cedana\.ai/enabled"=true
+```
+
+The Cedana controller reads this same `nodeSelector` to decide which nodes to
+manage, so it only applies the `cedana.ai/not-ready` taint to in-scope nodes.
+Nodes outside the selector are never tainted, and if you narrow the selector
+later, any existing `not-ready` taint is removed from the now-out-of-scope
+nodes automatically. You do **not** need to configure the taint or its
+toleration yourself — leave the built-in `cedana.ai/not-ready` toleration in
+place; it is required for Cedana to function.
+
+> This is the common case ("run Cedana on these nodes"). It does **not**
+> prevent other workloads from also running on those nodes. To *dedicate*
+> nodes exclusively to Cedana, see [Dedicated Node for Controller](#dedicated-node-for-controller)
+> below, which additionally taints the node to repel other workloads.
+
+#### Managing Node Taints Yourself
+
+By default the controller manages a `cedana.ai/not-ready:NoSchedule` taint on each
+node: it taints the node while Cedana is starting up there and removes the taint
+once Cedana is ready, gating other workloads off the node until it can
+checkpoint/restore. If you'd rather manage node readiness yourself (via your own
+tooling, GitOps, or an admission controller), disable it:
+
+```bash
+helm install cedana ./cedana-helm \
+  --set controllerManager.taintNodes=false
+```
+
+When disabled, the controller is completely hands-off — it will neither add nor
+remove the `cedana.ai/not-ready` taint — and you are responsible for keeping
+workloads off nodes until Cedana is ready. This is enabled (`true`) by default.
+
 #### Dedicated Node for Controller
 
 To run the Cedana Controller exclusively on a specific node:

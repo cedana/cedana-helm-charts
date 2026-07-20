@@ -99,6 +99,10 @@ daemonHelper:
       operator: "Exists"
       effect: "NoSchedule"
   affinity: {}
+  # Restrict Cedana to labeled nodes; the controller taints only these nodes.
+  #   kubectl label nodes <node-name> cedana.ai/enabled=true
+  #   nodeSelector: { cedana.ai/enabled: "true" }
+  # Empty = all nodes (default).
   nodeSelector: {}
 
 serviceAccount:
@@ -113,6 +117,10 @@ serviceAccount:
   name: cedana-controller-manager
 
 controllerManager:
+  # Whether the controller manages the cedana.ai/not-ready taint (gates workloads
+  # off a node until Cedana is ready). Set false to manage node readiness yourself;
+  # the controller then never adds or removes the taint.
+  taintNodes: true
   autoscaling:
     enabled: false
     replicaCount: 1
