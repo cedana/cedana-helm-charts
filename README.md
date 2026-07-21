@@ -56,6 +56,31 @@ helm install cedana ./cedana-helm \
   --set daemonHelper.nodeSelector."cedana\.ai/enabled"=true
 ```
 
+## EKS Pod Identity for S3 checkpoints
+
+The helper and health-check DaemonSets use a dedicated `cedana-helper` ServiceAccount. The chart does not install the EKS Pod Identity Agent, create IAM roles or policies, or create Pod Identity associations.
+
+1. Install the EKS Pod Identity Agent add-on on the cluster.
+2. Create an IAM role with a least-privilege policy for the checkpoint bucket. Typical permissions are `s3:ListBucket` on the bucket and `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:AbortMultipartUpload`, and multipart-list permissions on the checkpoint prefix.
+3. Associate that role with the chart namespace and the `cedana-helper` ServiceAccount.
+4. Install or upgrade with:
+
+```yaml
+config:
+  checkpointDir: s3://my-checkpoint-bucket/cedana
+  awsCredentialsMode: eksPodIdentity
+  awsRegion: us-east-1
+
+daemonHelper:
+  serviceAccount:
+    create: true
+    name: cedana-helper
+    automount: false
+    annotations: {}
+```
+
+To use an externally managed ServiceAccount, set `daemonHelper.serviceAccount.create: false` and provide its non-empty `name`. Use `config.awsCredentialsMode: ambient` for IRSA, node roles, or other AWS default-chain credential sources. Static mode remains the default and continues to read `config.awsAccessKeyId` and `config.awsSecretAccessKey`.
+
 The Cedana controller reads this same `nodeSelector` to decide which nodes to
 manage, so it only applies the `cedana.ai/not-ready` taint to in-scope nodes.
 Nodes outside the selector are never tainted, and if you narrow the selector
