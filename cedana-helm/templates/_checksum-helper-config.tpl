@@ -26,6 +26,7 @@
   "logLevel"
   "awsAccessKeyId"
   "awsSecretAccessKey"
+  "awsCredentialsMode"
   "awsRegion"
   "awsEndpoint"
   "preExistingSecret"
@@ -56,6 +57,10 @@
       {{- $_ := set $config "hostConfig-shmConfig-minSize" (get $.Values.hostConfig.shmConfig "minSize") -}}
     {{- end -}}
   {{- end -}}
+{{- end -}}
+
+{{- if hasKey $.Values.daemonHelper "serviceAccount" -}}
+  {{- $_ := set $config "daemonHelper-serviceAccount" $.Values.daemonHelper.serviceAccount -}}
 {{- end -}}
 
 {{- sha256sum (toJson $config) -}}
