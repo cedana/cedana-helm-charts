@@ -235,7 +235,7 @@ metricsService:
 # Enable cluster metrics (Prometheus and Vector collection to S3)
 clusterMetrics:
   # Enable the Cedana Monitoring Stack (installs Prometheus and Vector)
-  enabled: true
+  enabled: false
   # Enable GPU metrics collection (installs DCGM Exporter). Requires NVIDIA GPUs on nodes.
   gpu:
     enabled: false
