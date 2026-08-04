@@ -1,1 +1,3 @@
 .values.*
+cedana-helm/Chart.lock
+cedana-helm/charts/
