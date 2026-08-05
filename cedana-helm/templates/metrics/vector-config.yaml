@@ -1,4 +1,5 @@
 {{- if .Values.clusterMetrics.enabled -}}
+{{- if include "cedana-helm.vectorEnabled" . -}}
 {{- $cedanaUrl := required "config.url is required!" .Values.config.url -}}
 {{- $host := $cedanaUrl | trimSuffix "/v1" | trimSuffix "/v2" | trimSuffix "/" | trimPrefix "https://" | trimPrefix "http://" -}}
 {{- $region := .Values.clusterMetrics.s3.region | default .Values.config.awsRegion | default "us-east-1" -}}
@@ -19,19 +20,19 @@ data:
       kube-state-metrics:
         type: prometheus_scrape
         endpoints:
-          - http://{{ .Release.Name }}-kube-state-metrics.{{ .Release.Namespace }}.svc.cluster.local:8080/metrics
+          - {{ dig "endpoints" "kubeStateMetrics" "" (.Values.clusterMetrics | default dict) | default (printf "http://%s-kube-state-metrics.%s.svc.cluster.local:8080/metrics" .Release.Name .Release.Namespace) }}
       dcgm-exporter:
         type: prometheus_scrape
         endpoints:
-          - http://nvidia-dcgm-exporter.gpu-operator.svc.cluster.local:9400/metrics
+          - {{ dig "endpoints" "dcgmExporter" "" (.Values.clusterMetrics | default dict) | default (printf "http://dcgm-exporter.%s.svc.cluster.local:9400/metrics" .Release.Namespace) }}
       node-exporter:
         type: prometheus_scrape
         endpoints:
-          - http://{{ .Release.Name }}-prometheus-node-exporter.{{ .Release.Namespace }}.svc.cluster.local:9100/metrics
+          - {{ dig "endpoints" "nodeExporter" "" (.Values.clusterMetrics | default dict) | default (printf "http://%s-prometheus-node-exporter.%s.svc.cluster.local:9100/metrics" .Release.Name .Release.Namespace) }}
       cadvisor:
         type: prometheus_scrape
         endpoints:
-          - http://{{ .Release.Name }}-prometheus-server.{{ .Release.Namespace }}.svc.cluster.local/federate?match[]=container_cpu_usage_seconds_total&match[]=container_memory_working_set_bytes
+          - {{ dig "endpoints" "cadvisor" "" (.Values.clusterMetrics | default dict) | default (printf "http://%s-prometheus-server.%s.svc.cluster.local/federate?match[]=container_cpu_usage_seconds_total&match[]=container_memory_working_set_bytes" .Release.Name .Release.Namespace) }}
         scrape_interval_secs: 60
       host_metrics:
         type: host_metrics
@@ -114,3 +115,5 @@ data:
         filename_time_format: "%s"
         filename_append_uuid: true
 {{- end -}}
+{{- end -}}
+

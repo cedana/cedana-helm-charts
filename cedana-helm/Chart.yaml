@@ -11,12 +11,12 @@ dependencies:
   - name: prometheus
     version: "25.21.0"
     repository: "https://prometheus-community.github.io/helm-charts"
-    condition: clusterMetrics.enabled
+    condition: clusterMetrics.prometheus.enabled
   - name: vector
     version: "0.34.0"
     repository: "https://helm.vector.dev"
-    condition: clusterMetrics.enabled
+    condition: clusterMetrics.vector.enabled
   - name: dcgm-exporter
-    version: "3.3.5"
+    version: "3.4.0"
     repository: "https://nvidia.github.io/dcgm-exporter/helm-charts"
     condition: clusterMetrics.gpu.enabled

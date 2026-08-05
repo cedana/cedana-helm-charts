@@ -236,9 +236,22 @@ metricsService:
 clusterMetrics:
   # Enable the Cedana Monitoring Stack (installs Prometheus and Vector)
   enabled: false
+  # Enable Prometheus subchart installation.
+  prometheus:
+    enabled: false
+  # Enable Vector subchart installation.
+  vector:
+    enabled: false
   # Enable GPU metrics collection (installs DCGM Exporter). Requires NVIDIA GPUs on nodes.
   gpu:
     enabled: false
+  # Custom endpoints to use existing monitoring setup components when local ones are disabled
+  endpoints:
+    kubeStateMetrics: "" # Existing kube-state-metrics scrape endpoint (e.g. 'http://kube-metrics.monitoring.svc:8080/metrics')
+    nodeExporter: ""     # Existing node-exporter scrape endpoint (e.g. 'http://node-exporter.monitoring.svc:9100/metrics')
+    prometheusServer: "" # Existing prometheus-server endpoint
+    dcgmExporter: ""     # Existing dcgm-exporter scrape endpoint
+    cadvisor: ""         # Existing cadvisor/kubelet metrics endpoint
   # S3 configuration for metrics storage
   s3:
     bucket: ""              # AWS S3 bucket name (required when metrics are enabled)
@@ -354,6 +367,10 @@ vector:
       enabled: true
       path: "/var/lib/vector"
 
-# Subchart: DCGM Exporter configuration overrides when clusterMetrics are enabled
+# Subchart: DCGM Exporter configuration overrides
 dcgm-exporter:
   fullnameOverride: dcgm-exporter
+  serviceMonitor:
+    enabled: false
+  nodeSelector:
+    nvidia.com/gpu.present: "true"
