@@ -88,5 +88,5 @@ Return secret name to be used based on provided values.
 
 # Config map helper
 {{- define "cedana-helm.configMapName" -}}
-{{- default "cedana-config" .Values.config.preExistingSecret -}}
+{{- default "cedana-config" .Values.config.preExistingConfigMap -}}
 {{- end -}}

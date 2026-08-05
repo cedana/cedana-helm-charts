@@ -1,3 +1,4 @@
+{{- if .Values.controllerManager.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -15,3 +16,4 @@ spec:
   {{- include "cedana-helm.selectorLabels" . | nindent 4 }}
   ports:
 	{{- .Values.metricsService.ports | toYaml | nindent 2 }}
+{{- end }}

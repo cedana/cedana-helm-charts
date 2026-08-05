@@ -1,3 +1,4 @@
+{{- if .Values.uninstaller.enabled }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -70,3 +71,4 @@ roleRef:
   kind: ClusterRole
   name: {{ include "cedana-helm.fullname" . }}-uninstaller-clusterrole
   apiGroup: rbac.authorization.k8s.io
+{{- end }}

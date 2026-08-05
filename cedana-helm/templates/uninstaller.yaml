@@ -1,3 +1,4 @@
+{{- if .Values.uninstaller.enabled }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -94,3 +95,4 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+{{- end }}

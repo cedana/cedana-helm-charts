@@ -1,3 +1,4 @@
+{{- if .Values.controllerManager.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -57,3 +58,4 @@ subjects:
 - kind: ServiceAccount
   name: '{{ include "cedana-helm.serviceAccountName" . }}'
   namespace: '{{ .Release.Namespace }}'
+{{- end }}

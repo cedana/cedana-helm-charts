@@ -65,6 +65,26 @@ rules:
   - list
   - watch
   - create
+# Deployments: inference controller scales CPU inference Deployments per propagator
+# capacity intents (replicas 0/1) in the inference namespace.
+- apiGroups:
+  - "apps"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+# Leases: inference controller leader election in the inference namespace.
+- apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - leases
+  verbs:
+  - get
+  - create
+  - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

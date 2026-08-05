@@ -83,6 +83,9 @@ hostConfig:
     minSize: 10G # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
+  # Deploy the helper DaemonSets (and the health-check DaemonSet). Set false
+  # when only the dynamo-watcher is wanted (e.g. a watcher-only release).
+  enabled: true
   serviceAccount:
     # Create a dedicated ServiceAccount for the S3-using helper DaemonSets.
     create: true
@@ -123,6 +126,9 @@ serviceAccount:
   name: cedana-controller-manager
 
 controllerManager:
+  # Deploy the controller manager (and its RBAC/metrics/leader-election
+  # resources). Set false when only the dynamo-watcher is wanted.
+  enabled: true
   # Whether the controller manages the cedana.ai/not-ready taint (gates workloads
   # off a node until Cedana is ready). Set false to manage node readiness yourself;
   # the controller then never adds or removes the taint.
@@ -204,10 +210,16 @@ controllerManager:
 # dynamo Services, syncs their status to the Cedana propagator, and consumes the
 # cluster's RabbitMQ create/delete workload queues. Only relevant on clusters that
 # have NVIDIA Dynamo installed, so it is opt-in (disabled by default).
+#
+# It also runs the CPU inference lifecycle controller as a leader-elected loop in
+# `inferenceNamespace` (see INFERENCE_NAMESPACE).
 dynamoWatcher:
   enabled: false
   # Create a LoadBalancer Service for dynamo frontends (sets CEDANA_DYNAMO_CREATE_LB).
   createLoadBalancer: false
+  # Namespace holding CPU inference Deployments reconciled by the built-in
+  # inference controller (sets INFERENCE_NAMESPACE).
+  inferenceNamespace: cedana-inference
   replicaCount: 1
   podAnnotations: {}
   image:
@@ -228,6 +240,15 @@ dynamoWatcher:
     - key: "cedana.ai/not-ready"
       operator: "Exists"
       effect: "NoSchedule"
+
+# Gate the remaining cluster-scoped components of the chart so a watcher-only
+# (or manager-only) release does not collide with an existing full release.
+healthCheck:
+  enabled: true
+runtimeClass:
+  enabled: true
+uninstaller:
+  enabled: true
   affinity: {}
 
 kubernetesClusterDomain: cluster.local

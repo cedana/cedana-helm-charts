@@ -1,3 +1,4 @@
+{{- if .Values.daemonHelper.enabled }}
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -263,3 +264,4 @@ spec:
         - name: host-volume
           hostPath:
             path: /
+{{- end }}
