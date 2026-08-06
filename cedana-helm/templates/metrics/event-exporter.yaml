@@ -1,19 +1,15 @@
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: cedana-monitoring
----
+{{- if .Values.clusterMetrics.enabled -}}
+{{- if include "cedana-helm.vectorEnabled" . -}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: kubernetes-event-exporter
-  namespace: cedana-monitoring
+  namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kubernetes-event-exporter
+  name: {{ .Release.Name }}-kubernetes-event-exporter
 rules:
   - apiGroups: [""]
     resources: ["events"]
@@ -28,21 +24,21 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kubernetes-event-exporter
+  name: {{ .Release.Name }}-kubernetes-event-exporter
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kubernetes-event-exporter
+  name: {{ .Release.Name }}-kubernetes-event-exporter
 subjects:
   - kind: ServiceAccount
     name: kubernetes-event-exporter
-    namespace: cedana-monitoring
+    namespace: {{ .Release.Namespace }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kubernetes-event-exporter-config
-  namespace: cedana-monitoring
+  namespace: {{ .Release.Namespace }}
 data:
   config.yaml: |
     logLevel: info
@@ -52,17 +48,17 @@ data:
       - name: "dump"
         stdout:
           layout:
-            message: "{{ .Message }}"
-            reason: "{{ .Reason }}"
-            type: "{{ .Type }}"
-            count: "{{ .Count }}"
-            kind: "{{ .InvolvedObject.Kind }}"
-            name: "{{ .InvolvedObject.Name }}"
-            namespace: "{{ .Namespace }}"
-            component: "{{ .Source.Component }}"
-            host: "{{ .Source.Host }}"
-            firstTimestamp: "{{ .FirstTimestamp }}"
-            lastTimestamp: "{{ .LastTimestamp }}"
+            message: "{{`{{ .Message }}`}}"
+            reason: "{{`{{ .Reason }}`}}"
+            type: "{{`{{ .Type }}`}}"
+            count: "{{`{{ .Count }}`}}"
+            kind: "{{`{{ .InvolvedObject.Kind }}`}}"
+            name: "{{`{{ .InvolvedObject.Name }}`}}"
+            namespace: "{{`{{ .Namespace }}`}}"
+            component: "{{`{{ .Source.Component }}`}}"
+            host: "{{`{{ .Source.Host }}`}}"
+            firstTimestamp: "{{`{{ .FirstTimestamp }}`}}"
+            lastTimestamp: "{{`{{ .LastTimestamp }}`}}"
     route:
       routes:
         - match:
@@ -72,7 +68,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kubernetes-event-exporter
-  namespace: cedana-monitoring
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -114,7 +110,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kubernetes-event-exporter
-  namespace: cedana-monitoring
+  namespace: {{ .Release.Namespace }}
   labels:
     app: kubernetes-event-exporter
 spec:
@@ -124,3 +120,5 @@ spec:
     - port: 2112
       targetPort: 2112
       name: metrics
+{{- end -}}
+{{- end -}}
