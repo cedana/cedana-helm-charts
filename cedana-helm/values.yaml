@@ -46,6 +46,7 @@ config:
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
+  gpuDedupEnabled: true
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
@@ -221,6 +222,23 @@ dynamoWatcher:
       operator: "Exists"
       effect: "NoSchedule"
   affinity: {}
+
+csx:
+  image:
+    repository: cedana/cedana-csx
+    tag: latest
+    digest: # ignores tag if set
+    imagePullPolicy: Always
+
+csxConfig:
+  logLevel: debug
+  memoryCacheLimit: 128
+  memoryCachePath: /cedana/memstore/
+  localDiskCacheLimit: 1024
+  localDiskCachePath: /cedana/diskstore/
+  nfsPath: /cedana/nfsstore/
+  sockAddr: /run/csx.sock
+  nfsPollInterval: 10
 
 kubernetesClusterDomain: cluster.local
 

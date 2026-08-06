@@ -21,6 +21,7 @@ data:
   checkpoint-async: "{{ .Values.config.checkpointAsync }}"
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
+  gpu-dedup-enabled: "{{ .Values.config.gpuDedupEnabled }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"
@@ -39,6 +40,15 @@ data:
   shm-config-enabled: "{{ .Values.hostConfig.shmConfig.enabled }}"
   shm-config-size: "{{ .Values.hostConfig.shmConfig.size }}"
   shm-config-min-size: "{{ .Values.hostConfig.shmConfig.minSize }}"
+
+  csx-log-level: "{{ .Values.csxConfig.logLevel }}"
+  csx-sock-addr: "{{ .Values.csxConfig.sockAddr }}"
+  csx-memory-cache-limit: "{{ .Values.csxConfig.memoryCacheLimit }}"
+  csx-memory-cache-path: "{{ .Values.csxConfig.memoryCachePath }}"
+  csx-local-disk-cache-limit: "{{ .Values.csxConfig.localDiskCacheLimit }}"
+  csx-local-disk-cache-path: "{{ .Values.csxConfig.localDiskCachePath }}"
+  csx-nfs-path: "{{ .Values.csxConfig.nfsPath }}"
+  csx-nfs-poll-interval: "{{ .Values.csxConfig.nfsPollInterval }}"
 
   criu-log-level: "{{ .Values.config.criuLogLevel }}"
 {{- end }}
