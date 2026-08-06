@@ -26,6 +26,7 @@ spec:
       annotations:
         checksum/config: {{ include "cedana-helm.helper.config.checksum" . | sha256sum }}
     spec:
+      serviceAccountName: {{ include "cedana-helm.daemonHelperServiceAccountName" . }}
       hostPID: true
       hostIPC: true
       hostNetwork: true
@@ -189,6 +190,9 @@ spec:
               value: "true"
             - name: CEDANA_DB_REMOTE
               value: "true"
+            - name: CEDANA_AWS_CREDENTIALS_MODE
+              value: {{ include "cedana-helm.awsCredentialsMode" . | quote }}
+            {{- if eq (include "cedana-helm.awsCredentialsMode" .) "static" }}
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 configMapKeyRef:
@@ -199,6 +203,7 @@ spec:
                 secretKeyRef:
                   name: {{ template "cedana-helm.secretName" . }}
                   key: aws-secret-access-key
+            {{- end }}
             - name: CONTAINERD_ADDRESS
               valueFrom:
                 configMapKeyRef:

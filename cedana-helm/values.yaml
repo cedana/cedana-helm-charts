@@ -61,6 +61,8 @@ config:
 
   awsAccessKeyId: # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
   awsSecretAccessKey: # AWS secret access key if using S3 storage
+  # AWS credential provider: static, eksPodIdentity, or ambient
+  awsCredentialsMode: static
   awsRegion: # AWS region if using S3 storage (uses default region if not set)
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
@@ -81,6 +83,12 @@ hostConfig:
     minSize: 10G # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
+  serviceAccount:
+    # Create a dedicated ServiceAccount for the S3-using helper DaemonSets.
+    create: true
+    name: cedana-helper
+    automount: false
+    annotations: {}
   service:
     annotations: {}
   image:

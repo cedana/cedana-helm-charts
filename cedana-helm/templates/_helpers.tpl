@@ -5,6 +5,24 @@ Expand the name of the chart.
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{/* Validate and return the helper AWS credentials mode. */}}
+{{- define "cedana-helm.awsCredentialsMode" -}}
+{{- $mode := .Values.config.awsCredentialsMode -}}
+{{- if not (has $mode (list "static" "eksPodIdentity" "ambient")) -}}
+{{- fail (printf "config.awsCredentialsMode must be one of static, eksPodIdentity, or ambient; got %q" $mode) -}}
+{{- end -}}
+{{- $mode -}}
+{{- end }}
+
+{{/* Create the name of the dedicated helper service account. */}}
+{{- define "cedana-helm.daemonHelperServiceAccountName" -}}
+{{- if .Values.daemonHelper.serviceAccount.create -}}
+{{- required "daemonHelper.serviceAccount.name must be set" .Values.daemonHelper.serviceAccount.name -}}
+{{- else -}}
+{{- required "daemonHelper.serviceAccount.name must be set when create is false" .Values.daemonHelper.serviceAccount.name -}}
+{{- end -}}
+{{- end }}
+
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
