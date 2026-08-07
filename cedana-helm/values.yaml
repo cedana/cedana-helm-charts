@@ -220,6 +220,19 @@ dynamoWatcher:
   # Namespace holding CPU inference Deployments reconciled by the built-in
   # inference controller (sets INFERENCE_NAMESPACE).
   inferenceNamespace: cedana-inference
+  # GPU inference experiments: the watcher creates an owned DynamoGraphDeployment
+  # (NVIDIA Dynamo v1.1.1) per dynamo-hosted experiment and deletes it when the
+  # experiment reaches a terminal state, releasing GPU capacity. The cluster must
+  # have the Dynamo CRDs/operator installed and GPU nodes matching the selector
+  # below; the reconciler stays idle otherwise.
+  experiments:
+    # GPU nodes must carry this label/value to accept experiment workers.
+    gpuNodeSelector: {}
+    # Tolerations appended to experiment worker pods (e.g. nvidia.com/gpu).
+    gpuTolerations: []
+    # Retain the validated checkpoint artifact after an experiment completes;
+    # worker compute and routing are always released.
+    retainArtifactByDefault: false
   replicaCount: 1
   podAnnotations: {}
   image:
