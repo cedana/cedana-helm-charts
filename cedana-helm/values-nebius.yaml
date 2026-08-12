@@ -55,9 +55,12 @@ daemonHelper:
 controllerManager:
   enabled: true
   manager:
+    # Built from current cedana-controller HEAD. v0.6.5 predates
+    # reconcileOutOfScopeTaints, so with the helper pinned to GPU nodes it left
+    # the CPU nodes tainted not-ready forever and nothing could schedule.
     image:
       repository: cedana/cedana-controller
-      tag: v0.6.5
+      digest: sha256:c2fd061a98765aaf7ffb523ae0ac0ee10c3f1bee0bae948178dc42da07628171
 
 dynamoWatcher:
   enabled: true

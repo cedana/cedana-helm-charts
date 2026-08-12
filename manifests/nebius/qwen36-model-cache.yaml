@@ -44,6 +44,9 @@ spec:
               python - <<'PY'
               import json, os, sys
               from huggingface_hub import snapshot_download, list_repo_tree
+              # 0.30.x yields RepoFile/RepoFolder objects, which carry no
+              # `.type` discriminator — select files by class instead.
+              from huggingface_hub.hf_api import RepoFile
 
               REPO = "Qwen/Qwen3.6-27B-FP8"
               REV = "e89b16ebf1988b3d6befa7de50abc2d76f26eb09"
@@ -57,7 +60,7 @@ spec:
               expected = [
                   (e.path, e.size)
                   for e in list_repo_tree(REPO, revision=REV, recursive=True)
-                  if e.type == "file"
+                  if isinstance(e, RepoFile)
               ]
               print(f"expected {len(expected)} files at revision {REV[:12]}")
               if not expected:
