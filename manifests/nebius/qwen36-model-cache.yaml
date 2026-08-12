@@ -85,16 +85,25 @@ spec:
                   sys.exit(1)
 
               # Snapshot resolved commit: verify against the pinned revision.
+              # huggingface_hub has used two side-car formats — older builds
+              # write <file>.json carrying {"commit": ...}, 0.30.x writes
+              # <file>.metadata whose first line is the commit hash. Read both,
+              # otherwise the check silently finds nothing and fails a download
+              # that actually succeeded.
               meta_root = os.path.join(DEST, ".cache", "huggingface", "download")
               commits = set()
               for root, _, files in os.walk(meta_root):
                   for name in files:
-                      if not name.endswith(".json"):
-                          continue
+                      full = os.path.join(root, name)
                       try:
-                          meta = json.load(open(os.path.join(root, name)))
-                          if meta.get("commit"):
-                              commits.add(meta["commit"])
+                          if name.endswith(".json"):
+                              meta = json.load(open(full))
+                              if meta.get("commit"):
+                                  commits.add(meta["commit"])
+                          elif name.endswith(".metadata"):
+                              first = open(full).readline().strip()
+                              if first:
+                                  commits.add(first)
                       except Exception:
                           pass
               print(f"resolved commits: {sorted(commits)}")

@@ -60,6 +60,9 @@ config:
   # registry. Set this together with a helper image that bakes plugin artifacts
   # into the same path; leave empty to always download from the registry.
   pluginsLocalSearchPath: ""
+  # Register the daemon's host record with the propagator. Requires a
+  # propagator that serves the /hosts API; set false against one that does not.
+  dbRemote: true
 
   profiling: true
   metrics: true

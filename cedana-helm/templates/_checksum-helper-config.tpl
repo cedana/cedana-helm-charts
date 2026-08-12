@@ -24,6 +24,7 @@
   "pluginsGpuVersion"
   "pluginsStreamerVersion"
   "pluginsLocalSearchPath"
+  "dbRemote"
   "profiling"
   "metrics"
   "logLevel"

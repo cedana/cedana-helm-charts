@@ -16,9 +16,16 @@ config:
   # never reaches the (empty) registry. Path is read inside the chroot, so it is
   # the host path with no /host prefix.
   pluginsLocalSearchPath: /opt/cedana/plugins
-  # No GPU plugin artifact is baked yet and the L40S group is scaled to 0, so the
-  # GPU plugin is explicitly disabled instead of being looked up in the registry.
-  pluginsGpuVersion: none
+  # This propagator build serves the inference API but no /hosts endpoint, so
+  # remote host registration would 404 and stop the daemon before it starts.
+  dbRemote: false
+  # SigNoz is not part of this stack and this propagator serves no
+  # /otel/credentials, so leaving metrics on only produces a failed fetch on
+  # every daemon start. Dynamo/Switchyard metrics reach propagator directly.
+  metrics: false
+  # Baked into the helper image from the Cedana CI plugin registry, so this is
+  # resolved locally like the others and never downloaded on the node.
+  pluginsGpuVersion: v0.7.3
   gpuDedupEnabled: true
   gpuTemplatesEnabled: false
   gpuPoolSize: 0
@@ -31,7 +38,7 @@ daemonHelper:
     # plus criu, the containerd shim, and the runc/containerd .so files baked
     # into /opt/cedana/plugins.
     repository: cedana/cedana-helper
-    digest: sha256:0c7dd1a66356ddc508bbfac2da1fae3f2c7f1a236f567bea9c75579fad28570a
+    digest: sha256:ad8711b00ffb24bfd45cf4c9c199be6bc61dfb5b3fe0330fa5783b9ad0ecfa11
   # Checkpoint/restore only ever runs on the L40S nodes, so the helper only runs
   # there. It rewrites kubelet config and installs a host service; keeping it off
   # the control nodes keeps the databases, propagator, and UI out of its blast
@@ -58,7 +65,7 @@ dynamoWatcher:
   inferenceNamespace: inference
   image:
     repository: cedana/cedana-dynamo-watcher
-    digest: sha256:02d2fa357cccce1a6ccc4676d1ab408b99a68eef47369df3a24e4fe1f87dabf3
+    digest: sha256:2306bd73eeffcaf65f93d8d8f0641768c9ae95bfb9ac7e67a27b8543c6dc2310
   experiments:
     gpuNodeSelector:
       nebius.com/gpu-name: L40S
