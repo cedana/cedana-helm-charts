@@ -44,7 +44,11 @@ spec:
       - {key: cedana.ai/not-ready, operator: Exists, effect: NoSchedule}
       containers:
       - name: backend
-        image: cedana/cedana-ui-backend:nebius-amd64-20260812
+        # Pinned by digest, not tag. The `…-20260813i` tag was rebuilt after its
+        # first push, and `IfNotPresent` happily kept serving the stale layer the
+        # node had already cached — the rollout reported success while running
+        # the old bundle. A digest cannot drift under us.
+        image: cedana/cedana-ui-backend@sha256:073303c7e4ff5a7d240d32c1c19113be737ba4af82b0f913500c2b7179b3b8fe  # nebius-amd64-20260813i
         imagePullPolicy: IfNotPresent
         env:
         - {name: AUTH_MODE, value: custom}
@@ -52,6 +56,15 @@ spec:
         - {name: PROPAGATOR_URL, value: "propagator:1324"}
         - {name: SERVER_PORT, value: "3031"}
         - {name: SESSION_COOKIE_SECURE, value: "false"}
+        # The public OpenAI-compatible origin external clients dial: the
+        # `cedana-inference-endpoint` LoadBalancer in front of Switchyard. No
+        # propagator API publishes it (see cedana-ui/MISSING_APIS.md §3), and
+        # deriving it from the propagator host would hand out a URL that looks
+        # right and fails on every request — so it is configured here.
+        - {name: INFERENCE_GATEWAY_URL, value: "http://195.242.31.5"}
+        # One L40S, so one model loaded at a time. Nothing upstream reports
+        # accelerator inventory (§3b); the UI warns before activating past this.
+        - {name: INFERENCE_MAX_LOADED_MODELS, value: "1"}
         - name: CEDANA_AUTH_TOKEN
           valueFrom:
             secretKeyRef: {name: cedana-inference-auth, key: auth-token}
@@ -64,7 +77,7 @@ spec:
           allowPrivilegeEscalation: false
           capabilities: {drop: [ALL]}
       - name: frontend
-        image: cedana/cedana-ui-frontend:nebius-amd64-20260812
+        image: cedana/cedana-ui-frontend@sha256:3d1d4a4eb7837091800afdb23fc41c2250ef08a813f01146c7d413c2e3a1fac7  # nebius-amd64-20260813i
         imagePullPolicy: IfNotPresent
         ports: [{name: web, containerPort: 3000}]
         resources:
