@@ -28,6 +28,7 @@ data:
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"
   plugins-gpu-version: "{{ .Values.config.pluginsGpuVersion }}"
   plugins-streamer-version: "{{ .Values.config.pluginsStreamerVersion }}"
+  plugins-local-search-path: "{{ .Values.config.pluginsLocalSearchPath }}"
   metrics: "{{ .Values.config.metrics }}"
   profiling: "{{ .Values.config.profiling }}"
   log-level: "{{ .Values.config.logLevel }}"

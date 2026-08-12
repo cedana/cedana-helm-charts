@@ -23,6 +23,7 @@
   "pluginsContainerdRuntimeVersion"
   "pluginsGpuVersion"
   "pluginsStreamerVersion"
+  "pluginsLocalSearchPath"
   "profiling"
   "metrics"
   "logLevel"

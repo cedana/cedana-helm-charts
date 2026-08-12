@@ -1,7 +1,7 @@
 # Cedana systems release values - Nebius inference stack (2026-08-12)
 # Points helper/watcher/manager at the in-cluster propagator.
 config:
-  url: http://propagator.cedana-inference.svc.cluster.local:1324
+  url: http://10.0.163.250:1324/v1
   authToken: REDACTED_ROTATED_SEE_SECRET_MANAGER
   clusterId: e414ae14-8fb9-4572-b201-2c62d9fe084d
   # Checkpoint storage on Nebius object storage
@@ -11,6 +11,14 @@ config:
   awsSecretAccessKey: REDACTED_ROTATED_SEE_SECRET_MANAGER
   checkpointAsync: true
   pluginsBuilds: alpha
+  # Plugin artifacts are baked into the helper image and staged onto the host by
+  # plugins/k8s/scripts/install.sh; `plugin install` resolves them from here and
+  # never reaches the (empty) registry. Path is read inside the chroot, so it is
+  # the host path with no /host prefix.
+  pluginsLocalSearchPath: /opt/cedana/plugins
+  # No GPU plugin artifact is baked yet and the L40S group is scaled to 0, so the
+  # GPU plugin is explicitly disabled instead of being looked up in the registry.
+  pluginsGpuVersion: none
   gpuDedupEnabled: true
   gpuTemplatesEnabled: false
   gpuPoolSize: 0
@@ -19,8 +27,17 @@ config:
 daemonHelper:
   enabled: true
   image:
+    # Built by cedana-nebius/scripts/build-helper-image.sh: the monorepo helper
+    # plus criu, the containerd shim, and the runc/containerd .so files baked
+    # into /opt/cedana/plugins.
     repository: cedana/cedana-helper
-    digest: sha256:67319212f89e2bc819438035f8a613b65979045f4663bc85a44d6088e33e6718
+    digest: sha256:0c7dd1a66356ddc508bbfac2da1fae3f2c7f1a236f567bea9c75579fad28570a
+  # Checkpoint/restore only ever runs on the L40S nodes, so the helper only runs
+  # there. It rewrites kubelet config and installs a host service; keeping it off
+  # the control nodes keeps the databases, propagator, and UI out of its blast
+  # radius. With the GPU group scaled to 0 this DaemonSet has no nodes at all.
+  nodeSelector:
+    nebius.com/gpu-name: L40S
   tolerations:
     - key: "cedana.ai/not-ready"
       operator: "Exists"

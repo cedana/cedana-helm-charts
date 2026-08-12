@@ -56,6 +56,10 @@ config:
   pluginsContainerdRuntimeVersion: v0.7.5
   pluginsGpuVersion: v0.7.3
   pluginsStreamerVersion: v0.1.0
+  # Directory on the host that `cedana plugin install` searches before hitting the
+  # registry. Set this together with a helper image that bakes plugin artifacts
+  # into the same path; leave empty to always download from the registry.
+  pluginsLocalSearchPath: ""
 
   profiling: true
   metrics: true

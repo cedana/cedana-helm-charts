@@ -194,6 +194,14 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-streamer-version
+            - name: CEDANA_PLUGINS_LOCAL_SEARCH_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: plugins-local-search-path
+                  # optional so a pre-existing ConfigMap (created before this key
+                  # existed) doesn't break pod startup; absent => registry only
+                  optional: true
             - name: CEDANA_PROFILING_ENABLED
               valueFrom:
                 configMapKeyRef:
