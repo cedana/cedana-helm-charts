@@ -26,7 +26,21 @@ config:
   # Baked into the helper image from the Cedana CI plugin registry, so this is
   # resolved locally like the others and never downloaded on the node.
   pluginsGpuVersion: v0.7.3
-  gpuDedupEnabled: true
+  # GPU dedup is off because it cannot work on this node, and with it on the
+  # checkpoint does not merely lose deduplication — it fails outright.
+  #
+  # Dedup JIT-compiles a chunk-hashing kernel through NVRTC and looks for
+  # libnvrtc.so.11.2, a CUDA 11 library. This node runs driver 580 / CUDA 13 and
+  # has no libnvrtc at all, so the first GPU dump failed with:
+  #
+  #   DedupKernel init failed: cannot dlopen libnvrtc.so for chunkHashKernel:
+  #     libnvrtc.so.11.2: cannot open shared object file
+  #   Failed to checkpoint worker: DedupKernel unavailable
+  #
+  # Freeze and unfreeze both succeeded and the model kept serving, so the failure
+  # is confined to capturing GPU state. Re-enable only with a matching libnvrtc
+  # present, and expect larger checkpoints without it.
+  gpuDedupEnabled: false
   gpuTemplatesEnabled: false
   gpuPoolSize: 0
   gpuShmSize: "8589934592"
@@ -56,7 +70,7 @@ daemonHelper:
     # plus criu, the containerd shim, and the runc/containerd .so files baked
     # into /opt/cedana/plugins.
     repository: cedana/cedana-helper
-    digest: sha256:ad8711b00ffb24bfd45cf4c9c199be6bc61dfb5b3fe0330fa5783b9ad0ecfa11
+    digest: sha256:b49791df1e9f99377698d7229b704bbe5cbb340e95146086ad2d3fdba0ee5008
   # Checkpoint/restore only ever runs on the L40S nodes, so the helper only runs
   # there. It rewrites kubelet config and installs a host service; keeping it off
   # the control nodes keeps the databases, propagator, and UI out of its blast
@@ -102,7 +116,7 @@ dynamoWatcher:
   inferenceNamespace: inference
   image:
     repository: cedana/cedana-dynamo-watcher
-    digest: sha256:722c8a8d4a43659731d283baf7e098828961cb52ec46491f866e4fa724ccba31
+    digest: sha256:c86646c13d22830b0fa13317dd202513c3820d4b55f6b3ff81f683d4d61e0814
   experiments:
     gpuNodeSelector:
       nebius.com/gpu-name: L40S
