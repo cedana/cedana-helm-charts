@@ -3,7 +3,7 @@
 config:
   url: http://propagator.cedana-inference.svc.cluster.local:1324
   authToken: REDACTED_ROTATED_SEE_SECRET_MANAGER
-  clusterId: 3ea3174f-6cb8-4b2e-99c9-2d9c6ff0adb8
+  clusterId: e414ae14-8fb9-4572-b201-2c62d9fe084d
   # Checkpoint storage on Nebius object storage
   awsAccessKeyId: REDACTED_ROTATED_SEE_SECRET_MANAGER
   awsEndpoint: https://storage.eu-north1.nebius.cloud
