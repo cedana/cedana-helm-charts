@@ -1,0 +1,115 @@
+# Qwen3.6-27B-FP8 model cache: 80Gi PVC + verified snapshot downloader.
+#
+# Downloads Qwen/Qwen3.6-27B-FP8 at the pinned revision into
+# /cache/Qwen3.6-27B-FP8. Verifies every expected file's byte size against
+# the Hugging Face revision tree and the snapshot's resolved commit hash
+# before the Job completes. Idempotent: a completed verification skips the
+# download. Never mutates the existing qwen3-model-cache PVC.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qwen36-model-cache
+  namespace: inference
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: compute-csi-default-sc
+  resources:
+    requests:
+      storage: 80Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qwen36-model-cache-download
+  namespace: inference
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      nodeSelector:
+        inference.cedana.ai/node-role: control
+      tolerations:
+        - {key: CriticalAddonsOnly, operator: Exists, effect: NoSchedule}
+        - {key: cedana.ai/not-ready, operator: Exists, effect: NoSchedule}
+      containers:
+        - name: download
+          image: python:3.12-slim
+          command: [python, -c]
+          args:
+            - |
+              import json, os, sys
+              from huggingface_hub import snapshot_download, list_repo_tree
+
+              REPO = "Qwen/Qwen3.6-27B-FP8"
+              REV = "e89b16ebf1988b3d6befa7de50abc2d76f26eb09"
+              DEST = "/cache/Qwen3.6-27B-FP8"
+              MARKER = "/cache/.qwen36-verified"
+
+              if os.path.exists(MARKER):
+                  print("snapshot already verified; skipping download")
+                  sys.exit(0)
+
+              expected = [
+                  (e.path, e.size)
+                  for e in list_repo_tree(REPO, revision=REV, recursive=True)
+                  if e.type == "file"
+              ]
+              print(f"expected {len(expected)} files at revision {REV[:12]}")
+              if not expected:
+                  print("empty revision tree; aborting")
+                  sys.exit(1)
+
+              snapshot_download(
+                  repo_id=REPO,
+                  revision=REV,
+                  local_dir=DEST,
+                  local_dir_use_symlinks=False,
+                  allow_patterns="*",
+              )
+
+              # Every expected file present with the exact byte size.
+              bad = []
+              for path, size in expected:
+                  full = os.path.join(DEST, path)
+                  if not os.path.exists(full):
+                      bad.append(f"missing {path}")
+                  elif os.path.getsize(full) != size:
+                      bad.append(f"size {path}: {os.path.getsize(full)} != {size}")
+              if bad:
+                  print("\n".join(bad[:20]))
+                  sys.exit(1)
+
+              # Snapshot resolved commit: verify against the pinned revision.
+              meta_root = os.path.join(DEST, ".cache", "huggingface", "download")
+              commits = set()
+              for root, _, files in os.walk(meta_root):
+                  for name in files:
+                      if not name.endswith(".json"):
+                          continue
+                      try:
+                          meta = json.load(open(os.path.join(root, name)))
+                          if meta.get("commit"):
+                              commits.add(meta["commit"])
+                      except Exception:
+                          pass
+              print(f"resolved commits: {sorted(commits)}")
+              if REV not in commits:
+                  print(f"snapshot did not resolve to pinned revision {REV}")
+                  sys.exit(1)
+
+              total = sum(s for _, s in expected)
+              print(f"verified {len(expected)} files, {total / 1e9:.1f} GB at {REV}")
+              open(MARKER, "w").write(REV)
+          env:
+            - {name: HF_HUB_DISABLE_TELEMETRY, value: "1"}
+          resources:
+            requests: {cpu: "2", memory: 6Gi}
+            limits: {cpu: "4", memory: 12Gi}
+          volumeMounts:
+            - {name: cache, mountPath: /cache}
+      volumes:
+        - name: cache
+          persistentVolumeClaim: {claimName: qwen36-model-cache}

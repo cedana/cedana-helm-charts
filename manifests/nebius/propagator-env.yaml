@@ -1,7 +1,8 @@
 # Propagator environment wiring for the Nebius inference stack.
 #
-# Apply with:
-#   kubectl apply -f manifests/nebius/propagator-env.yaml
+# Strategic merge patch for the helm-managed propagator Deployment. Apply:
+#   kubectl patch deployment propagator -n cedana-inference \
+#     --type strategic --patch-file manifests/nebius/propagator-env.yaml
 #
 # 1. `propagator-aws` secret: AWS_REGION / AWS_ACCESS_KEY_ID /
 #    AWS_SECRET_ACCESS_KEY / BUCKET_NAME. Create it from the operator .env
@@ -15,7 +16,6 @@
 # 2. Wire envFrom on the propagator deployment so the plugin registry (S3)
 #    works, and advertise RabbitMQ with its fully-qualified in-cluster host so
 #    cross-namespace consumers (cedana-systems watcher/helper) can connect.
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
