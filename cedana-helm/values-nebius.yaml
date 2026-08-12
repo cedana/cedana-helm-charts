@@ -31,6 +31,24 @@ config:
   gpuPoolSize: 0
   gpuShmSize: "8589934592"
 
+# /checkpoint as tmpfs on the GPU nodes — the "memory" tier for checkpoints.
+#
+# Enabled here because this is where checkpointed workloads run, and the helper
+# only runs on the L40S nodes anyway. Restoring from RAM is what avoids the eleven
+# minute cold weight load measured on this hardware; the trade is that the
+# checkpoint dies with the node, so it serves model swaps on a live node and not
+# recovery from node loss.
+#
+# 50G against ~85GiB of host RAM. A 27B FP8 checkpoint is ~30GB, so this holds one
+# with headroom. It cannot go much higher: the GPU worker requests 48Gi and may
+# limit at 80Gi, and tmpfs pages are charged to the same node memory — the setup
+# script refuses anything above 80% of RAM rather than quietly shrinking it.
+hostConfig:
+  checkpointTmpfs:
+    enabled: true
+    size: 50G
+    mode: "1777"
+
 daemonHelper:
   enabled: true
   image:
@@ -45,6 +63,22 @@ daemonHelper:
   # radius. With the GPU group scaled to 0 this DaemonSet has no nodes at all.
   nodeSelector:
     nebius.com/gpu-name: L40S
+  # Wait for gpu-operator to finish before the helper runs at all. Tolerating
+  # the not-ready taint only lets gpu-operator *start* first — both DaemonSets
+  # would otherwise schedule together and the helper could win the race, set up
+  # the node with no driver present, and leave its GPU plugin blind until
+  # something restarted it.
+  #
+  # nvidia.com/cuda.driver-version.full is published by the operator's
+  # feature-discovery only once a driver is installed and working, so requiring
+  # it makes "driver ready" a scheduling precondition rather than a poll.
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: nvidia.com/cuda.driver-version.full
+                operator: Exists
   tolerations:
     - key: "cedana.ai/not-ready"
       operator: "Exists"
@@ -68,7 +102,7 @@ dynamoWatcher:
   inferenceNamespace: inference
   image:
     repository: cedana/cedana-dynamo-watcher
-    digest: sha256:2306bd73eeffcaf65f93d8d8f0641768c9ae95bfb9ac7e67a27b8543c6dc2310
+    digest: sha256:722c8a8d4a43659731d283baf7e098828961cb52ec46491f866e4fa724ccba31
   experiments:
     gpuNodeSelector:
       nebius.com/gpu-name: L40S
