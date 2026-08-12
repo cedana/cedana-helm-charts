@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedana-ui-caddy
+  namespace: cedana-inference
+data:
+  Caddyfile: |
+    :7070 {
+        reverse_proxy /api/* localhost:3031
+        reverse_proxy localhost:3000
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cedana-ui
+  namespace: cedana-inference
+  annotations:
+    service.beta.kubernetes.io/nebius-load-balancer-allowed-cidrs: 0.0.0.0/0
+spec:
+  type: LoadBalancer
+  selector: {app: cedana-ui}
+  ports:
+  - {name: http, port: 80, targetPort: http}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cedana-ui
+  namespace: cedana-inference
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: cedana-ui}
+  template:
+    metadata:
+      labels: {app: cedana-ui}
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        inference.cedana.ai/node-role: control
+      tolerations:
+      - {key: CriticalAddonsOnly, operator: Exists, effect: NoSchedule}
+      - {key: cedana.ai/not-ready, operator: Exists, effect: NoSchedule}
+      containers:
+      - name: backend
+        image: cedana/cedana-ui-backend:nebius-amd64-20260812
+        imagePullPolicy: IfNotPresent
+        env:
+        - {name: AUTH_MODE, value: custom}
+        - {name: PROPAGATOR_SCHEME, value: http}
+        - {name: PROPAGATOR_URL, value: "propagator:1324"}
+        - {name: SERVER_PORT, value: "3031"}
+        - {name: SESSION_COOKIE_SECURE, value: "false"}
+        - name: CEDANA_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef: {name: cedana-inference-auth, key: auth-token}
+        ports: [{name: api, containerPort: 3031}]
+        readinessProbe: {tcpSocket: {port: api}, periodSeconds: 10}
+        resources:
+          requests: {cpu: 50m, memory: 96Mi}
+          limits: {cpu: "1", memory: 512Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+      - name: frontend
+        image: cedana/cedana-ui-frontend:nebius-amd64-20260812
+        imagePullPolicy: IfNotPresent
+        ports: [{name: web, containerPort: 3000}]
+        resources:
+          requests: {cpu: 10m, memory: 32Mi}
+          limits: {cpu: 100m, memory: 128Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+      - name: caddy
+        image: caddy:2.7.6-alpine
+        imagePullPolicy: IfNotPresent
+        ports: [{name: http, containerPort: 7070}]
+        volumeMounts:
+        - {name: caddy-config, mountPath: /etc/caddy/Caddyfile, subPath: Caddyfile, readOnly: true}
+        readinessProbe: {httpGet: {path: /, port: http}, periodSeconds: 10}
+        resources:
+          requests: {cpu: 10m, memory: 16Mi}
+          limits: {cpu: 100m, memory: 64Mi}
+      volumes:
+      - name: caddy-config
+        configMap: {name: cedana-ui-caddy}

@@ -1,0 +1,54 @@
+# Cedana systems release values - Nebius inference stack (2026-08-12)
+# Points helper/watcher/manager at the in-cluster propagator.
+config:
+  url: http://propagator.cedana-inference.svc.cluster.local:1324
+  authToken: REDACTED_ROTATED_SEE_SECRET_MANAGER
+  clusterId: 3ea3174f-6cb8-4b2e-99c9-2d9c6ff0adb8
+  # Checkpoint storage on Nebius object storage
+  awsAccessKeyId: REDACTED_ROTATED_SEE_SECRET_MANAGER
+  awsEndpoint: https://storage.eu-north1.nebius.cloud
+  awsRegion: eu-north1
+  awsSecretAccessKey: REDACTED_ROTATED_SEE_SECRET_MANAGER
+  checkpointAsync: true
+  pluginsBuilds: alpha
+  gpuDedupEnabled: true
+  gpuTemplatesEnabled: false
+  gpuPoolSize: 0
+  gpuShmSize: "8589934592"
+
+daemonHelper:
+  enabled: true
+  image:
+    repository: cedana/cedana-helper
+    digest: sha256:67319212f89e2bc819438035f8a613b65979045f4663bc85a44d6088e33e6718
+  tolerations:
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "nebius.com/preemptible"
+      operator: "Exists"
+
+controllerManager:
+  enabled: true
+  manager:
+    image:
+      repository: cedana/cedana-controller
+      tag: v0.6.5
+
+dynamoWatcher:
+  enabled: true
+  createLoadBalancer: false
+  inferenceNamespace: inference
+  image:
+    repository: cedana/cedana-dynamo-watcher
+    digest: sha256:02d2fa357cccce1a6ccc4676d1ab408b99a68eef47369df3a24e4fe1f87dabf3
+  experiments:
+    gpuNodeSelector:
+      nebius.com/gpu-name: L40S
+    gpuTolerations:
+      - key: nebius.com/preemptible
+        operator: Exists
+  tolerations:
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+      effect: "NoSchedule"
