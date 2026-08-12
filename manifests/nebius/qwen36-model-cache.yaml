@@ -37,9 +37,11 @@ spec:
       containers:
         - name: download
           image: python:3.12-slim
-          command: [python, -c]
+          command: [sh, -ec]
           args:
             - |
+              pip install -q huggingface_hub==0.30.2
+              python - <<'PY'
               import json, os, sys
               from huggingface_hub import snapshot_download, list_repo_tree
 
@@ -103,6 +105,7 @@ spec:
               total = sum(s for _, s in expected)
               print(f"verified {len(expected)} files, {total / 1e9:.1f} GB at {REV}")
               open(MARKER, "w").write(REV)
+              PY
           env:
             - {name: HF_HUB_DISABLE_TELEMETRY, value: "1"}
           resources:
