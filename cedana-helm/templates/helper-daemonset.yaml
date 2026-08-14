@@ -155,6 +155,20 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-shm-size
+            - name: CEDANA_GPU_DEDUP_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-dedup-enabled
+                  # optional so a pre-existing ConfigMap (created before these keys
+                  # existed) doesn't break pod startup; absent => daemon default (false)
+                  optional: true
+            - name: CEDANA_GPU_TEMPLATES_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-templates-enabled
+                  optional: true
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
@@ -180,6 +194,14 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-streamer-version
+            - name: CEDANA_PLUGINS_LOCAL_SEARCH_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: plugins-local-search-path
+                  # optional so a pre-existing ConfigMap (created before this key
+                  # existed) doesn't break pod startup; absent => registry only
+                  optional: true
             - name: CEDANA_PROFILING_ENABLED
               valueFrom:
                 configMapKeyRef:
@@ -206,8 +228,17 @@ spec:
               value: "/etc/containerd/config.toml"
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
+            # Remote mode makes the daemon PUT its host record to the
+            # propagator. A propagator build without the /hosts API 404s and the
+            # daemon refuses to start, so this is settable per deployment.
+            # `default` treats false as empty, so an explicit false would be
+            # silently turned back into true — test for the key instead.
             - name: CEDANA_DB_REMOTE
+              {{- if hasKey .Values.config "dbRemote" }}
+              value: {{ .Values.config.dbRemote | quote }}
+              {{- else }}
               value: "true"
+              {{- end }}
             - name: CEDANA_AWS_CREDENTIALS_MODE
               value: {{ include "cedana-helm.awsCredentialsMode" . | quote }}
             {{- if eq (include "cedana-helm.awsCredentialsMode" .) "static" }}

@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedana-ui-caddy
+  namespace: cedana-inference
+data:
+  Caddyfile: |
+    :7070 {
+        reverse_proxy /api/* localhost:3031
+        reverse_proxy localhost:3000
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cedana-ui
+  namespace: cedana-inference
+  annotations:
+    service.beta.kubernetes.io/nebius-load-balancer-allowed-cidrs: 0.0.0.0/0
+spec:
+  type: LoadBalancer
+  selector: {app: cedana-ui}
+  ports:
+  - {name: http, port: 80, targetPort: http}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cedana-ui
+  namespace: cedana-inference
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: cedana-ui}
+  template:
+    metadata:
+      labels: {app: cedana-ui}
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        inference.cedana.ai/node-role: control
+      tolerations:
+      - {key: CriticalAddonsOnly, operator: Exists, effect: NoSchedule}
+      - {key: cedana.ai/not-ready, operator: Exists, effect: NoSchedule}
+      containers:
+      - name: backend
+        # Pinned by digest, not tag. The `…-20260813i` tag was rebuilt after its
+        # first push, and `IfNotPresent` happily kept serving the stale layer the
+        # node had already cached — the rollout reported success while running
+        # the old bundle. A digest cannot drift under us.
+        image: cedana/cedana-ui-backend@sha256:073303c7e4ff5a7d240d32c1c19113be737ba4af82b0f913500c2b7179b3b8fe  # nebius-amd64-20260813i
+        imagePullPolicy: IfNotPresent
+        env:
+        - {name: AUTH_MODE, value: custom}
+        - {name: PROPAGATOR_SCHEME, value: http}
+        - {name: PROPAGATOR_URL, value: "propagator:1324"}
+        - {name: SERVER_PORT, value: "3031"}
+        - {name: SESSION_COOKIE_SECURE, value: "false"}
+        # The public OpenAI-compatible origin external clients dial: the
+        # `cedana-inference-endpoint` LoadBalancer in front of Switchyard. No
+        # propagator API publishes it (see cedana-ui/MISSING_APIS.md §3), and
+        # deriving it from the propagator host would hand out a URL that looks
+        # right and fails on every request — so it is configured here.
+        - {name: INFERENCE_GATEWAY_URL, value: "http://195.242.31.5"}
+        # One L40S, so one model loaded at a time. Nothing upstream reports
+        # accelerator inventory (§3b); the UI warns before activating past this.
+        - {name: INFERENCE_MAX_LOADED_MODELS, value: "1"}
+        - name: CEDANA_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef: {name: cedana-inference-auth, key: auth-token}
+        ports: [{name: api, containerPort: 3031}]
+        readinessProbe: {tcpSocket: {port: api}, periodSeconds: 10}
+        resources:
+          requests: {cpu: 50m, memory: 96Mi}
+          limits: {cpu: "1", memory: 512Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+      - name: frontend
+        image: cedana/cedana-ui-frontend@sha256:3d1d4a4eb7837091800afdb23fc41c2250ef08a813f01146c7d413c2e3a1fac7  # nebius-amd64-20260813i
+        imagePullPolicy: IfNotPresent
+        ports: [{name: web, containerPort: 3000}]
+        resources:
+          requests: {cpu: 10m, memory: 32Mi}
+          limits: {cpu: 100m, memory: 128Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+      - name: caddy
+        image: caddy:2.7.6-alpine
+        imagePullPolicy: IfNotPresent
+        ports: [{name: http, containerPort: 7070}]
+        volumeMounts:
+        - {name: caddy-config, mountPath: /etc/caddy/Caddyfile, subPath: Caddyfile, readOnly: true}
+        readinessProbe: {httpGet: {path: /, port: http}, periodSeconds: 10}
+        resources:
+          requests: {cpu: 10m, memory: 16Mi}
+          limits: {cpu: 100m, memory: 64Mi}
+      volumes:
+      - name: caddy-config
+        configMap: {name: cedana-ui-caddy}

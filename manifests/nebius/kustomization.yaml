@@ -1,0 +1,19 @@
+# Nebius inference stack manifests. Apply with:
+#   kubectl kustomize manifests/nebius | kubectl apply -f -
+#
+# Propagator env wiring is applied separately (the deployment is helm-managed,
+# so it is patched, not re-created):
+#   kubectl patch deployment propagator -n cedana-inference \
+#     --patch-file manifests/nebius/propagator-env.yaml
+#
+# Requires the propagator-aws secret (see propagator-env.yaml header):
+#   set -a && . ./.env && set +a
+#   kubectl create secret generic propagator-aws -n cedana-inference \
+#     --from-literal=AWS_REGION="$AWS_REGION" \
+#     --from-literal=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+#     --from-literal=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+#     --from-literal=BUCKET_NAME="$BUCKET_NAME"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - cedana-ui.yaml

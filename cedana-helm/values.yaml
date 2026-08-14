@@ -46,6 +46,8 @@ config:
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
+  gpuDedupEnabled: true # Enable deduplication for GPU checkpoints to reduce checkpoint size.
+  gpuTemplatesEnabled: false # Enable templates for GPU checkpoint/restore.
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
@@ -54,6 +56,13 @@ config:
   pluginsContainerdRuntimeVersion: v0.7.5
   pluginsGpuVersion: v0.7.3
   pluginsStreamerVersion: v0.1.0
+  # Directory on the host that `cedana plugin install` searches before hitting the
+  # registry. Set this together with a helper image that bakes plugin artifacts
+  # into the same path; leave empty to always download from the registry.
+  pluginsLocalSearchPath: ""
+  # Register the daemon's host record with the propagator. Requires a
+  # propagator that serves the /hosts API; set false against one that does not.
+  dbRemote: true
 
   profiling: true
   metrics: true
