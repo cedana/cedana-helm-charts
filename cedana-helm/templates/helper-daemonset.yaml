@@ -288,6 +288,25 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: shm-config-min-size
+            # /checkpoint as tmpfs: the memory storage tier for checkpoints.
+            # Off unless enabled, because tmpfs pages are charged to node memory
+            # and compete with the workload — a GPU worker here requests 48Gi and
+            # may limit at 80Gi on an ~85GiB node.
+            - name: CHECKPOINT_TMPFS_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: checkpoint-tmpfs-enabled
+            - name: CHECKPOINT_TMPFS_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: checkpoint-tmpfs-size
+            - name: CHECKPOINT_TMPFS_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: checkpoint-tmpfs-mode
       volumes:
         - name: varlog
           hostPath:

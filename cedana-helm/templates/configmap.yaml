@@ -42,6 +42,9 @@ data:
   shm-config-enabled: "{{ .Values.hostConfig.shmConfig.enabled }}"
   shm-config-size: "{{ .Values.hostConfig.shmConfig.size }}"
   shm-config-min-size: "{{ .Values.hostConfig.shmConfig.minSize }}"
+  checkpoint-tmpfs-enabled: "{{ .Values.hostConfig.checkpointTmpfs.enabled }}"
+  checkpoint-tmpfs-size: "{{ .Values.hostConfig.checkpointTmpfs.size }}"
+  checkpoint-tmpfs-mode: "{{ .Values.hostConfig.checkpointTmpfs.mode }}"
 
   criu-log-level: "{{ .Values.config.criuLogLevel }}"
 {{- end }}

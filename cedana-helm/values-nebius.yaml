@@ -26,10 +26,42 @@ config:
   # Baked into the helper image from the Cedana CI plugin registry, so this is
   # resolved locally like the others and never downloaded on the node.
   pluginsGpuVersion: v0.7.3
-  gpuDedupEnabled: true
+  # GPU dedup is off because it cannot work on this node, and with it on the
+  # checkpoint does not merely lose deduplication — it fails outright.
+  #
+  # Dedup JIT-compiles a chunk-hashing kernel through NVRTC and looks for
+  # libnvrtc.so.11.2, a CUDA 11 library. This node runs driver 580 / CUDA 13 and
+  # has no libnvrtc at all, so the first GPU dump failed with:
+  #
+  #   DedupKernel init failed: cannot dlopen libnvrtc.so for chunkHashKernel:
+  #     libnvrtc.so.11.2: cannot open shared object file
+  #   Failed to checkpoint worker: DedupKernel unavailable
+  #
+  # Freeze and unfreeze both succeeded and the model kept serving, so the failure
+  # is confined to capturing GPU state. Re-enable only with a matching libnvrtc
+  # present, and expect larger checkpoints without it.
+  gpuDedupEnabled: false
   gpuTemplatesEnabled: false
   gpuPoolSize: 0
   gpuShmSize: "8589934592"
+
+# /checkpoint as tmpfs on the GPU nodes — the "memory" tier for checkpoints.
+#
+# Enabled here because this is where checkpointed workloads run, and the helper
+# only runs on the L40S nodes anyway. Restoring from RAM is what avoids the eleven
+# minute cold weight load measured on this hardware; the trade is that the
+# checkpoint dies with the node, so it serves model swaps on a live node and not
+# recovery from node loss.
+#
+# 50G against ~85GiB of host RAM. A 27B FP8 checkpoint is ~30GB, so this holds one
+# with headroom. It cannot go much higher: the GPU worker requests 48Gi and may
+# limit at 80Gi, and tmpfs pages are charged to the same node memory — the setup
+# script refuses anything above 80% of RAM rather than quietly shrinking it.
+hostConfig:
+  checkpointTmpfs:
+    enabled: true
+    size: 50G
+    mode: "1777"
 
 daemonHelper:
   enabled: true
@@ -38,13 +70,29 @@ daemonHelper:
     # plus criu, the containerd shim, and the runc/containerd .so files baked
     # into /opt/cedana/plugins.
     repository: cedana/cedana-helper
-    digest: sha256:ad8711b00ffb24bfd45cf4c9c199be6bc61dfb5b3fe0330fa5783b9ad0ecfa11
+    digest: sha256:b49791df1e9f99377698d7229b704bbe5cbb340e95146086ad2d3fdba0ee5008
   # Checkpoint/restore only ever runs on the L40S nodes, so the helper only runs
   # there. It rewrites kubelet config and installs a host service; keeping it off
   # the control nodes keeps the databases, propagator, and UI out of its blast
   # radius. With the GPU group scaled to 0 this DaemonSet has no nodes at all.
   nodeSelector:
     nebius.com/gpu-name: L40S
+  # Wait for gpu-operator to finish before the helper runs at all. Tolerating
+  # the not-ready taint only lets gpu-operator *start* first — both DaemonSets
+  # would otherwise schedule together and the helper could win the race, set up
+  # the node with no driver present, and leave its GPU plugin blind until
+  # something restarted it.
+  #
+  # nvidia.com/cuda.driver-version.full is published by the operator's
+  # feature-discovery only once a driver is installed and working, so requiring
+  # it makes "driver ready" a scheduling precondition rather than a poll.
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: nvidia.com/cuda.driver-version.full
+                operator: Exists
   tolerations:
     - key: "cedana.ai/not-ready"
       operator: "Exists"
@@ -68,7 +116,7 @@ dynamoWatcher:
   inferenceNamespace: inference
   image:
     repository: cedana/cedana-dynamo-watcher
-    digest: sha256:2306bd73eeffcaf65f93d8d8f0641768c9ae95bfb9ac7e67a27b8543c6dc2310
+    digest: sha256:c86646c13d22830b0fa13317dd202513c3820d4b55f6b3ff81f683d4d61e0814
   experiments:
     gpuNodeSelector:
       nebius.com/gpu-name: L40S

@@ -90,6 +90,22 @@ hostConfig:
     enabled: false # Set to true to enable /dev/shm size increase
     size: 10G # Size to set for /dev/shm (e.g., "10G", "20G")
     minSize: 10G # Minimum size to trigger remount (e.g., "10G", "20G")
+  # /checkpoint as tmpfs — the "memory" storage tier for Cedana checkpoints.
+  #
+  # Restoring from RAM is what avoids a cold weight load, which measures eleven
+  # minutes from block storage for a 27B FP8 model. The trade is that a tmpfs
+  # checkpoint dies with the node, so this tier serves model swaps on a live node
+  # and cannot serve recovery from node loss.
+  #
+  # Off by default: tmpfs pages are charged to node memory and compete with the
+  # workload, so only enable it on nodes that actually host checkpointed
+  # workloads. The setup script refuses a size above 80% of host RAM rather than
+  # clamping it, because a silently smaller mount surfaces as a checkpoint failing
+  # part-written.
+  checkpointTmpfs:
+    enabled: false
+    size: 50G # Must hold a full checkpoint; a 27B FP8 model is ~30GB
+    mode: "1777" # Written by the shim, possibly read by a differently-owned restore
 
 daemonHelper:
   # Deploy the helper DaemonSets (and the health-check DaemonSet). Set false
