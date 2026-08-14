@@ -18,11 +18,16 @@ metadata:
 rules:
 # NVIDIA Dynamo CRDs: watch DGDs, manage worker-metadata, apply/remove DGDs from
 # RabbitMQ create/delete workload messages.
+# dynamocomponentdeployments is listed and deleted, not created: the operator
+# generates one per component and leaves the previous one running when a pod spec
+# changes. On a single-GPU node the superseded worker keeps the device and its
+# replacement never schedules, so the watcher reaps it.
 - apiGroups:
   - "nvidia.com"
   resources:
   - dynamographdeployments
   - dynamoworkermetadatas
+  - dynamocomponentdeployments
   verbs:
   - get
   - list
@@ -42,6 +47,25 @@ rules:
   - watch
   - create
   - delete
+# Nodes, read-only: the restore gate compares a checkpoint's recorded boot id
+# against the node's current one. A memory-tier checkpoint lives in tmpfs and
+# does not survive a reboot, and nothing else about a node distinguishes "the
+# checkpoint is there" from "the checkpoint is gone" — this cluster's GPU node
+# has come back Ready under the same name, labels and driver with an empty tmpfs
+# more than once.
+#
+# Without this the gate cannot read the node, treats it as missing, and rejects
+# every checkpoint — so a profile with checkpointing enabled silently cold starts
+# forever, which is exactly how it behaved before this rule existed.
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+
 # Services: create/delete LoadBalancer services for dynamo frontends.
 - apiGroups:
   - ""
@@ -65,6 +89,19 @@ rules:
   - list
   - watch
   - create
+# Jobs: the inference controller stages a profile's model weights onto its cache
+# claim before deploying the workload that mounts them, so an operator never has
+# to apply a download Job by hand.
+- apiGroups:
+  - "batch"
+  resources:
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
 # Deployments: inference controller scales CPU inference Deployments per propagator
 # capacity intents (replicas 0/1) in the inference namespace.
 - apiGroups:
