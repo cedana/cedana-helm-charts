@@ -42,6 +42,25 @@ rules:
   - watch
   - create
   - delete
+# pods/exec: releasing a checkpoint's disk before writing a new one.
+#
+# The memory tier holds one checkpoint of a 27B model and not two — 50 GiB
+# against ~42 GiB — so an on-demand checkpoint must delete the previous dump
+# before it can write. The daemon cannot do it: DeleteCheckpoint takes an id
+# from the daemon's job registry, and a container dumped directly is not in it
+# ("cedana jobs" on a node holding a 42 GiB checkpoint reports none). The helper
+# is the only pod on a GPU node with the host filesystem mounted, so the
+# directory is removed through it.
+#
+# Note when checking this by hand: `kubectl auth can-i create pods/exec` reports
+# yes off the plain pods rule above and is not a test of this one. Use
+# `kubectl auth can-i create pods --subresource=exec`.
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
 # Services: create/delete LoadBalancer services for dynamo frontends.
 - apiGroups:
   - ""
