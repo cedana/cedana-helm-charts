@@ -213,8 +213,8 @@ spec:
             {{- if eq (include "cedana-helm.awsCredentialsMode" .) "static" }}
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                secretKeyRef:
+                  name: {{ template "cedana-helm.secretName" . }}
                   key: aws-access-key-id
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:

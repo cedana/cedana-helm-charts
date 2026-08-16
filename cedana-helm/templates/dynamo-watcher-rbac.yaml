@@ -61,6 +61,21 @@ rules:
   - pods/exec
   verbs:
   - create
+# Jobs: the model-cache staging Job that pulls weights into the inference
+# namespace PVC before a profile can serve. Without this the controller cannot
+# read or create it, every activation fails at "staging weights", and the model
+# never comes up — with the failure reported as an intent that will not apply
+# rather than as a missing permission.
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
 # Services: create/delete LoadBalancer services for dynamo frontends.
 - apiGroups:
   - ""
