@@ -23,6 +23,22 @@ rules:
   resources:
   - dynamographdeployments
   - dynamoworkermetadatas
+  # dynamocomponentdeployments: reaping superseded worker generations.
+  #
+  # The operator names each DCD "<dgd>-<component>-<specHash>" and creates a new
+  # one whenever the pod spec changes, without removing the previous one. On a
+  # single-GPU node that is a deadlock, not clutter: the superseded worker keeps
+  # the device, so its replacement sits Pending for ever and the change never
+  # takes effect. reapSupersededComponents exists to delete them and runs on
+  # every DGD apply — but without list/delete here it fails on the first call
+  # and logs at Debug, which is off in this deployment, so it appears to do
+  # nothing at all.
+  #
+  # Presents as "the cluster is stuck": the profile reports READY False with a
+  # Pending pod against it while the old worker serves happily, and the only way
+  # out is deleting the stale DCD by hand. That was done eight times in one
+  # evening before the missing verb was found.
+  - dynamocomponentdeployments
   verbs:
   - get
   - list
@@ -42,6 +58,24 @@ rules:
   - watch
   - create
   - delete
+# Nodes: the restore gate. A memory-tier checkpoint stops being restorable the
+# moment its node reboots, so selectRestorableArtifact compares the artifact's
+# recorded boot id against the live node's. Without `get` on nodes that lookup
+# fails, and because "cannot verify" is treated as "cannot restore", every
+# checkpoint is rejected and every activation cold starts — costing eleven
+# minutes each time while reporting only that the checkpoint was "not usable".
+#
+# The failure is easy to misread as preemption: the artifact is present, the
+# path is correct, the boot id in the record is right, and the node is healthy.
+# Only the reason string names the permission.
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
 # pods/exec: releasing a checkpoint's disk before writing a new one.
 #
 # The memory tier holds one checkpoint of a 27B model and not two — 50 GiB

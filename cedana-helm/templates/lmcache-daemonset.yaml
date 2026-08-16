@@ -1,0 +1,170 @@
+{{- if .Values.lmcache.enabled }}
+---
+# LMCache MP, one server per GPU node, shared by every vLLM pod on it.
+#
+# A DaemonSet and not a sidecar because that is the topology LMCache documents and
+# tests, and because a per-pod server would cost its L1 in RAM once per worker rather
+# than once per node. The consequence to know: the cache outlives any single worker,
+# so a Cedana restore onto the same node finds it warm, and a restore onto another node
+# does not. That is accepted, not overlooked.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-lmcache
+  labels:
+    app.kubernetes.io/component: lmcache
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.lmcache.updateStrategy.maxSurge }}
+      maxUnavailable: {{ .Values.lmcache.updateStrategy.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: lmcache
+      {{- include "cedana-helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: lmcache
+        {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
+    spec:
+      # hostNetwork so the server answers on the node's own address: a worker pod is
+      # NOT on the host network, so it dials status.hostIP (the controller supplies it
+      # through the downward API), never localhost. hostIPC and /dev/shm so CUDA IPC
+      # can move blocks between a worker's GPU memory and this process.
+      #
+      # Ports here are on the HOST. The cedana helper DaemonSet is also hostNetwork and
+      # already binds 8080, which is why httpPort defaults to 8079 and not LMCache's
+      # own default — two hostNetwork pods cannot share a port on one node. Only two
+      # ports are ever bound: mpPort (ZMQ) and httpPort (health + /metrics).
+      hostNetwork: true
+      hostIPC: {{ .Values.lmcache.hostIPC }}
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- with .Values.lmcache.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.lmcache.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.lmcache.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: lmcache
+          {{- if .Values.lmcache.image.digest }}
+          image: {{ .Values.lmcache.image.repository }}@{{ .Values.lmcache.image.digest }}
+          {{- else }}
+          image: {{ .Values.lmcache.image.repository }}:{{ .Values.lmcache.image.tag }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.lmcache.image.imagePullPolicy }}
+          # The module, not a console script: this is the entrypoint LMCache's own
+          # examples/multi_process/lmcache-daemonset.yaml uses.
+          command:
+            - /opt/venv/bin/python3
+            - -m
+            - lmcache.v1.multiprocess.server
+          args:
+            - --host=0.0.0.0
+            - --port={{ .Values.lmcache.mpPort }}
+            - --l1-size-gb={{ .Values.lmcache.l1SizeGB }}
+            # Lazy allocation's first slab. LMCache defaults it to 20, which is larger
+            # than a modest l1SizeGB — set it explicitly so it can never exceed the tier.
+            # `min` is integer-only in sprig and silently yields 0 on a fractional
+            # l1SizeGB, so compare as floats.
+            - --l1-init-size-gb={{ if lt (float64 .Values.lmcache.l1SizeGB) (float64 .Values.lmcache.l1InitSizeGB) }}{{ .Values.lmcache.l1SizeGB }}{{ else }}{{ .Values.lmcache.l1InitSizeGB }}{{ end }}
+            - --chunk-size={{ .Values.lmcache.chunkSize }}
+            - --eviction-policy={{ .Values.lmcache.evictionPolicy }}
+            # At least the number of vLLM pods that share this node, or requests queue
+            # behind one worker thread.
+            - --max-workers={{ .Values.lmcache.maxWorkers }}
+            # Health AND metrics both live on this one port. --prometheus-port is
+            # deliberately not passed: in this build it opens no listener at all
+            # ("OTel MeterProvider initialised with Prometheus fallback (standalone
+            # metrics HTTP server disabled; /metrics must be exposed by the caller)"),
+            # and only the ZMQ and HTTP ports are ever bound. /metrics is a route on
+            # the HTTP app. Verified against lmcache/standalone:nightly (0.5.5.dev118).
+            - --http-host=0.0.0.0
+            - --http-port={{ .Values.lmcache.httpPort }}
+            {{- if .Values.lmcache.separateObjectGroups }}
+            # Required by Mamba/linear-attention hybrids (Qwen3.5/3.6, Kimi). A profile
+            # that needs it cannot run on a node whose server started without it.
+            - --separate-object-groups
+            {{- end }}
+            {{- if gt (int .Values.lmcache.l2SizeGB) 0 }}
+            # POSIX, direct I/O off, and deliberately NOT --gds-l1-path: the GDS path
+            # initialises cuFile, which resolves CUDA driver symbols by dlsym against
+            # whatever is loaded as libcuda.so.1. Under the Cedana runtime that is the
+            # GPU interposer, which does not export every symbol cuFile asks for, and
+            # the failure is a worker that hangs on "under initialization" rather than
+            # one that says why. nvidia_fs is not loaded on these nodes anyway, so GDS
+            # would fall back to compat-mode POSIX for nothing.
+            # L2 has no hard size cap: pool_size is slots, and capacity is enforced
+            # softly by the adapter's own eviction controller against its watermark.
+            # lmcache.l2SizeGB is therefore what the volume is expected to hold, not a
+            # limit the server enforces — size the volume accordingly.
+            - --l2-adapter={"type":"nixl_store","backend":"POSIX","backend_params":{"file_path":"{{ .Values.lmcache.l2Dir }}","use_direct_io":"false"},"pool_size":{{ .Values.lmcache.l2PoolSize }},"eviction":{"eviction_policy":"{{ .Values.lmcache.evictionPolicy }}","trigger_watermark":{{ .Values.lmcache.evictionTriggerWatermark }},"eviction_ratio":{{ .Values.lmcache.evictionRatio }}}}
+            {{- end }}
+            {{- with .Values.lmcache.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: mp
+              containerPort: {{ .Values.lmcache.mpPort }}
+              protocol: TCP
+            # health, /metrics and the cache admin API, all on one port
+            - name: http
+              containerPort: {{ .Values.lmcache.httpPort }}
+              protocol: TCP
+          {{- if .Values.lmcache.healthPath }}
+          # Startup and readiness only, deliberately no liveness: the health path is
+          # documented but unverified against a running server, and a wrong path with a
+          # liveness probe is a crashloop, while a wrong path without one is a pod that
+          # runs and serves but reads NotReady. The second is the failure worth having.
+          startupProbe:
+            httpGet:
+              path: {{ .Values.lmcache.healthPath }}
+              port: {{ .Values.lmcache.httpPort }}
+            periodSeconds: 5
+            # Pinned memory grows lazily, but the first slab is not instant.
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.lmcache.healthPath }}
+              port: {{ .Values.lmcache.httpPort }}
+            periodSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+          resources:
+            {{- toYaml .Values.lmcache.resources | nindent 12 }}
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+            {{- if gt (int .Values.lmcache.l2SizeGB) 0 }}
+            - name: l2
+              mountPath: {{ .Values.lmcache.l2Dir }}
+            {{- end }}
+          {{- with .Values.lmcache.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: dshm
+          hostPath:
+            path: /dev/shm
+            type: Directory
+        {{- if gt (int .Values.lmcache.l2SizeGB) 0 }}
+        # The node's own NVMe. Node-local by decision: the cache does not follow a
+        # worker that restores onto another node.
+        - name: l2
+          hostPath:
+            path: {{ .Values.lmcache.l2HostPath }}
+            type: DirectoryOrCreate
+        {{- end }}
+{{- end }}

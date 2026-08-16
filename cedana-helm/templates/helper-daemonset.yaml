@@ -59,6 +59,19 @@ spec:
             - name: host-volume
               mountPath: /host
               readOnly: false
+              # Mounts this container makes under /host must reach the host, and
+              # with the default propagation (None) they do not. `cedana k8s
+              # setup` mounts the /checkpoint tmpfs through `chroot /host`, and
+              # chroot changes the root directory, not the mount namespace — so
+              # the tmpfs stayed private to this pod.
+              #
+              # That produced two directories answering to /checkpoint: a tmpfs
+              # only the helper could see, and a plain directory on the root disk
+              # that the daemon actually wrote to. A 74 GiB checkpoint went to
+              # block storage while every check reported a healthy memory tier
+              # with 50G free, and the tier read as empty afterwards. Restoring
+              # from RAM — the whole point of the tier — never happened.
+              mountPropagation: Bidirectional
           command: ["/bin/sh", "-c"]
           args: ["cedana k8s setup"]
           ports:
@@ -200,6 +213,14 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: log-level
+            - name: CEDANA_PLUGINS_LOCAL_SEARCH_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: plugins-local-search-path
+                  # optional so a pre-existing ConfigMap (created before this key
+                  # existed) doesn't break pod startup; absent => registry only
+                  optional: true
             - name: CEDANA_CRIU_MANAGE_CGROUPS
               value: "cg_none"
             - name: CONTAINERD_CONFIG_PATH
@@ -207,7 +228,15 @@ spec:
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
             - name: CEDANA_DB_REMOTE
+              value: {{ .Values.config.dbRemote | quote }}
+            {{- if .Values.hostConfig.checkpointTmpfs.enabled }}
+            - name: CHECKPOINT_TMPFS_ENABLED
               value: "true"
+            - name: CHECKPOINT_TMPFS_SIZE
+              value: {{ .Values.hostConfig.checkpointTmpfs.size | quote }}
+            - name: CHECKPOINT_TMPFS_MODE
+              value: {{ .Values.hostConfig.checkpointTmpfs.mode | quote }}
+            {{- end }}
             - name: CEDANA_AWS_CREDENTIALS_MODE
               value: {{ include "cedana-helm.awsCredentialsMode" . | quote }}
             {{- if eq (include "cedana-helm.awsCredentialsMode" .) "static" }}
