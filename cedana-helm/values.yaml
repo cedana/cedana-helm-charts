@@ -239,6 +239,9 @@ csxConfig:
   nfsPath: /cedana/nfsstore/
   sockAddr: /run/csx.sock
   nfsPollInterval: 10
+  tmpDir: /cedana/tmpdir
+  tmpDirObjectLimit: 1
+  enableMetrics: false
 
 kubernetesClusterDomain: cluster.local
 

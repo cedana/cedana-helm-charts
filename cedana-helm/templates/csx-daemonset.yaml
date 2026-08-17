@@ -98,6 +98,21 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: csx-nfs-poll-interval
+            - name: CEDANA_CSX_TMP_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-tmp-dir
+            - name: CEDANA_CSX_TMP_DIR_OBJECT_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-tmp-dir-object-limit
+            - name: CEDANA_CSX_ENABLE_METRICS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-enable-metrics
       volumes:
         - name: host-volume
           hostPath:

@@ -49,6 +49,9 @@ data:
   csx-local-disk-cache-path: "{{ .Values.csxConfig.localDiskCachePath }}"
   csx-nfs-path: "{{ .Values.csxConfig.nfsPath }}"
   csx-nfs-poll-interval: "{{ .Values.csxConfig.nfsPollInterval }}"
+  csx-tmp-dir: "{{ .Values.csxConfig.tmpDir }}"
+  csx-tmp-dir-object-limit: "{{ .Values.csxConfig.tmpDirObjectLimit }}"
+  csx-enable-metrics: "{{ .Values.csxConfig.enableMetrics }}"
 
   criu-log-level: "{{ .Values.config.criuLogLevel }}"
 {{- end }}
