@@ -72,3 +72,25 @@ Return secret name to be used based on provided values.
 {{- define "cedana-helm.configMapName" -}}
 {{- default "cedana-config" .Values.config.preExistingSecret -}}
 {{- end -}}
+
+{{/*
+Determine if Prometheus is enabled
+*/}}
+{{- define "cedana-helm.prometheusEnabled" -}}
+{{- $prometheusEnabled := false -}}
+{{- if and (hasKey .Values "clusterMetrics") (hasKey .Values.clusterMetrics "prometheus") (hasKey .Values.clusterMetrics.prometheus "enabled") -}}
+  {{- $prometheusEnabled = .Values.clusterMetrics.prometheus.enabled -}}
+{{- end -}}
+{{- if and .Values.clusterMetrics .Values.clusterMetrics.enabled $prometheusEnabled -}}true{{- end -}}
+{{- end -}}
+
+{{/*
+Determine if Vector is enabled
+*/}}
+{{- define "cedana-helm.vectorEnabled" -}}
+{{- $vectorEnabled := false -}}
+{{- if and (hasKey .Values "clusterMetrics") (hasKey .Values.clusterMetrics "vector") (hasKey .Values.clusterMetrics.vector "enabled") -}}
+  {{- $vectorEnabled = .Values.clusterMetrics.vector.enabled -}}
+{{- end -}}
+{{- if and .Values.clusterMetrics .Values.clusterMetrics.enabled $vectorEnabled -}}true{{- end -}}
+{{- end -}}

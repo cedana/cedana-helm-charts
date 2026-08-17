@@ -1,0 +1,29 @@
+{{/*
+Validation checks for metrics subcharts.
+Because Helm dependency conditions in Chart.yaml cannot perform logical AND checks,
+we use this template to fail the installation/upgrade if clusterMetrics.enabled is false
+but any subchart metrics components (prometheus, vector, or gpu) are explicitly enabled.
+*/}}
+{{- $prometheusExplicitlyEnabled := false -}}
+{{- if and (hasKey .Values "clusterMetrics") (hasKey .Values.clusterMetrics "prometheus") (hasKey .Values.clusterMetrics.prometheus "enabled") -}}
+  {{- $prometheusExplicitlyEnabled = .Values.clusterMetrics.prometheus.enabled -}}
+{{- end -}}
+
+{{- $vectorExplicitlyEnabled := false -}}
+{{- if and (hasKey .Values "clusterMetrics") (hasKey .Values.clusterMetrics "vector") (hasKey .Values.clusterMetrics.vector "enabled") -}}
+  {{- $vectorExplicitlyEnabled = .Values.clusterMetrics.vector.enabled -}}
+{{- end -}}
+
+{{- $gpuExplicitlyEnabled := false -}}
+{{- if and (hasKey .Values "clusterMetrics") (hasKey .Values.clusterMetrics "gpu") (hasKey .Values.clusterMetrics.gpu "enabled") -}}
+  {{- $gpuExplicitlyEnabled = .Values.clusterMetrics.gpu.enabled -}}
+{{- end -}}
+
+{{- $metricsEnabled := false -}}
+{{- if and (hasKey .Values "clusterMetrics") (hasKey .Values.clusterMetrics "enabled") -}}
+  {{- $metricsEnabled = .Values.clusterMetrics.enabled -}}
+{{- end -}}
+
+{{- if and (not $metricsEnabled) (or $prometheusExplicitlyEnabled $vectorExplicitlyEnabled $gpuExplicitlyEnabled) -}}
+  {{- fail "Installation failed: clusterMetrics.enabled must be set to true for prometheus, vector, or gpu installation to occur when they are enabled." -}}
+{{- end -}}

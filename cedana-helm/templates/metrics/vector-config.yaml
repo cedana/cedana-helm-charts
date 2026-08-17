@@ -1,0 +1,119 @@
+{{- if .Values.clusterMetrics.enabled -}}
+{{- if include "cedana-helm.vectorEnabled" . -}}
+{{- $cedanaUrl := required "config.url is required!" .Values.config.url -}}
+{{- $host := $cedanaUrl | trimSuffix "/v1" | trimSuffix "/v2" | trimSuffix "/" | trimPrefix "https://" | trimPrefix "http://" -}}
+{{- $region := .Values.clusterMetrics.s3.region | default .Values.config.awsRegion | default "us-east-1" -}}
+{{- $bucket := required "clusterMetrics.s3.bucket is required when metrics are enabled!" .Values.clusterMetrics.s3.bucket -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-config
+  namespace: {{ .Release.Namespace }}
+data:
+  vector.yaml: |
+    data_dir: /vector-data
+    api:
+      enabled: true
+      address: 127.0.0.1:8686
+      playground: false
+    sources:
+      kube-state-metrics:
+        type: prometheus_scrape
+        endpoints:
+          - {{ dig "endpoints" "kubeStateMetrics" "" (.Values.clusterMetrics | default dict) | default (printf "http://%s-kube-state-metrics.%s.svc.cluster.local:8080/metrics" .Release.Name .Release.Namespace) }}
+      dcgm-exporter:
+        type: prometheus_scrape
+        endpoints:
+          - {{ dig "endpoints" "dcgmExporter" "" (.Values.clusterMetrics | default dict) | default (printf "http://dcgm-exporter.%s.svc.cluster.local:9400/metrics" .Release.Namespace) }}
+      node-exporter:
+        type: prometheus_scrape
+        endpoints:
+          - {{ dig "endpoints" "nodeExporter" "" (.Values.clusterMetrics | default dict) | default (printf "http://%s-prometheus-node-exporter.%s.svc.cluster.local:9100/metrics" .Release.Name .Release.Namespace) }}
+      cadvisor:
+        type: prometheus_scrape
+        endpoints:
+          - {{ dig "endpoints" "cadvisor" "" (.Values.clusterMetrics | default dict) | default (printf "http://%s-prometheus-server.%s.svc.cluster.local/federate?match[]=container_cpu_usage_seconds_total&match[]=container_memory_working_set_bytes" .Release.Name .Release.Namespace) }}
+        scrape_interval_secs: 60
+      host_metrics:
+        type: host_metrics
+        scrape_interval_secs: 60
+      event-exporter:
+        type: prometheus_scrape
+        endpoints:
+          - http://kubernetes-event-exporter.{{ .Release.Namespace }}.svc.cluster.local:2112/metrics
+        scrape_interval_secs: 30
+
+    transforms:
+      host_filter:
+        type: remap
+        inputs:
+          - host_metrics
+        source: |
+          .tags.host = get_env_var!("SPEC_NODE_NAME")
+      cadvisor_filter:
+        type: filter
+        inputs:
+          - cadvisor
+        condition: |
+          starts_with(string!(.name), "container_cpu_") || starts_with(string!(.name), "container_memory_")
+      cadvisor_tag:
+        type: remap
+        inputs:
+          - cadvisor_filter
+        source: |
+          .tags.host = get_env_var!("SPEC_NODE_NAME")
+          .tags.collector = "cadvisor"
+      event_exporter_tag:
+        type: remap
+        inputs:
+          - event-exporter
+        source: |
+          .tags.collector = "event-exporter"
+      kube_state_filter:
+        type: filter
+        inputs:
+          - kube-state-metrics
+        condition: |
+          .name == "kube_pod_owner" || .name == "kube_pod_info" || .name == "kube_job_owner"
+      kube_state_tag:
+        type: remap
+        inputs:
+          - kube_state_filter
+        source: |
+          .tags.collector = "kube-state-metrics"
+      dcgm_filter:
+        type: filter
+        inputs:
+          - dcgm-exporter
+        condition: |
+          starts_with(string!(.name), "DCGM_FI_DEV_") || starts_with(string!(.name), "DCGM_FI_PROF_")
+      dcgm_tag:
+        type: remap
+        inputs:
+          - dcgm_filter
+        source: |
+          .tags.host = if exists(.tags.Hostname) { .tags.Hostname } else { get_env_var!("SPEC_NODE_NAME") }
+          .tags.collector = "dcgm"
+      add_timestamp:
+        type: remap
+        inputs: [host_filter, cadvisor_tag, event_exporter_tag, kube_state_tag, dcgm_tag]
+        source: |
+          .tags.ts = to_string(to_unix_timestamp(now()))
+    sinks:
+      s3_sink:
+        type: aws_s3
+        inputs: [add_timestamp]
+        bucket: {{ $bucket | quote }}
+        region: {{ $region | quote }}
+        compression: "none"
+        encoding:
+          codec: "json"
+        batch:
+          max_bytes: 10485760 # 10MB
+          timeout_secs: 15
+        key_prefix: "{{ $host }}/v2/vector/data/{{ "{{" }} tags.ts {{ "}}" }}/"
+        filename_time_format: "%s"
+        filename_append_uuid: true
+{{- end -}}
+{{- end -}}
+

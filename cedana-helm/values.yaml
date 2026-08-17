@@ -252,3 +252,146 @@ metricsService:
       protocol: TCP
       targetPort: https
   type: ClusterIP
+
+# Enable cluster metrics (Prometheus and Vector collection to S3)
+clusterMetrics:
+  # Enable the Cedana Monitoring Stack (installs Prometheus and Vector)
+  enabled: false
+  # Enable Prometheus subchart installation.
+  prometheus:
+    enabled: false
+  # Enable Vector subchart installation.
+  vector:
+    enabled: false
+  # Enable GPU metrics collection (installs DCGM Exporter). Requires NVIDIA GPUs on nodes.
+  gpu:
+    enabled: false
+  # Custom endpoints to use existing monitoring setup components when local ones are disabled
+  endpoints:
+    kubeStateMetrics: "" # Existing kube-state-metrics scrape endpoint (e.g. 'http://kube-metrics.monitoring.svc:8080/metrics')
+    nodeExporter: ""     # Existing node-exporter scrape endpoint (e.g. 'http://node-exporter.monitoring.svc:9100/metrics')
+    prometheusServer: "" # Existing prometheus-server endpoint
+    dcgmExporter: ""     # Existing dcgm-exporter scrape endpoint
+    cadvisor: ""         # Existing cadvisor/kubelet metrics endpoint
+  # S3 configuration for metrics storage
+  s3:
+    bucket: ""              # AWS S3 bucket name (required when metrics are enabled)
+    region: ""              # AWS S3 region (falls back to config.awsRegion)
+    awsAccessKeyId: ""      # AWS Access Key ID (falls back to config.awsAccessKeyId)
+    awsSecretAccessKey: ""  # AWS Secret Access Key (falls back to config.awsSecretAccessKey)
+
+# Subchart: Prometheus configuration overrides when clusterMetrics are enabled
+prometheus:
+  fullnameOverride: prometheus
+  alertmanager:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  server:
+    persistentVolume:
+      enabled: false
+    extraScrapeConfigs: |
+      - job_name: 'kubernetes-cadvisor'
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+  extraManifests:
+    - |
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: prometheus-server-cadvisor
+      rules:
+        - apiGroups: [""]
+          resources: ["nodes/proxy"]
+          verbs: ["get"]
+    - |
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: prometheus-server-cadvisor
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: prometheus-server-cadvisor
+      subjects:
+        - kind: ServiceAccount
+          name: prometheus-server
+          namespace: {{ .Release.Namespace }}
+
+# Subchart: Vector configuration overrides when clusterMetrics are enabled
+vector:
+  fullnameOverride: vector
+  role: "Agent"
+  env:
+    - name: CEDANA_URL
+      value: "{{ .Values.config.url }}"
+    - name: SPEC_NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: vector-aws-credentials
+          key: awsAccessKeyId
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: vector-aws-credentials
+          key: awsSecretAccessKey
+  existingConfigMaps:
+    - vector-config
+  dataDir: "/vector-data"
+  service:
+    enabled: true
+    ports:
+      - name: api
+        port: 8686
+        protocol: TCP
+        targetPort: 8686
+  defaultVolumes:
+    - name: var-lib
+      hostPath:
+        path: "/var/lib/"
+    - name: procfs
+      hostPath:
+        path: "/proc"
+    - name: sysfs
+      hostPath:
+        path: "/sys"
+  defaultVolumeMounts:
+    - name: var-lib
+      mountPath: "/var/lib"
+      readOnly: true
+    - name: procfs
+      mountPath: "/host/proc"
+      readOnly: true
+    - name: sysfs
+      mountPath: "/host/sys"
+      readOnly: true
+  persistence:
+    hostPath:
+      enabled: true
+      path: "/var/lib/vector"
+
+# Subchart: DCGM Exporter configuration overrides
+dcgm-exporter:
+  fullnameOverride: dcgm-exporter
+  serviceMonitor:
+    enabled: false
+  nodeSelector:
+    nvidia.com/gpu.present: "true"
