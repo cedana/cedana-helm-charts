@@ -227,7 +227,7 @@ dynamoWatcher:
 csx:
   image:
     repository: cedana/cedana-csx
-    tag: latest
+    tag: main
     digest: # ignores tag if set
     imagePullPolicy: Always
 
