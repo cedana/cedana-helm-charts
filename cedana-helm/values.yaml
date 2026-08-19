@@ -30,6 +30,7 @@ config:
   # - `cedana://<path>` for Cedana-managed global storage (recommended)
   # - `s3://<bucket>/<path>` for your S3 storage
   # - `<path>` for node-local storage (not recommended, as it won't be accessible across nodes)
+  # - `csx://` for using Cedana's custom NFS backed storage solution
   checkpointDir: /tmp
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
@@ -231,15 +232,29 @@ csx:
     imagePullPolicy: Always
 
 csxConfig:
-  logLevel: debug
-  memoryCacheLimit: 128
+  logLevel: info
+  # Path to Dir inside a NFS where CSX can store persistent checkpoints on the cluster.
+  nfsPath:
+  # Percentage of system RAM CSX can use to cache checkpoints (1-100).
+  # CSX creates a tmpfs of this size at memoryCachePath.
+  memoryCachePercent: 25
+  # Path where CSX mounts the tmpfs used to cache checkpoints in RAM.
+  # CSX creates the path if it does not exist.
   memoryCachePath: /cedana/memstore/
-  localDiskCacheLimit: 1024
+  # Amount of local disk space, in GiB, CSX can use to cache checkpoints.
+  localDiskCacheLimit: 200
+  # Path on the local disk where CSX caches checkpoints.
+  # CSX creates the path if it does not exist.
   localDiskCachePath: /cedana/diskstore/
-  nfsPath: /cedana/nfsstore/
+  # Path of the Unix socket used by the CSX gRPC server.
   sockAddr: /run/csx.sock
-  nfsPollInterval: 10
+  # Interval, in seconds, at which CSX checks NFS for checkpoints from other nodes.
+  nfsPollInterval: 1
+  # Path where CSX temporarily stores objects while they are being written or
+  # have not yet been copied to NFS. CSX creates a tmpfs at this path.
   tmpDir: /cedana/tmpdir
+  # Maximum number of objects allowed in tmpDir at once. Once reached, new
+  # writes are degraded to NFS.
   tmpDirObjectLimit: 1
   enableMetrics: false
 

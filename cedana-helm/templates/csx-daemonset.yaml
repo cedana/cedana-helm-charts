@@ -80,11 +80,11 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: csx-memory-cache-path
-            - name: CEDANA_CSX_MEMORY_CACHE_LIMIT
+            - name: CEDANA_CSX_MEMORY_CACHE_PERCENT
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
-                  key: csx-memory-cache-limit
+                  key: csx-memory-cache-percent
             - name: CEDANA_CSX_LOCAL_DISK_CACHE_PATH
               valueFrom:
                 configMapKeyRef:

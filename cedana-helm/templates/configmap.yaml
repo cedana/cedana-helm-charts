@@ -43,11 +43,15 @@ data:
 
   csx-log-level: "{{ .Values.csxConfig.logLevel }}"
   csx-sock-addr: "{{ .Values.csxConfig.sockAddr }}"
-  csx-memory-cache-limit: "{{ .Values.csxConfig.memoryCacheLimit }}"
+  csx-memory-cache-percent: "{{ .Values.csxConfig.memoryCachePercent }}"
   csx-memory-cache-path: "{{ .Values.csxConfig.memoryCachePath }}"
   csx-local-disk-cache-limit: "{{ .Values.csxConfig.localDiskCacheLimit }}"
   csx-local-disk-cache-path: "{{ .Values.csxConfig.localDiskCachePath }}"
+  {{- if eq .Values.config.checkpointDir "csx://" }}
+  csx-nfs-path: "{{ required "Please provide --set csxConfig.nfsPath=<nfs-path> when config.checkpointDir=csx://" .Values.csxConfig.nfsPath }}"
+  {{- else }}
   csx-nfs-path: "{{ .Values.csxConfig.nfsPath }}"
+  {{- end }}
   csx-nfs-poll-interval: "{{ .Values.csxConfig.nfsPollInterval }}"
   csx-tmp-dir: "{{ .Values.csxConfig.tmpDir }}"
   csx-tmp-dir-object-limit: "{{ .Values.csxConfig.tmpDirObjectLimit }}"
