@@ -24,6 +24,8 @@ spec:
       labels:
         app.kubernetes.io/component: csx
         {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       hostPID: true
       hostIPC: true
