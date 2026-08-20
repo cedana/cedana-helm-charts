@@ -161,6 +161,12 @@ spec:
                   # optional so a pre-existing ConfigMap (created before these keys
                   # existed) doesn't break pod startup; absent => daemon default (false)
                   optional: true
+            - name: CEDANA_GPU_DELTA_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-delta-enabled
+                  optional: true
             - name: CEDANA_GPU_TEMPLATES_ENABLED
               valueFrom:
                 configMapKeyRef:
