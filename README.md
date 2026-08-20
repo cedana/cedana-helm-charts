@@ -127,6 +127,40 @@ helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedan
 --set hostConfig.shmConfig.size="20G"
 ```
 
+#### Monitoring Configuration
+
+When cluster metrics are enabled, you must populate the metrics S3 bucket name explicitly. The S3 region and credentials will automatically fall back to the main `config` settings if omitted.
+
+The monitoring stack includes **Prometheus** (for metrics collection) and **Vector** (for shipping logs/metrics to S3). Individual subcharts can be enabled via `clusterMetrics.prometheus.enabled` and `clusterMetrics.vector.enabled` respectively.
+
+Note that `clusterMetrics.enabled` must be set to `true` to use these subcharts. If `clusterMetrics.enabled` is `false` while any sub-component is enabled, the installation will fail validation.
+
+1. Fetch the subchart dependencies:
+```bash
+helm dependency update ./cedana-helm-charts/cedana-helm
+```
+
+2. Install with metrics enabled (e.g. enabling both Prometheus and Vector):
+```bash
+helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-system \
+  --set config.url=$CEDANA_URL \
+  --set config.authToken=$CEDANA_AUTH_TOKEN \
+  --set config.clusterId=$CLUSTER_ID \
+  --set config.awsRegion=$AWS_REGION \
+  --set config.awsAccessKeyId=$AWS_ACCESS_KEY_ID \
+  --set config.awsSecretAccessKey=$AWS_SECRET_ACCESS_KEY \
+  --set clusterMetrics.enabled=true \
+  --set clusterMetrics.prometheus.enabled=true \
+  --set clusterMetrics.vector.enabled=true \
+  --set clusterMetrics.s3.bucket=$METRICS_S3_BUCKET
+```
+
+If your cluster has NVIDIA GPUs and you want to monitor GPU metrics (utilization, memory, temperature, etc.), set `clusterMetrics.gpu.enabled=true` as well. Note that by default, the GPU exporter DaemonSet will only schedule pods on GPU-enabled nodes labeled with `nvidia.com/gpu.present=true`:
+
+```bash
+  --set clusterMetrics.gpu.enabled=true
+```
+
 ### Usage
 
 See https://docs.cedana.ai/get-started/using-the-cedana-platform for usage instructions with the Cedana Platform!
