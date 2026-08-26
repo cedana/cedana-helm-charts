@@ -13,8 +13,8 @@ spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: {{ .Values.daemonHelper.updateStrategy.maxSurge }}
-      maxUnavailable: {{ .Values.daemonHelper.updateStrategy.maxUnavailable }}
+      maxSurge: {{ .Values.csx.updateStrategy.maxSurge }}
+      maxUnavailable: {{ .Values.csx.updateStrategy.maxUnavailable }}
   selector:
     matchLabels:
       app.kubernetes.io/component: csx
@@ -30,15 +30,15 @@ spec:
       hostPID: true
       hostIPC: true
       hostNetwork: true
-      {{- with .Values.daemonHelper.affinity }}
+      {{- with .Values.csx.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.daemonHelper.tolerations }}
+      {{- with .Values.csx.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.daemonHelper.nodeSelector }}
+      {{- with .Values.csx.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}

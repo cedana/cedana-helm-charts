@@ -227,9 +227,24 @@ dynamoWatcher:
 csx:
   image:
     repository: cedana/cedana-csx
-    tag: main
+    tag: latest
     digest: # ignores tag if set
+    # change to IfNotPresent after csx release has been made
     imagePullPolicy: Always
+  updateStrategy:
+    maxSurge: 0
+    maxUnavailable: 99999
+  tolerations:
+    # Allow scheduling on nodes that are waiting for Cedana to be ready
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+      effect: "NoSchedule"
+  affinity: {}
+  # Restrict Cedana to labeled nodes; the controller taints only these nodes.
+  #   kubectl label nodes <node-name> cedana.ai/enabled=true
+  #   nodeSelector: { cedana.ai/enabled: "true" }
+  # Empty = all nodes (default).
+  nodeSelector: {}
 
 csxConfig:
   logLevel: info
