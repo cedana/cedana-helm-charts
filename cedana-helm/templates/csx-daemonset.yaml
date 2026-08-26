@@ -115,6 +115,16 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: csx-enable-metrics
+            - name: CEDANA_CSX_READ_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-read-timeout
+            - name: CEDANA_CSX_WRITE_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-write-timeout
       volumes:
         - name: host-volume
           hostPath:

@@ -56,6 +56,8 @@ data:
   csx-tmp-dir: "{{ .Values.csxConfig.tmpDir }}"
   csx-tmp-dir-object-limit: "{{ .Values.csxConfig.tmpDirObjectLimit }}"
   csx-enable-metrics: "{{ .Values.csxConfig.enableMetrics }}"
+  csx-read-timeout: "{{ .Values.csxConfig.readTimeout }}"
+  csx-write-timeout: "{{ .Values.csxConfig.writeTimeout }}"
 
   criu-log-level: "{{ .Values.config.criuLogLevel }}"
 {{- end }}

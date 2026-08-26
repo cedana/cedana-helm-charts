@@ -257,6 +257,10 @@ csxConfig:
   # writes are degraded to NFS.
   tmpDirObjectLimit: 1
   enableMetrics: false
+  # Maximum duration, in seconds, that a read can remain open.
+  readTimeout: 3600
+  # Maximum duration, in seconds, that a write can remain open.
+  writeTimeout: 3600
 
 kubernetesClusterDomain: cluster.local
 
