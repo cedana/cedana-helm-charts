@@ -50,10 +50,10 @@ config:
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: release
-  pluginsCriuVersion: v4.2-cedana.01
-  pluginsContainerdRuntimeVersion: v0.7.5
-  pluginsGpuVersion: v0.7.3
-  pluginsStreamerVersion: v0.1.0
+  pluginsCriuVersion: v4.2.1-cedana.00
+  pluginsContainerdRuntimeVersion: v0.7.6
+  pluginsGpuVersion: v0.7.5
+  pluginsStreamerVersion: v0.1.1
 
   profiling: true
   metrics: true
@@ -85,7 +85,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.297
+    tag: v0.9.300
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -143,7 +143,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.6.5
+      tag: v0.6.6
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -205,7 +205,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: v0.6.4
+    tag: v0.6.6
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
@@ -248,16 +248,16 @@ clusterMetrics:
   # Custom endpoints to use existing monitoring setup components when local ones are disabled
   endpoints:
     kubeStateMetrics: "" # Existing kube-state-metrics scrape endpoint (e.g. 'http://kube-metrics.monitoring.svc:8080/metrics')
-    nodeExporter: ""     # Existing node-exporter scrape endpoint (e.g. 'http://node-exporter.monitoring.svc:9100/metrics')
+    nodeExporter: "" # Existing node-exporter scrape endpoint (e.g. 'http://node-exporter.monitoring.svc:9100/metrics')
     prometheusServer: "" # Existing prometheus-server endpoint
-    dcgmExporter: ""     # Existing dcgm-exporter scrape endpoint
-    cadvisor: ""         # Existing cadvisor/kubelet metrics endpoint
+    dcgmExporter: "" # Existing dcgm-exporter scrape endpoint
+    cadvisor: "" # Existing cadvisor/kubelet metrics endpoint
   # S3 configuration for metrics storage
   s3:
-    bucket: ""              # AWS S3 bucket name (required when metrics are enabled)
-    region: ""              # AWS S3 region (falls back to config.awsRegion)
-    awsAccessKeyId: ""      # AWS Access Key ID (falls back to config.awsAccessKeyId)
-    awsSecretAccessKey: ""  # AWS Secret Access Key (falls back to config.awsSecretAccessKey)
+    bucket: "" # AWS S3 bucket name (required when metrics are enabled)
+    region: "" # AWS S3 region (falls back to config.awsRegion)
+    awsAccessKeyId: "" # AWS Access Key ID (falls back to config.awsAccessKeyId)
+    awsSecretAccessKey: "" # AWS Secret Access Key (falls back to config.awsSecretAccessKey)
 
 # Subchart: Prometheus configuration overrides when clusterMetrics are enabled
 prometheus:
