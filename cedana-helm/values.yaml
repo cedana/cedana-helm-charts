@@ -205,7 +205,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: v0.6.4
+    tag: v0.6.6
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
