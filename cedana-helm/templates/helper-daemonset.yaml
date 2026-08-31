@@ -153,6 +153,20 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-shm-size
+            - name: CEDANA_GPU_DEDUP_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-dedup-enabled
+                  # optional so a pre-existing ConfigMap (created before these keys
+                  # existed) doesn't break pod startup; absent => daemon default (false)
+                  optional: true
+            - name: CEDANA_GPU_TEMPLATES_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-templates-enabled
+                  optional: true
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
