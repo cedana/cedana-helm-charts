@@ -245,8 +245,6 @@ csx:
   #   nodeSelector: { cedana.ai/enabled: "true" }
   # Empty = all nodes (default).
   nodeSelector: {}
-
-csxConfig:
   logLevel: info
   # Path to Dir inside a NFS where CSX can store persistent checkpoints on the cluster.
   nfsPath:
