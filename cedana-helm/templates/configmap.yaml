@@ -22,6 +22,7 @@ data:
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
   gpu-dedup-enabled: "{{ .Values.config.gpuDedupEnabled }}"
+  gpu-templates-enabled: "{{ .Values.config.gpuTemplatesEnabled }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"
