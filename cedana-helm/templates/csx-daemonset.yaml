@@ -1,0 +1,132 @@
+{{- if eq .Values.config.checkpointDir "csx://" }}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "cedana-helm.fullname" . }}-csx
+  labels:
+    app.kubernetes.io/component: csx
+    app.kubernetes.io/created-by: cedana-helm
+    app.kubernetes.io/part-of: cedana-helm
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.csx.updateStrategy.maxSurge }}
+      maxUnavailable: {{ .Values.csx.updateStrategy.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: csx
+      {{- include "cedana-helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: csx
+        {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      hostPID: true
+      hostIPC: true
+      hostNetwork: true
+      {{- with .Values.csx.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.csx.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.csx.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: csx
+          {{- if .Values.csx.image.digest }}
+          image: {{ .Values.csx.image.repository }}@{{ .Values.csx.image.digest }}
+          {{- else }}
+          image: {{ .Values.csx.image.repository }}:{{ .Values.csx.image.tag }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.csx.image.imagePullPolicy }}
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: host-volume
+              mountPath: /host
+              readOnly: false
+          command: ["/bin/bash"]
+          args: ["scripts/install-k8s.sh"]
+          env:
+            - name: CEDANA_CSX_LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-log-level
+            - name: CEDANA_CSX_SOCK_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-sock-addr
+            - name: CEDANA_CSX_NFS_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-nfs-path
+            - name: CEDANA_CSX_MEMORY_CACHE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-memory-cache-path
+            - name: CEDANA_CSX_MEMORY_CACHE_PERCENT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-memory-cache-percent
+            - name: CEDANA_CSX_LOCAL_DISK_CACHE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-local-disk-cache-path
+            - name: CEDANA_CSX_LOCAL_DISK_CACHE_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-local-disk-cache-limit
+            - name: CEDANA_CSX_NFS_POLL_INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-nfs-poll-interval
+            - name: CEDANA_CSX_TMP_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-tmp-dir
+            - name: CEDANA_CSX_TMP_DIR_OBJECT_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-tmp-dir-object-limit
+            - name: CEDANA_CSX_ENABLE_METRICS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-enable-metrics
+            - name: CEDANA_CSX_READ_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-read-timeout
+            - name: CEDANA_CSX_WRITE_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-write-timeout
+      volumes:
+        - name: host-volume
+          hostPath:
+            path: /
+{{- end }}

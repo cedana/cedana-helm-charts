@@ -42,5 +42,23 @@ data:
   shm-config-size: "{{ .Values.hostConfig.shmConfig.size }}"
   shm-config-min-size: "{{ .Values.hostConfig.shmConfig.minSize }}"
 
+  csx-log-level: "{{ .Values.csx.logLevel }}"
+  csx-sock-addr: "{{ .Values.csx.sockAddr }}"
+  csx-memory-cache-percent: "{{ .Values.csx.memoryCachePercent }}"
+  csx-memory-cache-path: "{{ .Values.csx.memoryCachePath }}"
+  csx-local-disk-cache-limit: "{{ .Values.csx.localDiskCacheLimit }}"
+  csx-local-disk-cache-path: "{{ .Values.csx.localDiskCachePath }}"
+  {{- if eq .Values.config.checkpointDir "csx://" }}
+  csx-nfs-path: "{{ required "Please provide --set csx.nfsPath=<nfs-path> when config.checkpointDir=csx://" .Values.csx.nfsPath }}"
+  {{- else }}
+  csx-nfs-path: "{{ .Values.csx.nfsPath }}"
+  {{- end }}
+  csx-nfs-poll-interval: "{{ .Values.csx.nfsPollInterval }}"
+  csx-tmp-dir: "{{ .Values.csx.tmpDir }}"
+  csx-tmp-dir-object-limit: "{{ .Values.csx.tmpDirObjectLimit }}"
+  csx-enable-metrics: "{{ .Values.csx.enableMetrics }}"
+  csx-read-timeout: "{{ .Values.csx.readTimeout }}"
+  csx-write-timeout: "{{ .Values.csx.writeTimeout }}"
+
   criu-log-level: "{{ .Values.config.criuLogLevel }}"
 {{- end }}
