@@ -32,7 +32,6 @@
   "awsEndpoint"
   "preExistingSecret"
   "criuLogLevel"
-  "gpuDedupEnabled"
 -}}
 {{- range $key := $configKeysFromValuesConfig -}}
   {{- if hasKey $.Values.config $key -}}
