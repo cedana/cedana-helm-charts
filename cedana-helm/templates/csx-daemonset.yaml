@@ -125,6 +125,31 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: csx-write-timeout
+            - name: CEDANA_CSX_PROPAGATOR_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: url
+            - name: CEDANA_CSX_PROPAGATOR_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "cedana-helm.secretName" . }}
+                  key: auth-token
+            - name: CEDANA_CSX_CLUSTER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: cluster-id
+            - name: CEDANA_CSX_INITIALIZATION_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-initialization-timeout
+            - name: CEDANA_CSX_ENABLE_RMQ
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-enable-rmq
       volumes:
         - name: host-volume
           hostPath:

@@ -31,7 +31,7 @@ config:
   # - `s3://<bucket>/<path>` for your S3 storage
   # - `<path>` for node-local storage (not recommended, as it won't be accessible across nodes)
   # - `csx://` for using Cedana's custom NFS backed storage solution
-  checkpointDir: /tmp
+  checkpointDir: csx://
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   # Streaming ensures a low footprint by using memory efficiently with no intermediate
@@ -52,9 +52,9 @@ config:
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: release
+  pluginsBuilds: alpha
   pluginsCriuVersion: v4.2.1-cedana.00
-  pluginsContainerdRuntimeVersion: v0.7.6
+  pluginsContainerdRuntimeVersion: cedana
   pluginsGpuVersion: v0.7.5
   pluginsStreamerVersion: v0.1.1
 
@@ -87,8 +87,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: v0.9.300
+    repository: cedana/cedana-helper-test
+    tag: f525449b300d822b8dc3802fad3a7665f8c83007
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -227,8 +227,8 @@ dynamoWatcher:
 
 csx:
   image:
-    repository: cedana/cedana-csx
-    tag: latest
+    repository: cedana/cedana-csx-test
+    tag: 45000c3bd08c6acc0560350fdac1272fe923f5f5
     digest: # ignores tag if set
     # change to IfNotPresent after csx release has been made
     imagePullPolicy: Always
@@ -246,9 +246,9 @@ csx:
   #   nodeSelector: { cedana.ai/enabled: "true" }
   # Empty = all nodes (default).
   nodeSelector: {}
-  logLevel: info
+  logLevel: debug
   # Path to Dir inside a NFS where CSX can store persistent checkpoints on the cluster.
-  nfsPath:
+  nfsPath: /mnt/filesystem-a6/
   # Percentage of system RAM CSX can use to cache checkpoints (1-100).
   # CSX creates a tmpfs of this size at memoryCachePath.
   memoryCachePercent: 25
@@ -275,6 +275,10 @@ csx:
   readTimeout: 3600
   # Maximum duration, in seconds, that a write can remain open.
   writeTimeout: 3600
+  # Maximum duration, in milliseconds, that CSX waits for an initial checkpoint
+  # list before caching random checkpoints from NFS.
+  initializationTimeout: 100000
+  enableRmq: true
 
 kubernetesClusterDomain: cluster.local
 
