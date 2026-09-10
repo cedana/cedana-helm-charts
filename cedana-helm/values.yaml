@@ -53,7 +53,7 @@ config:
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: release
   pluginsCriuVersion: v4.2.1-cedana.00
-  pluginsContainerdRuntimeVersion: v0.7.6
+  pluginsContainerdRuntimeVersion: v0.7.7
   pluginsGpuVersion: v0.7.5
   pluginsStreamerVersion: v0.1.1
 
