@@ -6,7 +6,6 @@ Kubernetes cluster.
 ## cedana-helm
 
 Chart for installing the controller and cedana daemon.
-Additionally it aims to provide optional deployments for services commonly used with our deployments such as Kueue.
 
 ### Installation
 
