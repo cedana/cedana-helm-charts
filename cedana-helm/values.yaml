@@ -198,6 +198,35 @@ controllerManager:
 # dynamo Services, syncs their status to the Cedana propagator, and consumes the
 # cluster's RabbitMQ create/delete workload queues. Only relevant on clusters that
 # have NVIDIA Dynamo installed, so it is opt-in (disabled by default).
+# Switchyard: the OpenAI-compatible inference gateway that routes to the Dynamo profiles the
+# inference controller manages. Deployed into the inference namespace (where the DGDs live)
+# and authenticated with config.authToken against config.url.
+switchyard:
+  enabled: false
+  namespace: cedana-inference
+  replicaCount: 1
+  podAnnotations: {}
+  image:
+    repository: cedana/cedana-switchyard
+    tag: latest
+    digest: # ignores tag if set
+    imagePullPolicy: IfNotPresent
+  # Appended verbatim to config.toml after the [cedana] table.
+  extraConfig: ""
+  service:
+    type: ClusterIP
+    port: 4000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+  nodeSelector: {}
+  tolerations:
+    - key: "cedana.ai/not-ready"
+      operator: "Exists"
+
 dynamoWatcher:
   enabled: false
   # Create a LoadBalancer Service for dynamo frontends (sets CEDANA_DYNAMO_CREATE_LB).
