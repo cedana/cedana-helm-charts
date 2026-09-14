@@ -7,7 +7,7 @@ Expand the name of the chart.
 
 {{/* Validate and return the helper AWS credentials mode. */}}
 {{- define "cedana-helm.awsCredentialsMode" -}}
-{{- $mode := .Values.config.awsCredentialsMode -}}
+{{- $mode := default "static" .Values.config.awsCredentialsMode -}}
 {{- if not (has $mode (list "static" "eksPodIdentity" "ambient")) -}}
 {{- fail (printf "config.awsCredentialsMode must be one of static, eksPodIdentity, or ambient; got %q" $mode) -}}
 {{- end -}}
