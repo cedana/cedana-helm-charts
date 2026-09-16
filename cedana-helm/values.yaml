@@ -1,10 +1,6 @@
 nameOverride: cedana
 fullnameOverride: cedana
 
-# Install the following CRDs before setting installKueue as true
-# kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.10.1/manifests.yaml
-installKueue: false
-
 config:
   authToken:
   url:
@@ -52,10 +48,10 @@ config:
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: alpha
+  pluginsBuilds: release
   pluginsCriuVersion: v4.2.1-cedana.00
-  pluginsContainerdRuntimeVersion: cedana
-  pluginsGpuVersion: v0.7.5
+  pluginsContainerdRuntimeVersion: v0.7.8
+  pluginsGpuVersion: v0.7.6
   pluginsStreamerVersion: v0.1.1
 
   profiling: true
@@ -64,6 +60,8 @@ config:
 
   awsAccessKeyId: # AWS access key ID if using S3 storage (if `s3://<bucket>/<path>` in checkpointDir)
   awsSecretAccessKey: # AWS secret access key if using S3 storage
+  # AWS credential provider: static, eksPodIdentity, or ambient
+  awsCredentialsMode: static
   awsRegion: # AWS region if using S3 storage (uses default region if not set)
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
@@ -84,11 +82,17 @@ hostConfig:
     minSize: 10G # Minimum size to trigger remount (e.g., "10G", "20G")
 
 daemonHelper:
+  serviceAccount:
+    # Create a dedicated ServiceAccount for the S3-using helper DaemonSets.
+    create: true
+    name: cedana-helper
+    automount: false
+    annotations: {}
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper-test
-    tag: f525449b300d822b8dc3802fad3a7665f8c83007
+    repository: cedana/cedana-helper
+    tag: v0.9.301
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -146,7 +150,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.6.6
+      tag: v0.6.8
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -208,7 +212,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: v0.6.6
+    tag: v0.6.7
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
