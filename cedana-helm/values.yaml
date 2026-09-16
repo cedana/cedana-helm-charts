@@ -23,10 +23,14 @@ config:
   protocol: tcp
 
   # Specify path to directory for storing checkpoints.
-  # - `cedana://<path>` for Cedana-managed global storage (recommended)
+  # - `cedana://<path>` for Cedana-managed global storage
   # - `s3://<bucket>/<path>` for your S3 storage
   # - `<path>` for node-local storage (not recommended, as it won't be accessible across nodes)
-  # - `csx://` for using Cedana's custom NFS backed storage solution
+  # - `csx://` for using Cedana's custom NFS backed storage solution (recommended)
+  #   CSX uses a combination of tmpfs, local disk and NFS to store and cache checkpoints.
+  #   All checkpoints are persisted to NFS but are written first to RAM in order to reduce freeze time.
+  #   Checkpoints are automatically cached to tmpfs and local disk allowing for faster restores.
+  #   See the `csx` key to configure NFS path, tmpfs limits, local disk limits and other config options.
   checkpointDir: /tmp
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
@@ -231,8 +235,8 @@ dynamoWatcher:
 
 csx:
   image:
-    repository: cedana/cedana-csx-test
-    tag: 45000c3bd08c6acc0560350fdac1272fe923f5f5
+    repository: cedana/cedana-csx
+    tag: latest
     digest: # ignores tag if set
     # change to IfNotPresent after csx release has been made
     imagePullPolicy: Always
@@ -272,7 +276,7 @@ csx:
   # have not yet been copied to NFS. CSX creates a tmpfs at this path.
   tmpDir: /cedana/tmpdir
   # Maximum number of objects allowed in tmpDir at once. Once reached, new
-  # writes are degraded to NFS.
+  # checkpoints are written straight to NFS.
   tmpDirObjectLimit: 1
   enableMetrics: false
   # Maximum duration, in seconds, that a read can remain open.
