@@ -283,9 +283,16 @@ clusterMetrics:
     prometheusServer: "" # Existing prometheus-server endpoint
     dcgmExporter: "" # Existing dcgm-exporter scrape endpoint
     cadvisor: "" # Existing cadvisor/kubelet metrics endpoint
-  # S3 configuration for metrics storage
+  # Where Vector writes. control-plane: the propagator hands each cluster its bucket, key
+  # layout and hourly scoped credentials (nothing to configure here). static: bring your own
+  # bucket and long-lived keys via clusterMetrics.s3 (the pre-0.7.9 behaviour).
+  storage:
+    mode: control-plane
+    # Refresh interval for control-plane credentials; must stay under their 3600 s TTL.
+    credentialsRefreshSecs: 1800
+  # S3 configuration for metrics storage (storage.mode: static only)
   s3:
-    bucket: "" # AWS S3 bucket name (required when metrics are enabled)
+    bucket: "" # AWS S3 bucket name (required when storage.mode is static)
     region: "" # AWS S3 region (falls back to config.awsRegion)
     awsAccessKeyId: "" # AWS Access Key ID (falls back to config.awsAccessKeyId)
     awsSecretAccessKey: "" # AWS Secret Access Key (falls back to config.awsSecretAccessKey)
@@ -346,26 +353,105 @@ prometheus:
 vector:
   fullnameOverride: vector
   role: "Agent"
+  # The subchart does not tpl these values: names below are the chart's fixed defaults
+  # (cedana-config, cedana-secrets); config.preExistingSecret changes them.
   env:
-    - name: CEDANA_URL
-      value: "{{ .Values.config.url }}"
     - name: SPEC_NODE_NAME
       valueFrom:
         fieldRef:
           fieldPath: spec.nodeName
-    - name: AWS_ACCESS_KEY_ID
+    - name: CEDANA_CLUSTER_ID
       valueFrom:
-        secretKeyRef:
-          name: vector-aws-credentials
-          key: awsAccessKeyId
-    - name: AWS_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: vector-aws-credentials
-          key: awsSecretAccessKey
+        configMapKeyRef:
+          name: cedana-config
+          key: cluster-id
+  # Static keys or AWS_CONTAINER_CREDENTIALS_FULL_URI, rendered per clusterMetrics.storage.mode.
+  envFrom:
+    - secretRef:
+        name: vector-aws-credentials
   existingConfigMaps:
     - vector-config
   dataDir: "/vector-data"
+  # Sources and transforms are static; the sink fragment is written at pod start.
+  args:
+    - --config-dir
+    - /etc/vector/
+    - --config-dir
+    - /etc/vector-dynamic/
+  initContainers:
+    - name: vector-bootstrap
+      image: alpine:3.20
+      command: ["/bin/sh", "/opt/cedana/bootstrap.sh"]
+      env:
+        - name: CEDANA_URL
+          valueFrom:
+            configMapKeyRef:
+              name: cedana-config
+              key: url
+        - name: CEDANA_CLUSTER_ID
+          valueFrom:
+            configMapKeyRef:
+              name: cedana-config
+              key: cluster-id
+        - name: CEDANA_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cedana-secrets
+              key: auth-token
+      volumeMounts:
+        - name: vector-bootstrap
+          mountPath: /opt/cedana
+          readOnly: true
+        - name: vector-dynamic
+          mountPath: /etc/vector-dynamic
+  extraContainers:
+    # Serves the AWS container-credentials document on 127.0.0.1:9099 for the vector
+    # container and refreshes it from the control plane. Idle in static mode.
+    - name: metrics-credentials
+      image: alpine:3.20
+      command: ["/bin/sh", "/opt/cedana/credentials.sh"]
+      env:
+        - name: CEDANA_URL
+          valueFrom:
+            configMapKeyRef:
+              name: cedana-config
+              key: url
+        - name: CEDANA_CLUSTER_ID
+          valueFrom:
+            configMapKeyRef:
+              name: cedana-config
+              key: cluster-id
+        - name: CEDANA_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cedana-secrets
+              key: auth-token
+      volumeMounts:
+        - name: vector-bootstrap
+          mountPath: /opt/cedana
+          readOnly: true
+        - name: vector-credentials
+          mountPath: /var/lib/vector-credentials
+      resources:
+        requests:
+          cpu: 5m
+          memory: 16Mi
+        limits:
+          memory: 32Mi
+  extraVolumes:
+    - name: vector-bootstrap
+      configMap:
+        name: vector-bootstrap
+        defaultMode: 0555
+    - name: vector-dynamic
+      emptyDir: {}
+    - name: vector-credentials
+      emptyDir:
+        medium: Memory
+  extraVolumeMounts:
+    - name: vector-dynamic
+      mountPath: /etc/vector-dynamic
+      readOnly: true
   service:
     enabled: true
     ports:

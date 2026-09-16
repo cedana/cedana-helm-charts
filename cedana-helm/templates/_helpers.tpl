@@ -94,3 +94,14 @@ Determine if Vector is enabled
 {{- end -}}
 {{- if and .Values.clusterMetrics .Values.clusterMetrics.enabled $vectorEnabled -}}true{{- end -}}
 {{- end -}}
+
+{{/*
+Metrics storage mode: control-plane (default) or static. Anything else fails the render.
+*/}}
+{{- define "cedana-helm.metricsStorageMode" -}}
+{{- $mode := dig "storage" "mode" "control-plane" (.Values.clusterMetrics | default dict) -}}
+{{- if not (has $mode (list "control-plane" "static")) -}}
+{{- fail (printf "clusterMetrics.storage.mode must be control-plane or static, got %q" $mode) -}}
+{{- end -}}
+{{- $mode -}}
+{{- end -}}

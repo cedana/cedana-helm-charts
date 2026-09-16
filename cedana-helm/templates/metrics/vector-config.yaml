@@ -1,9 +1,5 @@
 {{- if .Values.clusterMetrics.enabled -}}
 {{- if include "cedana-helm.vectorEnabled" . -}}
-{{- $cedanaUrl := required "config.url is required!" .Values.config.url -}}
-{{- $host := $cedanaUrl | trimSuffix "/v1" | trimSuffix "/v2" | trimSuffix "/" | trimPrefix "https://" | trimPrefix "http://" -}}
-{{- $region := .Values.clusterMetrics.s3.region | default .Values.config.awsRegion | default "us-east-1" -}}
-{{- $bucket := required "clusterMetrics.s3.bucket is required when metrics are enabled!" .Values.clusterMetrics.s3.bucket -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -99,21 +95,9 @@ data:
         inputs: [host_filter, cadvisor_tag, event_exporter_tag, kube_state_tag, dcgm_tag]
         source: |
           .tags.ts = to_string(to_unix_timestamp(now()))
-    sinks:
-      s3_sink:
-        type: aws_s3
-        inputs: [add_timestamp]
-        bucket: {{ $bucket | quote }}
-        region: {{ $region | quote }}
-        compression: "none"
-        encoding:
-          codec: "json"
-        batch:
-          max_bytes: 10485760 # 10MB
-          timeout_secs: 15
-        key_prefix: "{{ $host }}/v2/vector/data/{{ "{{" }} tags.ts {{ "}}" }}/"
-        filename_time_format: "%s"
-        filename_append_uuid: true
+          .tags.cluster_id = get_env_var!("CEDANA_CLUSTER_ID")
+    # The aws_s3 sink lives in /etc/vector-dynamic/sink.yaml, written by the vector-bootstrap
+    # init container (see vector-bootstrap.yaml); it feeds from add_timestamp.
 {{- end -}}
 {{- end -}}
 
