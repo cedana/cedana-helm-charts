@@ -26,6 +26,8 @@ spec:
         {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/csx-config: {{ include (print $.Template.BasePath "/csx-configmap.yaml") . | sha256sum }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
     spec:
       hostPID: true
       hostIPC: true
@@ -63,67 +65,67 @@ spec:
             - name: CEDANA_CSX_LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-log-level
             - name: CEDANA_CSX_SOCK_ADDR
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-sock-addr
             - name: CEDANA_CSX_NFS_PATH
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-nfs-path
             - name: CEDANA_CSX_MEMORY_CACHE_PATH
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-memory-cache-path
             - name: CEDANA_CSX_MEMORY_CACHE_PERCENT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-memory-cache-percent
             - name: CEDANA_CSX_LOCAL_DISK_CACHE_PATH
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-local-disk-cache-path
             - name: CEDANA_CSX_LOCAL_DISK_CACHE_LIMIT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-local-disk-cache-limit
             - name: CEDANA_CSX_NFS_POLL_INTERVAL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-nfs-poll-interval
             - name: CEDANA_CSX_TMP_DIR
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-tmp-dir
             - name: CEDANA_CSX_TMP_DIR_OBJECT_LIMIT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-tmp-dir-object-limit
             - name: CEDANA_CSX_ENABLE_METRICS
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-enable-metrics
             - name: CEDANA_CSX_READ_TIMEOUT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-read-timeout
             - name: CEDANA_CSX_WRITE_TIMEOUT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-write-timeout
             - name: CEDANA_CSX_PROPAGATOR_URL
               valueFrom:
@@ -143,12 +145,12 @@ spec:
             - name: CEDANA_CSX_INITIALIZATION_TIMEOUT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-initialization-timeout
             - name: CEDANA_CSX_ENABLE_RMQ
               valueFrom:
                 configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-enable-rmq
       volumes:
         - name: host-volume

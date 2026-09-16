@@ -27,7 +27,7 @@ config:
   # - `s3://<bucket>/<path>` for your S3 storage
   # - `<path>` for node-local storage (not recommended, as it won't be accessible across nodes)
   # - `csx://` for using Cedana's custom NFS backed storage solution
-  checkpointDir: csx://
+  checkpointDir: /tmp
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   # Streaming ensures a low footprint by using memory efficiently with no intermediate
@@ -252,7 +252,7 @@ csx:
   nodeSelector: {}
   logLevel: debug
   # Path to Dir inside a NFS where CSX can store persistent checkpoints on the cluster.
-  nfsPath: /mnt/filesystem-a6/
+  nfsPath:
   # Percentage of system RAM CSX can use to cache checkpoints (1-100).
   # CSX creates a tmpfs of this size at memoryCachePath.
   memoryCachePercent: 25
