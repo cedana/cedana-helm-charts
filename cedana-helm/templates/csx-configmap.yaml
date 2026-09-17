@@ -21,5 +21,4 @@ data:
   csx-read-timeout: "{{ .Values.csx.readTimeout }}"
   csx-write-timeout: "{{ .Values.csx.writeTimeout }}"
   csx-initialization-timeout: "{{ .Values.csx.initializationTimeout }}"
-  csx-enable-rmq: "{{ .Values.csx.enableRmq }}"
 {{- end }}

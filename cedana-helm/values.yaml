@@ -264,7 +264,7 @@ csx:
   # CSX creates the path if it does not exist.
   memoryCachePath: /cedana/memstore/
   # Amount of local disk space, in GiB, CSX can use to cache checkpoints.
-  localDiskCacheLimit: 200
+  localDiskCacheLimit: 1000
   # Path on the local disk where CSX caches checkpoints.
   # CSX creates the path if it does not exist.
   localDiskCachePath: /cedana/diskstore/
@@ -285,8 +285,7 @@ csx:
   writeTimeout: 3600
   # Maximum duration, in milliseconds, that CSX waits for an initial checkpoint
   # list before caching random checkpoints from NFS.
-  initializationTimeout: 100000
-  enableRmq: true
+  initializationTimeout: 10000
 
 kubernetesClusterDomain: cluster.local
 
