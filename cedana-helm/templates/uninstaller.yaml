@@ -45,6 +45,24 @@ spec:
               readOnly: false
           command: ["/bin/sh", "-c"]
           args: ["cedana k8s destroy"]
+        {{- if eq .Values.config.checkpointDir "csx://" }}
+        - name: csx-uninstaller
+          {{- if .Values.csx.image.digest }}
+          image: {{ .Values.csx.image.repository }}@{{ .Values.csx.image.digest }}
+          {{- else }}
+          image: {{ .Values.csx.image.repository }}:{{ .Values.csx.image.tag }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.csx.image.imagePullPolicy }}
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: host-volume
+              mountPath: /host
+              readOnly: false
+          command: ["/bin/bash"]
+          args: ["scripts/uninstall-k8s.sh"]
+        {{- end }}
       volumes:
         - name: varlog
           hostPath:

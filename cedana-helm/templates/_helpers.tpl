@@ -91,6 +91,11 @@ Return secret name to be used based on provided values.
 {{- default "cedana-config" .Values.config.preExistingSecret -}}
 {{- end -}}
 
+{{/* Create the name of the CSX ConfigMap. */}}
+{{- define "cedana-helm.csxConfigMapName" -}}
+cedana-csx-config
+{{- end -}}
+
 {{/*
 Determine if Prometheus is enabled
 */}}
