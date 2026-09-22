@@ -203,6 +203,9 @@ controllerManager:
 # and authenticated with config.authToken against config.url.
 switchyard:
   enabled: false
+  # Optional persistent outbox. Use a distinct writable PVC per Switchyard
+  # installation; records are deleted only after propagator accepts them.
+  telemetryExistingClaim: ""
   namespace: cedana-inference
   replicaCount: 1
   podAnnotations: {}

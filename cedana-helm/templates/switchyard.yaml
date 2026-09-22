@@ -1,4 +1,7 @@
 {{- if .Values.switchyard.enabled }}
+{{- if and .Values.switchyard.telemetryExistingClaim (ne (int .Values.switchyard.replicaCount) 1) }}
+{{- fail "switchyard.telemetryExistingClaim requires replicaCount=1; each writer needs its own outbox volume" }}
+{{- end }}
 {{- $ns := .Values.switchyard.namespace }}
 # Switchyard: the inference gateway agents talk to. Lives in the inference namespace next
 # to the Dynamo deployments it routes to, and uses the release's auth token against the
@@ -52,6 +55,10 @@ metadata:
     {{- include "cedana-helm.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.switchyard.replicaCount | default 1 }}
+  {{- if .Values.switchyard.telemetryExistingClaim }}
+  strategy:
+    type: Recreate
+  {{- end }}
   selector:
     matchLabels:
       app: switchyard
@@ -65,6 +72,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      {{- if .Values.switchyard.telemetryExistingClaim }}
+      securityContext:
+        fsGroup: 1000
+      {{- end }}
       containers:
         - name: switchyard
           {{- if .Values.switchyard.image.digest }}
@@ -78,6 +89,10 @@ spec:
             - name: http
               containerPort: 4000
           env:
+            {{- if .Values.switchyard.telemetryExistingClaim }}
+            - name: CEDANA_TELEMETRY_DIR
+              value: /var/lib/switchyard/telemetry
+            {{- end }}
             - name: CEDANA_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -97,9 +112,18 @@ spec:
             periodSeconds: 30
           resources: {{- toYaml .Values.switchyard.resources | nindent 12 }}
           volumeMounts:
+            {{- if .Values.switchyard.telemetryExistingClaim }}
+            - name: telemetry
+              mountPath: /var/lib/switchyard/telemetry
+            {{- end }}
             - name: config
               mountPath: /etc/switchyard
       volumes:
+        {{- if .Values.switchyard.telemetryExistingClaim }}
+        - name: telemetry
+          persistentVolumeClaim:
+            claimName: {{ .Values.switchyard.telemetryExistingClaim | quote }}
+        {{- end }}
         - name: config
           configMap:
             name: switchyard-config

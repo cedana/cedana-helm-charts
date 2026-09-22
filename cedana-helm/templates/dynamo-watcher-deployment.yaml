@@ -58,6 +58,12 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        # Lifecycle events are the control plane's only view of what is running: a
+        # dropped route.published leaves a capacity intent Pending forever and its
+        # GPUs pinned. The emitter's last-resort disk spool needs somewhere writable,
+        # which a runAsNonRoot container with no mounts does not have by default.
+        - name: CEDANA_LIFECYCLE_SPOOL_DIR
+          value: /var/spool/cedana/lifecycle-spool
         {{- if .Values.dynamoWatcher.image.digest }}
         image: {{ .Values.dynamoWatcher.image.repository }}@{{ .Values.dynamoWatcher.image.digest }}
         {{- else }}
@@ -66,6 +72,14 @@ spec:
         imagePullPolicy: {{ .Values.dynamoWatcher.image.imagePullPolicy }}
         resources: {{- toYaml .Values.dynamoWatcher.resources | nindent 10 }}
         securityContext: {{- toYaml .Values.dynamoWatcher.containerSecurityContext | nindent 10 }}
+        volumeMounts:
+        - name: lifecycle-spool
+          mountPath: /var/spool/cedana
+      volumes:
+      # emptyDir is enough: the spool only has to outlive a broker or propagator
+      # blip, not the pod.
+      - name: lifecycle-spool
+        emptyDir: {}
       securityContext:
         runAsNonRoot: true
       serviceAccountName: {{ include "cedana-helm.fullname" . }}-dynamo-watcher
