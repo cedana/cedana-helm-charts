@@ -198,8 +198,6 @@ spec:
                   key: log-level
             - name: CEDANA_CRIU_MANAGE_CGROUPS
               value: "cg_none"
-            - name: CONTAINERD_CONFIG_PATH
-              value: "/etc/containerd/config.toml"
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
             - name: CEDANA_DB_REMOTE

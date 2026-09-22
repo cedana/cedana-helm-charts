@@ -52,11 +52,11 @@ config:
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: release
-  pluginsCriuVersion: v4.2.1-cedana.00
-  pluginsContainerdRuntimeVersion: v0.7.8
-  pluginsGpuVersion: v0.7.6
-  pluginsStreamerVersion: v0.1.1
+  pluginsBuilds: alpha
+  pluginsCriuVersion: criu-dev
+  pluginsContainerdRuntimeVersion: cedana
+  pluginsGpuVersion: main
+  pluginsStreamerVersion: main
 
   profiling: true
   metrics: true
@@ -95,8 +95,8 @@ daemonHelper:
   service:
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: v0.9.301
+    repository: cedana/cedana-helper-test
+    tag: main
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -153,8 +153,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.6.8
+      repository: cedana/cedana-controller-test
+      tag: main
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
