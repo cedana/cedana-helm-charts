@@ -55,7 +55,7 @@ config:
   pluginsBuilds: release
   pluginsCriuVersion: v4.2.1-cedana.00
   pluginsContainerdRuntimeVersion: v0.8.0
-  pluginsGpuVersion: v0.7.8
+  pluginsGpuVersion: v0.7.9
   pluginsStreamerVersion: v0.1.1
 
   profiling: true
@@ -96,7 +96,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.303
+    tag: v0.9.305
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
