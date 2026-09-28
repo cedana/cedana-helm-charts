@@ -134,6 +134,12 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: criu-log-level
+            - name: CEDANA_CSX_SOCK_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: csx-sock-addr
+                  optional: true
             - name: CEDANA_CHECKPOINT_COMPRESSION
               valueFrom:
                 configMapKeyRef:

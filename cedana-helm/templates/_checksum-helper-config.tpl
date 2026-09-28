@@ -61,6 +61,13 @@
   {{- end -}}
 {{- end -}}
 
+{{- /* Values from .Values.csx */ -}}
+{{- if hasKey $.Values "csx" -}}
+  {{- if hasKey $.Values.csx "sockAddr" -}}
+    {{- $_ := set $config "csx-sockAddr" (get $.Values.csx "sockAddr") -}}
+  {{- end -}}
+{{- end -}}
+
 {{- if hasKey $.Values.daemonHelper "serviceAccount" -}}
   {{- $_ := set $config "daemonHelper-serviceAccount" $.Values.daemonHelper.serviceAccount -}}
 {{- end -}}
