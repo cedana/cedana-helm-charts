@@ -72,6 +72,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CEDANA_TAINT_NODES
           value: {{ quote .Values.controllerManager.taintNodes }}
+        - name: CEDANA_CLUSTER_SYNC
+          value: {{ quote .Values.controllerManager.clusterSync }}
         {{- if .Values.controllerManager.manager.image.digest }}
         image: {{ .Values.controllerManager.manager.image.repository }}@{{ .Values.controllerManager.manager.image.digest }}
         {{- else }}
