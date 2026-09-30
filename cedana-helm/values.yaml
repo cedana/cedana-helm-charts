@@ -296,6 +296,10 @@ csx:
   # Maximum duration, in milliseconds, that CSX waits for an initial checkpoint
   # list before caching random checkpoints from NFS.
   initializationTimeout: 10000
+  # Hash each checkpoint before it is copied to NFS and record the checksum
+  # with the checkpoint. The hash runs in the background, off the checkpoint's
+  # own path, but on the node's CPU.
+  checksum: true
 
 kubernetesClusterDomain: cluster.local
 

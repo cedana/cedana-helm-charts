@@ -21,4 +21,5 @@ data:
   csx-read-timeout: "{{ .Values.csx.readTimeout }}"
   csx-write-timeout: "{{ .Values.csx.writeTimeout }}"
   csx-initialization-timeout: "{{ .Values.csx.initializationTimeout }}"
+  csx-checksum: "{{ .Values.csx.checksum }}"
 {{- end }}
