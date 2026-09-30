@@ -52,6 +52,10 @@ spec:
               key: log-level
         - name: CEDANA_DYNAMO_CREATE_LB
           value: {{ .Values.dynamoWatcher.createLoadBalancer | quote }}
+        {{- with .Values.dynamoWatcher.loops }}
+        - name: CEDANA_DYNAMO_LOOPS
+          value: {{ . | quote }}
+        {{- end }}
         - name: KUBERNETES_CLUSTER_DOMAIN
           value: {{ quote .Values.kubernetesClusterDomain }}
         - name: CONTROLLER_NAMESPACE

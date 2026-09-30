@@ -31,7 +31,7 @@ config:
   #   All checkpoints are persisted to NFS but are written first to RAM in order to reduce freeze time.
   #   Checkpoints are automatically cached to tmpfs and local disk allowing for faster restores.
   #   See the `csx` key to configure NFS path, tmpfs limits, local disk limits and other config options.
-  checkpointDir: /tmp
+  checkpointDir: "csx://"
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   # Streaming ensures a low footprint by using memory efficiently with no intermediate
@@ -211,6 +211,11 @@ dynamoWatcher:
   enabled: false
   # Create a LoadBalancer Service for dynamo frontends (sets CEDANA_DYNAMO_CREATE_LB).
   createLoadBalancer: false
+  # Watcher loops to run (sets CEDANA_DYNAMO_LOOPS), as a comma-separated list of
+  # informers, worker-metadata, inference, experiments, create-workload and
+  # delete-workload. Empty runs them all. "worker-metadata" alone only re-registers
+  # restored workers with Dynamo discovery, and gets a matching minimal ClusterRole.
+  loops: ""
   replicaCount: 1
   podAnnotations: {}
   image:
