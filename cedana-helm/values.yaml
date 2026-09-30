@@ -31,7 +31,7 @@ config:
   #   All checkpoints are persisted to NFS but are written first to RAM in order to reduce freeze time.
   #   Checkpoints are automatically cached to tmpfs and local disk allowing for faster restores.
   #   See the `csx` key to configure NFS path, tmpfs limits, local disk limits and other config options.
-  checkpointDir: "csx://"
+  checkpointDir: "/tmp"
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   # Streaming ensures a low footprint by using memory efficiently with no intermediate
