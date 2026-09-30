@@ -30,6 +30,8 @@ config:
   #   CSX uses a combination of tmpfs, local disk and NFS to store and cache checkpoints.
   #   All checkpoints are persisted to NFS but are written first to RAM in order to reduce freeze time.
   #   Checkpoints are automatically cached to tmpfs and local disk allowing for faster restores.
+  #   CSX is not compatible with checkpoint streaming, so checkpointStreams MUST BE 0 for CSX to work
+  #   correctly.
   #   See the `csx` key to configure NFS path, tmpfs limits, local disk limits and other config options.
   checkpointDir: "/tmp"
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
