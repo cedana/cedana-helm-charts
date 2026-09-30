@@ -215,7 +215,7 @@ dynamoWatcher:
   # informers, worker-metadata, inference, experiments, create-workload and
   # delete-workload. Empty runs them all. "worker-metadata" alone only re-registers
   # restored workers with Dynamo discovery, and gets a matching minimal ClusterRole.
-  loops: ""
+  loops: "worker-metadata"
   replicaCount: 1
   podAnnotations: {}
   image:
