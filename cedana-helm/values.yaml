@@ -72,6 +72,11 @@ config:
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
   criuLogLevel: 2
+
+  # Fall back to a normal (cold) start of the container if a Cedana restore fails, instead of
+  # failing the pod. The failed restore is still reported and shows as a "Cold start" in the
+  # monitoring page, with the restore error attached.
+  fallbackColdStart: false
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 

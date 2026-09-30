@@ -33,6 +33,7 @@
   "awsEndpoint"
   "preExistingSecret"
   "criuLogLevel"
+  "fallbackColdStart"
 -}}
 {{- range $key := $configKeysFromValuesConfig -}}
   {{- if hasKey $.Values.config $key -}}
