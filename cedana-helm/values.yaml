@@ -76,6 +76,8 @@ config:
   # Fall back to a normal (cold) start of the container if a Cedana restore fails, instead of
   # failing the pod. The failed restore is still reported and shows as a "Cold start" in the
   # monitoring page, with the restore error attached.
+  # If you bring your own ConfigMap (config.preExistingConfigMap), add a `fallback-cold-start`
+  # key to it; the helper reads the setting from there.
   fallbackColdStart: true
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
