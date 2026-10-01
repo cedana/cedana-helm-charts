@@ -44,5 +44,7 @@ data:
 
   criu-log-level: "{{ .Values.config.criuLogLevel }}"
 
+  fallback-cold-start: "{{ .Values.config.fallbackColdStart }}"
+
   csx-sock-addr: "{{ .Values.csx.sockAddr }}"
 {{- end }}
