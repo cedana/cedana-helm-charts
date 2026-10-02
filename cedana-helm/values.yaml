@@ -56,8 +56,8 @@ config:
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: release
   pluginsCriuVersion: v4.2.1-cedana.01
-  pluginsContainerdRuntimeVersion: v0.8.2
-  pluginsGpuVersion: v0.7.9
+  pluginsContainerdRuntimeVersion: v0.8.3
+  pluginsGpuVersion: v0.8.0
   pluginsStreamerVersion: v0.1.2
 
   profiling: true
@@ -102,7 +102,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.307
+    tag: v0.9.308
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -160,7 +160,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.6.10
+      tag: v0.6.11
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
