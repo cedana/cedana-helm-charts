@@ -39,6 +39,18 @@ helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-names
 
 ### Configuration Options
 
+#### CRIU Device Plugins
+
+The CRIU `nvidia-dev` and `infiniband` plugins are installed on every node by default.
+They let CRIU checkpoint processes holding open `/dev/nvidia*` (e.g. NVML users) or
+`/dev/infiniband/*` fds, and are inert on nodes without those devices. They follow
+`config.pluginsCriuVersion`. To opt out (the plugin is removed from the node):
+
+```bash
+--set config.pluginsCriuNvidiaDev=false
+--set config.pluginsCriuInfiniband=false
+```
+
 #### Restricting Cedana to Specific Nodes
 
 By default the Cedana helper runs on every node in the cluster. To limit it to a

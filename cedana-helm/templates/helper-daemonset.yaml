@@ -205,6 +205,19 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: plugins-streamer-version
+            - name: CEDANA_PLUGINS_CRIU_NVIDIA_DEV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: plugins-criu-nvidia-dev
+                  # optional so a pre-existing ConfigMap doesn't break pod startup; absent => script default (true)
+                  optional: true
+            - name: CEDANA_PLUGINS_CRIU_INFINIBAND
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: plugins-criu-infiniband
+                  optional: true
             - name: CEDANA_PROFILING_ENABLED
               valueFrom:
                 configMapKeyRef:
