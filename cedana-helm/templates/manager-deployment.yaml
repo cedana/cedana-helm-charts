@@ -54,16 +54,6 @@ spec:
             configMapKeyRef:
               name: {{ template "cedana-helm.configMapName" . }}
               key: url
-        # Where the inference controller dumps checkpoints: the same directory as the
-        # helper, so that they go through csx where it is deployed. Optional, so that a
-        # pre-existing ConfigMap without the key still starts the manager, which then
-        # uses /checkpoint as it did before the key was read
-        - name: CEDANA_CHECKPOINT_DIR
-          valueFrom:
-            configMapKeyRef:
-              name: {{ template "cedana-helm.configMapName" . }}
-              key: checkpoint-dir
-              optional: true
         - name: CEDANA_METRICS_ENABLED
           valueFrom:
             configMapKeyRef:

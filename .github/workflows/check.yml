@@ -36,11 +36,11 @@ jobs:
             rendered=$(helm template cedana cedana-helm \
               --set config.checkpointDir=csx:// --set csx.nfsPath=/nfs \
               --set config.clusterId=check --set config.authToken=check --set config.url=http://check \
-              --set csx.checksum=$checksum)
+              --set csx.checksum=$checksum --set dynamoWatcher.enabled=true)
             echo "$rendered" | grep -q "csx-checksum: \"$checksum\"" || { echo "csx-checksum: \"$checksum\" missing from the csx ConfigMap"; exit 1; }
             echo "$rendered" | grep -q "name: CEDANA_CSX_CHECKSUM" || { echo "CEDANA_CSX_CHECKSUM missing from the csx DaemonSet"; exit 1; }
-            # The manager dumps inference checkpoints into the same directory as the helper
-            echo "$rendered" | awk '/^kind: Deployment$/,/^---$/' | grep -q "name: CEDANA_CHECKPOINT_DIR" || { echo "CEDANA_CHECKPOINT_DIR missing from the manager Deployment"; exit 1; }
+            # The inference controller runs in the dynamo-watcher and dumps into the same directory as the helper
+            echo "$rendered" | awk '/^# Source: .*dynamo-watcher-deployment.yaml/,/^---$/' | grep -q "name: CEDANA_CHECKPOINT_DIR" || { echo "CEDANA_CHECKPOINT_DIR missing from the dynamo-watcher Deployment"; exit 1; }
           done
 
   version:
