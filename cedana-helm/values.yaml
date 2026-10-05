@@ -56,10 +56,12 @@ config:
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: release
   pluginsCriuVersion: v4.2.1-cedana.01
+  pluginsCriuNvidiaDev: true
+  pluginsCriuInfiniband: true
   pluginsContainerdRuntimeVersion: v0.8.3
   pluginsGpuVersion: v0.8.0
   pluginsStreamerVersion: v0.1.2
-
+  
   profiling: true
   metrics: true
   logLevel: info

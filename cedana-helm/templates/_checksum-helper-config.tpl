@@ -23,6 +23,8 @@
   "pluginsContainerdRuntimeVersion"
   "pluginsGpuVersion"
   "pluginsStreamerVersion"
+  "pluginsCriuNvidiaDev"
+  "pluginsCriuInfiniband"
   "profiling"
   "metrics"
   "logLevel"

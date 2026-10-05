@@ -28,6 +28,8 @@ data:
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"
   plugins-gpu-version: "{{ .Values.config.pluginsGpuVersion }}"
   plugins-streamer-version: "{{ .Values.config.pluginsStreamerVersion }}"
+  plugins-criu-nvidia-dev: "{{ .Values.config.pluginsCriuNvidiaDev }}"
+  plugins-criu-infiniband: "{{ .Values.config.pluginsCriuInfiniband }}"
   metrics: "{{ .Values.config.metrics }}"
   profiling: "{{ .Values.config.profiling }}"
   log-level: "{{ .Values.config.logLevel }}"
