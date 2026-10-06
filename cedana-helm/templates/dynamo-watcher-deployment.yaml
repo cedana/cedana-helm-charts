@@ -18,6 +18,9 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: dynamo-watcher
+        # Rolls the watcher when a value it reads through the ConfigMap changes, such as
+        # the checkpoint directory; an environment variable is read once at start
+        checksum/config: {{ include "cedana-helm.watcher.config.checksum" . | sha256sum }}
       {{- with .Values.dynamoWatcher.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

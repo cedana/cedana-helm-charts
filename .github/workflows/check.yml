@@ -42,6 +42,15 @@ jobs:
             # The inference controller runs in the dynamo-watcher and dumps into the same directory as the helper
             echo "$rendered" | awk '/^# Source: .*dynamo-watcher-deployment.yaml/,/^---$/' | grep -q "name: CEDANA_CHECKPOINT_DIR" || { echo "CEDANA_CHECKPOINT_DIR missing from the dynamo-watcher Deployment"; exit 1; }
           done
+          # A change of checkpoint directory must roll the watcher, which reads it once at start
+          watcher_checksum() {
+            helm template cedana cedana-helm --set config.checkpointDir=$1 --set csx.nfsPath=/nfs \
+              --set config.clusterId=check --set config.authToken=check --set config.url=http://check \
+              --set dynamoWatcher.enabled=true | awk '/^# Source: .*dynamo-watcher-deployment.yaml/,/^---$/' | grep "checksum/config:"
+          }
+          if [ "$(watcher_checksum csx://)" = "$(watcher_checksum /tmp)" ]; then
+            echo "the dynamo-watcher's checksum/config annotation does not change with the checkpoint directory"; exit 1
+          fi
 
   version:
     name: Version
