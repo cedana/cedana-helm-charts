@@ -14,6 +14,7 @@
   "checkpointStreamMemoryLimit"
   "checkpointCompression"
   "checkpointAsync"
+  "checkpointChecksum"
   "gpuPoolSize"
   "gpuShmSize"
   "gpuDedupEnabled"
