@@ -55,7 +55,7 @@ config:
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: release
-  pluginsCriuVersion: v4.2.1-cedana.03
+  pluginsCriuVersion: v4.2.1-cedana.01
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
   pluginsContainerdRuntimeVersion: v0.8.3
