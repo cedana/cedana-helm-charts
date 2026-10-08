@@ -11,7 +11,6 @@
   "protocol"
   "checkpointDir"
   "checkpointStreams"
-  "checkpointStreamMemoryLimit"
   "checkpointCompression"
   "checkpointAsync"
   "gpuPoolSize"
