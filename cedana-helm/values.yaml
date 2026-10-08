@@ -39,8 +39,6 @@ config:
   # Streaming ensures a low footprint by using memory efficiently with no intermediate
   # disk space required, although performance may be slightly better or worse depending on disk and network read/write speeds.
   checkpointStreams: 0
-  # Specify the maximum memory (RAM) allowed for checkpoint streaming.
-  checkpointStreamMemoryLimit: 4096 # 4 GiB
   checkpointCompression: none # Options: "none", "tar", "lz4", "gzip", "zlib"
   # Specify whether to perform checkpoint compression/upload async. Recommended if anticipating large checkpoints,
   # which could take too long to stream directly to a bucket. Note that restore will only be possible after upload is complete,
