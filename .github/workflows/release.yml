@@ -57,7 +57,7 @@ jobs:
       gpu_version: ${{ needs.prepare.outputs.gpu_version }}
       streamer_version: ${{ needs.prepare.outputs.streamer_version }}
 
-  test_k8s:
+  test:
     name: Test
     uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
@@ -71,7 +71,7 @@ jobs:
   publish:
     name: Publish
     uses: ./.github/workflows/publish.yml
-    needs: test_k8s
+    needs: test
     secrets: inherit
     with:
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug_publish }}

@@ -35,7 +35,7 @@ jobs:
       gpu_version: ${{ needs.prepare.outputs.gpu_version }}
       streamer_version: ${{ needs.prepare.outputs.streamer_version }}
 
-  test_k8s:
+  test:
     name: Test
     uses: cedana/cedana/.github/workflows/test_k8s.yml@main
     needs: [prepare, download]
