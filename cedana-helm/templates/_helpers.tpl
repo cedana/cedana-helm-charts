@@ -14,6 +14,35 @@ Expand the name of the chart.
 {{- $mode -}}
 {{- end }}
 
+{{/* Validate and return the GCS credentials mode. */}}
+{{- define "cedana-helm.gcsCredentialsMode" -}}
+{{- $mode := default "ambient" .Values.config.gcsCredentialsMode -}}
+{{- if not (has $mode (list "ambient" "serviceAccount")) -}}
+{{- fail (printf "config.gcsCredentialsMode must be one of ambient or serviceAccount; got %q" $mode) -}}
+{{- end -}}
+{{- $mode -}}
+{{- end }}
+
+{{/* The GCS variables of the helper and the health check. */}}
+{{- define "cedana-helm.gcsEnv" -}}
+- name: CEDANA_GCS_CREDENTIALS_MODE
+  value: {{ include "cedana-helm.gcsCredentialsMode" . | quote }}
+{{- if eq (include "cedana-helm.gcsCredentialsMode" .) "serviceAccount" }}
+- name: CEDANA_GCS_SERVICE_ACCOUNT_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ template "cedana-helm.secretName" . }}
+      key: gcs-service-account-key
+      optional: true
+{{- end }}
+- name: CEDANA_GCS_EMULATOR_HOST
+  valueFrom:
+    configMapKeyRef:
+      name: {{ template "cedana-helm.configMapName" . }}
+      key: gcs-emulator-host
+      optional: true
+{{- end }}
+
 {{/* Create the name of the dedicated helper service account. */}}
 {{- define "cedana-helm.daemonHelperServiceAccountName" -}}
 {{- if .Values.daemonHelper.serviceAccount.create -}}

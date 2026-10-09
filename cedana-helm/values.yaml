@@ -46,6 +46,11 @@ config:
   # which could take too long to stream directly to a bucket. Note that restore will only be possible after upload is complete,
   # so there might be a delay before a workload can be restored even though the checkpoint shows as complete.
   checkpointAsync: false
+  # Record an integrity checksum of each checkpoint as stored. The daemon computes it as it
+  # uploads or streams a checkpoint; the helper reads a local checkpoint back for it after
+  # the dump, so nothing is added to the checkpoint pause. The checksum is shown on the
+  # checkpoints page.
+  checkpointChecksum: true
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
@@ -72,6 +77,12 @@ config:
   awsCredentialsMode: static
   awsRegion: # AWS region if using S3 storage (uses default region if not set)
   awsEndpoint: # AWS endpoint if using S3-compatible storage
+
+  # GCS credential source if using GCS storage (if `gs://<bucket>/<path>` in checkpointDir):
+  # ambient (the SDK's default chain, e.g. GKE Workload Identity) or serviceAccount
+  gcsCredentialsMode: ambient
+  gcsServiceAccountKey: # GCS service account key JSON, for gcsCredentialsMode serviceAccount (stored in the Secret)
+  gcsEmulatorHost: # host:port of a GCS emulator such as fake-gcs-server, for testing only
 
   criuLogLevel: 2
 

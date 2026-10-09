@@ -29,6 +29,43 @@ jobs:
         run: |
           helm lint cedana-helm
 
+      - name: Render the checkpoint checksum setting
+        # The value reaches the daemon and the helper as CEDANA_CHECKPOINT_CHECKSUM, and a change rolls the helper
+        run: |
+          for checksum in true false; do
+            rendered=$(helm template cedana cedana-helm \
+              --set config.clusterId=check --set config.authToken=check --set config.url=http://check \
+              --set config.checkpointChecksum=$checksum)
+            echo "$rendered" | grep -q "checkpoint-checksum: \"$checksum\"" || { echo "checkpoint-checksum: \"$checksum\" missing from the ConfigMap"; exit 1; }
+            echo "$rendered" | awk '/^# Source: .*helper-daemonset.yaml/,/^---$/' | grep -q "name: CEDANA_CHECKPOINT_CHECKSUM" || { echo "CEDANA_CHECKPOINT_CHECKSUM missing from the helper DaemonSet"; exit 1; }
+            echo "$rendered" | awk '/^# Source: .*helper-daemonset.yaml/,/^---$/' | grep "checksum/config:" >> /tmp/helper-config-checksums
+          done
+          if [ "$(sort -u /tmp/helper-config-checksums | wc -l)" != 2 ]; then
+            echo "the helper's checksum/config annotation does not change with the checkpoint checksum setting"; exit 1
+          fi
+          # GCS: the credentials mode and the emulator host reach the helper and the health check;
+          # a service account key reaches them from the Secret only in that mode
+          echo '{"type":"service_account"}' > /tmp/gcs-key.json
+          for mode in ambient serviceAccount; do
+            rendered=$(helm template cedana cedana-helm \
+              --set config.clusterId=check --set config.authToken=check --set config.url=http://check \
+              --set config.gcsCredentialsMode=$mode --set-file config.gcsServiceAccountKey=/tmp/gcs-key.json)
+            for ds in helper-daemonset health-check-daemonset; do
+              section=$(echo "$rendered" | awk "/^# Source: .*$ds.yaml/,/^---\$/")
+              echo "$section" | grep -A1 "name: CEDANA_GCS_CREDENTIALS_MODE" | grep -q "value: \"$mode\"" || { echo "CEDANA_GCS_CREDENTIALS_MODE=$mode missing from $ds"; exit 1; }
+              echo "$section" | grep -q "name: CEDANA_GCS_EMULATOR_HOST" || { echo "CEDANA_GCS_EMULATOR_HOST missing from $ds"; exit 1; }
+              if [ "$mode" = serviceAccount ]; then
+                echo "$section" | grep -q "name: CEDANA_GCS_SERVICE_ACCOUNT_KEY" || { echo "CEDANA_GCS_SERVICE_ACCOUNT_KEY missing from $ds"; exit 1; }
+              elif echo "$section" | grep -q "name: CEDANA_GCS_SERVICE_ACCOUNT_KEY"; then
+                echo "CEDANA_GCS_SERVICE_ACCOUNT_KEY set in $ds in the ambient mode"; exit 1
+              fi
+            done
+          done
+          if helm template cedana cedana-helm --set config.clusterId=check --set config.authToken=check \
+              --set config.url=http://check --set config.gcsCredentialsMode=bogus >/dev/null 2>&1; then
+            echo "an invalid config.gcsCredentialsMode rendered"; exit 1
+          fi
+
   version:
     name: Version
     runs-on: ubuntu-latest
