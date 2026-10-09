@@ -15,6 +15,7 @@
   "checkpointCompression"
   "checkpointAsync"
   "checkpointChecksum"
+  "checkpointChecksumVerify"
   "gpuPoolSize"
   "gpuShmSize"
   "gpuDedupEnabled"
