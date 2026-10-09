@@ -2,10 +2,10 @@ apiVersion: v2
 name: cedana-helm
 description: Helm chart for Cedana k8s system
 type: application
-version: 0.9.309
+version: 0.9.310
 # The appVersion is the version of the Cedana API this chart
 # should best work with.
-appVersion: 2.0.3.7
+appVersion: 2.0.3.8
 
 dependencies:
   - name: prometheus
