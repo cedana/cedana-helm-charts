@@ -78,6 +78,12 @@ config:
   awsRegion: # AWS region if using S3 storage (uses default region if not set)
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
+  # GCS credential source if using GCS storage (if `gs://<bucket>/<path>` in checkpointDir):
+  # ambient (the SDK's default chain, e.g. GKE Workload Identity) or serviceAccount
+  gcsCredentialsMode: ambient
+  gcsServiceAccountKey: # GCS service account key JSON, for gcsCredentialsMode serviceAccount (stored in the Secret)
+  gcsEmulatorHost: # host:port of a GCS emulator such as fake-gcs-server, for testing only
+
   criuLogLevel: 2
 
   # Fall back to a normal (cold) start of the container if a Cedana restore fails, instead of failing the pod.

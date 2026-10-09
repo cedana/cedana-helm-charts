@@ -250,6 +250,7 @@ spec:
               value: "true"
             - name: CEDANA_DB_REMOTE
               value: "true"
+            {{- include "cedana-helm.gcsEnv" . | nindent 12 }}
             - name: CEDANA_AWS_CREDENTIALS_MODE
               value: {{ include "cedana-helm.awsCredentialsMode" . | quote }}
             {{- if eq (include "cedana-helm.awsCredentialsMode" .) "static" }}
