@@ -51,6 +51,12 @@ config:
   # the dump, so nothing is added to the checkpoint pause. The checksum is shown on the
   # checkpoints page.
   checkpointChecksum: true
+  # What a restore does with the checksum recorded at dump: "off" computes nothing, "warn"
+  # restores and reports a mismatch, "strict" fails the restore before the process runs and
+  # marks a checkpoint whose stored bytes are bad as corrupt. A failed restore falls back to a
+  # cold start when fallbackColdStart is on. Start with warn, then set strict once restores
+  # report no mismatches.
+  checkpointChecksumVerify: warn
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.

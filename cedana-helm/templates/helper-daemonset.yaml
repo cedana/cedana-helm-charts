@@ -162,6 +162,12 @@ spec:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: checkpoint-checksum
                   optional: true
+            - name: CEDANA_CHECKPOINT_CHECKSUM_VERIFY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: checkpoint-checksum-verify
+                  optional: true
             - name: CEDANA_GPU_POOL_SIZE
               valueFrom:
                 configMapKeyRef:
