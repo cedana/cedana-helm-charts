@@ -6,6 +6,9 @@ config:
   url:
   clusterId:
   sqsQueueUrl:
+  # Externally reachable Kubernetes API server URL, e.g. https://k8s.example.com:6443.
+  # Registered with Cedana together with the cedana-observer token when directAccess is enabled.
+  apiServerUrl:
 
   # Specify the address and port to bind the daemon on
   #
@@ -121,6 +124,11 @@ daemonHelper:
   #   nodeSelector: { cedana.ai/enabled: "true" }
   # Empty = all nodes (default).
   nodeSelector: {}
+
+# Lets Cedana read this cluster's Kubernetes API directly through the read-only
+# cedana-observer ServiceAccount. Requires config.apiServerUrl.
+directAccess:
+  enabled: false
 
 serviceAccount:
   # Specifies whether a service account should be created

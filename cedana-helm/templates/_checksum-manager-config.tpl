@@ -6,6 +6,7 @@
   "sqsQueueUrl"
   "clusterId"
   "url"
+  "apiServerUrl"
   "authToken"
   "profiling"
   "metrics"
