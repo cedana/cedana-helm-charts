@@ -55,11 +55,11 @@ config:
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: release
-  pluginsCriuVersion: v4.2.1-cedana.02
+  pluginsCriuVersion: v4.2.1-cedana.03
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
-  pluginsContainerdRuntimeVersion: v0.8.4
-  pluginsGpuVersion: v0.8.2
+  pluginsContainerdRuntimeVersion: v0.8.5
+  pluginsGpuVersion: v0.8.3
   pluginsStreamerVersion: v0.1.3
   
   profiling: true
@@ -108,7 +108,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.310
+    tag: v0.9.311
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -166,7 +166,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.6.13
+      tag: v0.6.14
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -233,7 +233,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: v0.6.13
+    tag: v0.6.14
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
