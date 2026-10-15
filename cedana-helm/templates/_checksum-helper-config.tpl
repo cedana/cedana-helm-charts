@@ -35,6 +35,8 @@
   "awsEndpoint"
   "preExistingSecret"
   "criuLogLevel"
+  "criuZeroElide"
+  "criuShmemDumpThreads"
   "fallbackColdStart"
 -}}
 {{- range $key := $configKeysFromValuesConfig -}}
