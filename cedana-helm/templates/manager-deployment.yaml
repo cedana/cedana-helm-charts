@@ -81,14 +81,6 @@ spec:
           value: {{ quote .Chart.AppVersion }}
         - name: HELM_RELEASE
           value: {{ quote .Release.Name }}
-        {{- range $env, $key := dict "PLUGINS_BUILDS" "plugins-builds" "PLUGIN_CRIU_VERSION" "plugins-criu-version" "PLUGIN_GPU_VERSION" "plugins-gpu-version" "PLUGIN_CONTAINERD_RUNTIME_VERSION" "plugins-containerd-runtime-version" "PLUGIN_STREAMER_VERSION" "plugins-streamer-version" }}
-        - name: {{ $env }}
-          valueFrom:
-            configMapKeyRef:
-              name: {{ template "cedana-helm.configMapName" $ }}
-              key: {{ $key }}
-              optional: true
-        {{- end }}
         {{- if .Values.controllerManager.manager.image.digest }}
         image: {{ .Values.controllerManager.manager.image.repository }}@{{ .Values.controllerManager.manager.image.digest }}
         {{- else }}
@@ -111,6 +103,14 @@ spec:
           }}
         securityContext: {{- toYaml .Values.controllerManager.manager.containerSecurityContext
           | nindent 10 }}
+        volumeMounts:
+        - name: helm-values
+          mountPath: /etc/cedana/helm
+          readOnly: true
+      volumes:
+      - name: helm-values
+        configMap:
+          name: cedana-helm-values
       securityContext:
         runAsNonRoot: true
       serviceAccountName: {{ include "cedana-helm.serviceAccountName" . }}
