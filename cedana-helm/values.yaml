@@ -166,7 +166,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.7.0
+      tag: v0.7.1
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -233,7 +233,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: v0.7.0
+    tag: v0.7.1
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
