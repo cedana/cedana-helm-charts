@@ -72,6 +72,23 @@ spec:
               fieldPath: metadata.namespace
         - name: CEDANA_TAINT_NODES
           value: {{ quote .Values.controllerManager.taintNodes }}
+        # Reported to the propagator for the UI's cluster page.
+        - name: HELM_CHART
+          value: {{ quote .Chart.Name }}
+        - name: HELM_CHART_VERSION
+          value: {{ quote .Chart.Version }}
+        - name: HELM_APP_VERSION
+          value: {{ quote .Chart.AppVersion }}
+        - name: HELM_RELEASE
+          value: {{ quote .Release.Name }}
+        {{- range $env, $key := dict "PLUGINS_BUILDS" "plugins-builds" "PLUGIN_CRIU_VERSION" "plugins-criu-version" "PLUGIN_GPU_VERSION" "plugins-gpu-version" "PLUGIN_CONTAINERD_RUNTIME_VERSION" "plugins-containerd-runtime-version" "PLUGIN_STREAMER_VERSION" "plugins-streamer-version" }}
+        - name: {{ $env }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" $ }}
+              key: {{ $key }}
+              optional: true
+        {{- end }}
         {{- if .Values.controllerManager.manager.image.digest }}
         image: {{ .Values.controllerManager.manager.image.repository }}@{{ .Values.controllerManager.manager.image.digest }}
         {{- else }}
