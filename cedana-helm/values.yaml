@@ -73,7 +73,7 @@ config:
   awsRegion: # AWS region if using S3 storage (uses default region if not set)
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
-  criuLogLevel: 2
+  criuLogLevel: 3
   # Omit all-zero shared memory and ghost file pages from dumps (restored as zero-fill). Needs a CRIU with --zero-elide.
   criuZeroElide: true
   # Threads that scan and write shared memory segments on dump
@@ -108,7 +108,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.400
+    tag: v0.9.401
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
