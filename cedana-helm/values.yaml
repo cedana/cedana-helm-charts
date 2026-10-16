@@ -108,7 +108,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.400
+    tag: v0.9.401
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
