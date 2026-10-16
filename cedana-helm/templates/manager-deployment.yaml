@@ -54,6 +54,12 @@ spec:
             configMapKeyRef:
               name: {{ template "cedana-helm.configMapName" . }}
               key: url
+        - name: CEDANA_APISERVER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: apiserver-url
+              optional: true
         - name: CEDANA_METRICS_ENABLED
           valueFrom:
             configMapKeyRef:
@@ -94,9 +100,21 @@ spec:
           }}
         securityContext: {{- toYaml .Values.controllerManager.manager.containerSecurityContext
           | nindent 10 }}
+        {{- if .Values.directAccess.enabled }}
+        volumeMounts:
+        - name: cedana-observer-token
+          mountPath: /var/run/cedana/observer
+          readOnly: true
+        {{- end }}
       securityContext:
         runAsNonRoot: true
       serviceAccountName: {{ include "cedana-helm.serviceAccountName" . }}
+      {{- if .Values.directAccess.enabled }}
+      volumes:
+      - name: cedana-observer-token
+        secret:
+          secretName: cedana-observer-token
+      {{- end }}
       terminationGracePeriodSeconds: 10
       {{- with .Values.controllerManager.affinity }}
       affinity:
