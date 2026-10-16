@@ -55,7 +55,7 @@ config:
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: release
-  pluginsCriuVersion: v4.2.1-cedana.03
+  pluginsCriuVersion: v4.2.1-cedana.04
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
   pluginsContainerdRuntimeVersion: v0.8.5
@@ -73,7 +73,7 @@ config:
   awsRegion: # AWS region if using S3 storage (uses default region if not set)
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
-  criuLogLevel: 3
+  criuLogLevel: 2
   # Omit all-zero shared memory and ghost file pages from dumps (restored as zero-fill). Needs a CRIU with --zero-elide.
   criuZeroElide: true
   # Threads that scan and write shared memory segments on dump
