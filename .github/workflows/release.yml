@@ -1,5 +1,9 @@
 name: Release
 
+# Releases are made by cedana-marshal: its release suite tests the chart at the release PR head, and
+# after merging, its release-publish pushes this tag. So a tag only checks and publishes the chart
+# (OCI + GitHub release); marshal posts one combined release summary.
+
 permissions:
   contents: write
   packages: write
@@ -14,11 +18,6 @@ on:
       - "*"
   workflow_dispatch:
     inputs:
-      debug_test:
-        type: boolean
-        description: "Run tests with debugging enabled"
-        required: false
-        default: false
       debug_publish:
         type: boolean
         description: "Run publish with debugging enabled"
@@ -38,43 +37,13 @@ jobs:
       helm: true
       version: true
 
-  prepare:
-    name: Prepare
-    uses: ./.github/workflows/prepare.yml
-    needs: check
-    secrets: inherit
-
-  download:
-    name: Download
-    uses: cedana/cedana/.github/workflows/download.yml@main
-    needs: prepare
-    secrets: inherit
-    with:
-      cedana_version: ${{ needs.prepare.outputs.cedana_version }}
-      controller_version: ${{ needs.prepare.outputs.controller_version }}
-      containerd_runtime_version: ${{ needs.prepare.outputs.containerd_runtime_version }}
-      criu_version: ${{ needs.prepare.outputs.criu_version }}
-      gpu_version: ${{ needs.prepare.outputs.gpu_version }}
-      streamer_version: ${{ needs.prepare.outputs.streamer_version }}
-
-  test:
-    name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
-    needs: [prepare, download]
-    secrets: inherit
-    with:
-      ref: main
-      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
-      platforms: '["K3s", "EKS", "GKE"]'
-      post_summary: true
-
   publish:
     name: Publish
     uses: ./.github/workflows/publish.yml
-    needs: test
+    needs: check
     secrets: inherit
     with:
       debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug_publish }}
       github: true
       dockerhub: true
-      post_summary: true
+      post_summary: false

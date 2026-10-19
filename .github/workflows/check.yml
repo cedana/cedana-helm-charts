@@ -46,4 +46,4 @@ jobs:
 
       - name: Check helm versions
         run: |
-          grep -qF '${{ steps.version.outputs.VERSION }}' cedana-helm/Chart.yaml || (echo "update the version field in cedana-helm/Chart.yaml"; exit 1)
+          grep -qxF 'version: ${{ steps.version.outputs.VERSION }}' cedana-helm/Chart.yaml || (echo "update the version field in cedana-helm/Chart.yaml"; exit 1)
