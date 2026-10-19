@@ -20,6 +20,9 @@ concurrency:
 jobs:
   check:
     name: Check
+    # Marshal's release PRs pin tags that are only on the alpha channel until its release suite
+    # promotes them, so this CI fails by design; their status is marshal/release-suite
+    if: github.event.pull_request.user.login != 'cedana-marshal[bot]' && !contains(github.event.pull_request.labels.*.name, 'marshal-release')
     uses: ./.github/workflows/check.yml
     secrets: inherit
     with:
@@ -28,6 +31,9 @@ jobs:
 
   prepare:
     name: Prepare
+    # Marshal's release PRs pin tags that are only on the alpha channel until its release suite
+    # promotes them, so this CI fails by design; their status is marshal/release-suite
+    if: github.event.pull_request.user.login != 'cedana-marshal[bot]' && !contains(github.event.pull_request.labels.*.name, 'marshal-release')
     uses: ./.github/workflows/prepare.yml
     secrets: inherit
 
