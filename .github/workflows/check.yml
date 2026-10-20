@@ -43,6 +43,24 @@ jobs:
           if [ "$(sort -u /tmp/helper-config-checksums | wc -l)" != 2 ]; then
             echo "the helper's checksum/config annotation does not change with the checkpoint checksum setting"; exit 1
           fi
+          # The verification mode on restore reaches the daemon as CEDANA_CHECKPOINT_CHECKSUM_VERIFY, which
+          # it writes to the node's config file that the restore CLI reads; a change rolls the helper
+          rm -f /tmp/helper-verify-checksums
+          for mode in off warn strict; do
+            rendered=$(helm template cedana cedana-helm \
+              --set config.clusterId=check --set config.authToken=check --set config.url=http://check \
+              --set config.checkpointChecksumVerify=$mode)
+            echo "$rendered" | grep -q "checkpoint-checksum-verify: \"$mode\"" || { echo "checkpoint-checksum-verify: \"$mode\" missing from the ConfigMap"; exit 1; }
+            for ds in helper-daemonset health-check-daemonset; do
+              echo "$rendered" | awk "/^# Source: .*$ds.yaml/,/^---\$/" | grep -q "name: CEDANA_CHECKPOINT_CHECKSUM_VERIFY" || { echo "CEDANA_CHECKPOINT_CHECKSUM_VERIFY missing from $ds"; exit 1; }
+            done
+            echo "$rendered" | awk '/^# Source: .*helper-daemonset.yaml/,/^---$/' | grep "checksum/config:" >> /tmp/helper-verify-checksums
+          done
+          if [ "$(sort -u /tmp/helper-verify-checksums | wc -l)" != 3 ]; then
+            echo "the helper's checksum/config annotation does not change with the verification mode"; exit 1
+          fi
+          helm template cedana cedana-helm --set config.clusterId=check --set config.authToken=check --set config.url=http://check \
+            | grep -q 'checkpoint-checksum-verify: "warn"' || { echo "the default verification mode must be warn"; exit 1; }
           # GCS: the credentials mode and the emulator host reach the helper and the health check;
           # a service account key reaches them from the Secret only in that mode
           echo '{"type":"service_account"}' > /tmp/gcs-key.json
