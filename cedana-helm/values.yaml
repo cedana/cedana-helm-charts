@@ -7,20 +7,20 @@ config:
   clusterId:
   sqsQueueUrl:
 
-  # Specify the address and port to bind the daemon on
+  # Specify the address to bind the daemon on (socket path for unix, host:port for tcp)
   #
-  # Address has to be 0.0.0.0 for the service to be externally addressable,
-  # if you don't want it to be feel free to update, it ideally won't affect stability
+  # For unix, the socket's directory is shared with the helper pods via hostPath,
+  # so keep it in a dedicated directory.
   #
-  # Default: 0.0.0.0:8080
-  address: 0.0.0.0:8080
+  # Default: /run/cedana/cedana.sock
+  address: /run/cedana/cedana.sock
   # Specify the protocol to use for daemon service
-  # Default: tcp (other protocols might not be supported properly, update with caution)
+  # Default: unix (uses no host port)
   # Options:
-  # - tcp: TCP socket
   # - unix: Unix Socket
+  # - tcp: TCP socket (binds a port on the host network)
   # - vsock: VSock for VM and hypervisor communication, useful for supporting VM based migrations
-  protocol: tcp
+  protocol: unix
 
   # Specify path to directory for storing checkpoints.
   # - `cedana://<path>` for Cedana-managed global storage
@@ -103,8 +103,6 @@ daemonHelper:
     create: true
     name: cedana-helper
     automount: false
-    annotations: {}
-  service:
     annotations: {}
   image:
     repository: cedana/cedana-helper
