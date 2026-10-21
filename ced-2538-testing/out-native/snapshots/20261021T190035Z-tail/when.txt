@@ -1,0 +1,5 @@
+reason=tail
+wall_epoch=1792609235.669004022
+mono_uptime=515940.37
+iso=20261021T190035.665449197Z
+trigger_s=8

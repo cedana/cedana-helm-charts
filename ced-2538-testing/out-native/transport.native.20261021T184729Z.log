@@ -1,0 +1,3 @@
+/out/transport.rendered.bt:22:1-47: ERROR: syntax error, unexpected -, expecting {
+ *   @ipc_ret[func, ret]     cuIpc*/shareable-handle calls by return code. A non-zero ret is the
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

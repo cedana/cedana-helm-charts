@@ -1,0 +1,42 @@
+
+Per-node system memory usage (in MBs):
+Token Unaccepted not in hash table.
+Token Unaccepted not in hash table.
+                          Node 0          Node 1           Total
+                 --------------- --------------- ---------------
+MemTotal               903010.18       903132.88      1806143.05
+MemFree                  7854.89         2158.39        10013.28
+MemUsed                895155.29       900974.49      1796129.77
+SwapCached                  0.00            0.00            0.00
+Active                 611197.80       601673.88      1212871.68
+Inactive               208263.63       265239.84       473503.47
+Active(anon)           591654.03       600565.23      1192219.27
+Inactive(anon)          28212.79        21178.26        49391.05
+Active(file)            19543.77         1108.64        20652.41
+Inactive(file)         180050.84       244061.58       424112.42
+Unevictable             23270.00          306.05        23576.04
+Mlocked                 23008.64           44.93        23053.57
+Dirty                       1.92            0.93            2.85
+Writeback                   0.00            0.00            0.00
+FilePages              803957.15       845738.43      1649695.59
+Mapped                 605891.17       602481.24      1208372.41
+AnonPages               38775.41        21481.50        60256.91
+Shmem                  603728.52       600557.16      1204285.68
+KernelStack                46.59           55.01          101.59
+PageTables               1380.44         1279.70         2660.13
+SecPageTables               0.00            0.00            0.00
+NFS_Unstable                0.00            0.00            0.00
+Bounce                      0.00            0.00            0.00
+WritebackTmp                0.00            0.00            0.00
+Slab                     5638.04         8427.48        14065.52
+SReclaimable             1976.75         3902.29         5879.04
+SUnreclaim               3661.29         4525.19         8186.48
+AnonHugePages               0.00            0.00            0.00
+ShmemHugePages              0.00            0.00            0.00
+ShmemPmdMapped              0.00            0.00            0.00
+FileHugePages               0.00            0.00            0.00
+FilePmdMapped               0.00            0.00            0.00
+HugePages_Total         12000.00        12000.00        24000.00
+HugePages_Free           2304.00         3096.00         5400.00
+HugePages_Surp              0.00            0.00            0.00
+KReclaimable             1976.75         3902.29         5879.04

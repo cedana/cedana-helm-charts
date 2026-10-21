@@ -134,6 +134,48 @@ uprobe:__LIB__:cuMemHostUnregister
 	@hostunreg_n[comm] = count();
 }
 
+/* ------------------------------------------------- interceptor: PINNED HOST ALLOCATION
+ * The native run showed ZERO cuMemHostRegister calls while HiCache was plainly doing async host
+ * copies, which means the pool is ALLOCATED pinned (cuMemHostAlloc / cuMemAllocHost) rather than
+ * registered after the fact. Those are different entry points, so the registration probes above
+ * see nothing and the real pinning cost was invisible. Both exist in libcuda and in the
+ * interceptor, so this attaches on both sides.
+ *   Note the asymmetry in names: cuMemAllocHost is remapped to _v2 by the interceptor, while
+ *   cuMemHostAlloc and cuMemFreeHost are not.
+ * Watch @pinalloc_bytes for the 128 GiB pool arriving, and @pinalloc_us for how long pinning it
+ * blocks -- a multi-second pin inside a request's forward is a direct TTFT stall. */
+uprobe:__LIB__:cuMemHostAlloc,
+uprobe:__LIB__:cuMemAllocHost_v2
+{
+	@pastart[tid] = nsecs;
+	@pasize[tid] = arg1;            /* (void** pp, size_t bytesize [, unsigned flags]) */
+	@pafunc[tid] = func;
+}
+
+uretprobe:__LIB__:cuMemHostAlloc,
+uretprobe:__LIB__:cuMemAllocHost_v2
+/@pastart[tid]/
+{
+	$us = (nsecs - @pastart[tid]) / 1000;
+	@pinalloc_us[@pafunc[tid]] = hist($us);
+	@pinalloc_bytes[@pafunc[tid]] = hist(@pasize[tid]);
+	@pinalloc_n[comm, @pafunc[tid]] = count();
+	@pinalloc_total[comm] = sum(@pasize[tid]);
+	if (retval != 0) {
+		@pinalloc_fail[retval] = count();
+	}
+	/* Always printed: these are few, large, and each one decides how a whole pool behaves. */
+	printf("mono=%llu wall=%s PINALLOC %s %d %d %s bytes=%llu ret=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs),
+	       comm, pid, tid, @pafunc[tid], @pasize[tid], retval, $us);
+	delete(@pastart[tid]); delete(@pasize[tid]); delete(@pafunc[tid]);
+}
+
+uprobe:__LIB__:cuMemFreeHost
+{
+	@pinfree_n[comm] = count();
+}
+
 /* --------------------------------------------------------- interceptor: module / JIT loading */
 uprobe:__LIB__:cuModuleLoad,
 uprobe:__LIB__:cuModuleLoadData,
@@ -215,11 +257,13 @@ interval:s:10
 	print(@copy_n); print(@copy_16m); print(@copy_total_bytes);
 	print(@copy_bytes); print(@copy_us);
 	print(@hostreg_n); print(@hostreg_fail); print(@hostreg_us); print(@hostreg_bytes);
+	print(@pinalloc_n); print(@pinalloc_total); print(@pinalloc_us); print(@pinalloc_bytes);
 	print(@modload_n); print(@modload_us);
 	print(@drv_copy_n); print(@drv_copy_us); print(@drv_copy_bytes); print(@drv_hostreg_us);
 	clear(@copy_n); clear(@copy_16m); clear(@copy_total_bytes);
 	clear(@copy_bytes); clear(@copy_us);
 	clear(@hostreg_us); clear(@hostreg_bytes);
+	clear(@pinalloc_us); clear(@pinalloc_bytes);
 	clear(@modload_n); clear(@modload_us);
 	clear(@drv_copy_n); clear(@drv_copy_us); clear(@drv_copy_bytes); clear(@drv_hostreg_us);
 	/* @hostreg_n, @hostreg_fail and @hostunreg_n are deliberately NOT cleared: they are small,
@@ -230,9 +274,11 @@ END
 {
 	printf("\n===== ced-2538 cumulative =====\n");
 	print(@hostreg_n); print(@hostreg_fail); print(@hostunreg_n);
+	print(@pinalloc_n); print(@pinalloc_total); print(@pinalloc_fail); print(@pinfree_n);
 	clear(@cstart); clear(@csize); clear(@cfunc);
 	clear(@hrstart); clear(@hrsize); clear(@hrptr);
 	clear(@mstart); clear(@mfunc);
+	clear(@pastart); clear(@pasize); clear(@pafunc);
 	clear(@dstart); clear(@dsize); clear(@dfunc); clear(@drv_hrstart);
 	clear(@THRESH_MS); clear(@CHUNK);
 }

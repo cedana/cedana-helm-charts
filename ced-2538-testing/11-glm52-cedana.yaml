@@ -112,7 +112,7 @@ spec:
     - name: NCCL_DEBUG
       value: "INFO"
     - name: NCCL_DEBUG_SUBSYS
-      value: "INIT,GRAPH,TUNING"
+      value: "INIT,GRAPH"
     # --- cedana-only, delta 3 ---
     - {name: CEDANA_PERSISTENT_MOUNTS, value: "/dev/shm,/root/.triton,/root/.cache,/root/.nv"}
     - {name: CEDANA_CRIU_OPTS,         value: '{"link_remap": true, "tcp_established": true}'}

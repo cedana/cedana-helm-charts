@@ -19,7 +19,7 @@
  * Then use this to see WHY, and to catch a mid-run change the init log cannot show.
  *
  * ROWS
- *   @ipc_ret[func, ret]     cuIpc*/shareable-handle calls by return code. A non-zero ret is the
+ *   @ipc_ret[func, ret]     cuIpc and shareable-handle calls by return code. A non-zero ret is the
  *                           trigger for NCCL's SHM fallback. 0 = CUDA_SUCCESS.
  *   @ipc_us[func]           their latency -- the export path stands up a unix socket and waits for
  *                           an fd (hooks/driver_api.cpp:2932-2992), so it can be slow, not just

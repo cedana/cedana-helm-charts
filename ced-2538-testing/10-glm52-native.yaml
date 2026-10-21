@@ -133,7 +133,7 @@ spec:
     - name: NCCL_DEBUG
       value: "INFO"
     - name: NCCL_DEBUG_SUBSYS
-      value: "INIT,GRAPH,TUNING"
+      value: "INIT,GRAPH"
     ports:
     - containerPort: 30000
     resources:

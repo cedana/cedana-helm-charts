@@ -1,0 +1,10 @@
+Process 3885099: sglang::scheduler_TP6
+Python v3.12.3 (/usr/bin/python3.12)
+
+Error: Failed to get stack traces
+
+Caused by:
+    0: Failed to call get_stack_trace for thread 132422708908800
+    1: Failed to copy PyCodeObject
+    2: Bad address (os error 14)
+    3: Bad address (os error 14)

@@ -1,0 +1,1 @@
+[<0>] pick_next_entity+0x35/0x50
