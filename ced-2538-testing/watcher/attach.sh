@@ -128,6 +128,13 @@ for src in "$@"; do
         "$rendered" > "$rendered.tmp" && mv "$rendered.tmp" "$rendered"
     log "$base: no worker libcuda, driver-side section removed"
   fi
+  # libcuda has no ncclCommInit*; libcedana-gpu.so does. A missing named symbol makes bpftrace
+  # refuse the whole script, so drop that section when the symbol is not there.
+  if [ "$(bpftrace -l "uprobe:$LIB:ncclCommInitRank" 2>/dev/null | wc -l | tr -d ' ')" -eq 0 ]; then
+    sed -e '/>>>NCCL_SECTION/,/<<<NCCL_SECTION/d' -e '/@comminit/d' \
+        "$rendered" > "$rendered.tmp" && mv "$rendered.tmp" "$rendered"
+    log "$base: no ncclCommInit* in $LIB, NCCL section removed"
+  fi
   out="$OUTDIR/${base}.${SIDE}.${STAMP}.log"
   log "launching $base -> $out"
   # -f text keeps output line-oriented and greppable for the offline join against bench.jsonl.

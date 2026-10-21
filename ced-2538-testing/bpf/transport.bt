@@ -94,6 +94,7 @@ uretprobe:__LIB__:cuCtxEnablePeerAccess
 	delete(@peerstart[tid]);
 }
 
+/* >>>NCCL_SECTION (attach.sh deletes to <<<NCCL_SECTION when the symbols are absent) */
 /* ------------------------------------------------------------- NCCL communicator construction */
 uprobe:__LIB__:ncclCommInitRank,
 uprobe:__LIB__:ncclCommInitRankConfig,
@@ -104,6 +105,8 @@ uprobe:__LIB__:ncclCommInitRankScalable
 	printf("mono=%llu wall=%s NCCL-INIT %s %d %d %s\n",
 	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, func);
 }
+
+/* <<<NCCL_SECTION */
 
 /* ------------------------------------------------------- the SHM fallback's visible side effect
  * NCCL's SHM transport backs each channel with a /dev/shm/nccl-* segment. These opens are the
