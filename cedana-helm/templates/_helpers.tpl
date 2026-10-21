@@ -14,6 +14,17 @@ Expand the name of the chart.
 {{- $mode -}}
 {{- end }}
 
+{{/* Return the host directory of the daemon's unix socket, shared with the helper pods (empty for other protocols). */}}
+{{- define "cedana-helm.daemonSocketDir" -}}
+{{- if eq (lower .Values.config.protocol) "unix" -}}
+{{- $dir := dir .Values.config.address -}}
+{{- if or (not (isAbs .Values.config.address)) (eq $dir "/") -}}
+{{- fail (printf "config.address must be an absolute socket path in a dedicated directory when config.protocol is unix; got %q" .Values.config.address) -}}
+{{- end -}}
+{{- $dir -}}
+{{- end -}}
+{{- end }}
+
 {{/* Create the name of the dedicated helper service account. */}}
 {{- define "cedana-helm.daemonHelperServiceAccountName" -}}
 {{- if .Values.daemonHelper.serviceAccount.create -}}

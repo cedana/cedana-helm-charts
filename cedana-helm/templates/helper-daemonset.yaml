@@ -58,31 +58,31 @@ spec:
             - name: host-volume
               mountPath: /host
               readOnly: false
+            {{- with include "cedana-helm.daemonSocketDir" . }}
+            - name: daemon-socket
+              mountPath: {{ . }}
+            {{- end }}
           command: ["/bin/sh", "-c"]
           args: ["cedana k8s setup"]
-          ports:
-            - name: grpc
-              containerPort: 8080
-              protocol: TCP
           startupProbe:
-            grpc:
-              port: 8080
+            exec:
+              command: ["cedana", "daemon", "check", "--ping"]
             initialDelaySeconds: 0
             periodSeconds: 5
             failureThreshold: 12
             successThreshold: 1
             timeoutSeconds: 5
           readinessProbe:
-            grpc:
-              port: 8080
+            exec:
+              command: ["cedana", "daemon", "check", "--ping"]
             initialDelaySeconds: 0
             periodSeconds: 5
             failureThreshold: 1
             successThreshold: 1
             timeoutSeconds: 5
           livenessProbe:
-            grpc:
-              port: 8080
+            exec:
+              command: ["cedana", "daemon", "check", "--ping"]
             initialDelaySeconds: 0
             periodSeconds: 10
             failureThreshold: 6
@@ -129,6 +129,16 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: criu-log-level
+            - name: CEDANA_CRIU_ZERO_ELIDE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: criu-zero-elide
+            - name: CEDANA_CRIU_SHMEM_DUMP_THREADS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: criu-shmem-dump-threads
             - name: CEDANA_K8S_FALLBACK_COLD_START
               valueFrom:
                 configMapKeyRef:
@@ -295,3 +305,9 @@ spec:
         - name: host-volume
           hostPath:
             path: /
+        {{- with include "cedana-helm.daemonSocketDir" . }}
+        - name: daemon-socket
+          hostPath:
+            path: {{ . }}
+            type: DirectoryOrCreate
+        {{- end }}

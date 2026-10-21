@@ -1,0 +1,13 @@
+{{- /* Rendered values minus secrets, mounted into the manager and reported to the propagator for the UI. */ -}}
+{{- $v := deepCopy .Values -}}
+{{- $_ := unset $v.config "authToken" -}}
+{{- $_ := unset $v.config "awsSecretAccessKey" -}}
+{{- with $v.clusterMetrics }}{{ with .s3 }}{{ $_ := unset . "awsSecretAccessKey" }}{{ end }}{{ end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedana-helm-values
+  labels:
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+data:
+  values.json: {{ $v | toJson | quote }}

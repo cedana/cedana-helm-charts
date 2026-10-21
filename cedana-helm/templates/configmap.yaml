@@ -44,6 +44,8 @@ data:
   shm-config-min-size: "{{ .Values.hostConfig.shmConfig.minSize }}"
 
   criu-log-level: "{{ .Values.config.criuLogLevel }}"
+  criu-zero-elide: "{{ .Values.config.criuZeroElide }}"
+  criu-shmem-dump-threads: "{{ .Values.config.criuShmemDumpThreads }}"
 
   fallback-cold-start: "{{ .Values.config.fallbackColdStart }}"
 

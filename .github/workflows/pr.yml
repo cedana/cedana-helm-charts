@@ -6,12 +6,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      debug:
-        type: boolean
-        description: "Run with debugging enabled"
-        required: false
-        default: false
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}
@@ -20,60 +14,10 @@ concurrency:
 jobs:
   check:
     name: Check
+    # Runs on marshal's release PRs too: it only lints, and Check / Helm is a required check
     uses: ./.github/workflows/check.yml
     secrets: inherit
     with:
       helm: true
       version: false
 
-  prepare:
-    name: Prepare
-    uses: ./.github/workflows/prepare.yml
-    secrets: inherit
-
-  download:
-    name: Download
-    uses: cedana/cedana/.github/workflows/download.yml@main
-    needs: prepare
-    secrets: inherit
-    with:
-      cedana_version: ${{ needs.prepare.outputs.cedana_version }}
-      controller_version: ${{ needs.prepare.outputs.controller_version }}
-      containerd_runtime_version: ${{ needs.prepare.outputs.containerd_runtime_version }}
-      criu_version: ${{ needs.prepare.outputs.criu_version }}
-      gpu_version: ${{ needs.prepare.outputs.gpu_version }}
-      streamer_version: ${{ needs.prepare.outputs.streamer_version }}
-
-  test_k3s:
-    name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
-    needs: [prepare, download]
-    secrets: inherit
-    with:
-      ref: main
-      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
-      post_summary: true
-
-  test_eks:
-    name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
-    needs: [prepare, download]
-    secrets: inherit
-    concurrency: test-k8s-eks # Since the cluster is reused
-    with:
-      ref: main
-      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
-      platform: EKS
-      post_summary: true
-
-  test_gke:
-    name: Test
-    uses: cedana/cedana/.github/workflows/test_k8s.yml@main
-    needs: [prepare, download]
-    secrets: inherit
-    concurrency: test-k8s-gke # Since the cluster is reused
-    with:
-      ref: main
-      debug: ${{ startsWith(github.event_name, 'workflow') && inputs.debug }}
-      platform: GKE
-      post_summary: true

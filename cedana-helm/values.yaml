@@ -7,20 +7,20 @@ config:
   clusterId:
   sqsQueueUrl:
 
-  # Specify the address and port to bind the daemon on
+  # Specify the address to bind the daemon on (socket path for unix, host:port for tcp)
   #
-  # Address has to be 0.0.0.0 for the service to be externally addressable,
-  # if you don't want it to be feel free to update, it ideally won't affect stability
+  # For unix, the socket's directory is shared with the helper pods via hostPath,
+  # so keep it in a dedicated directory.
   #
-  # Default: 0.0.0.0:8080
-  address: 0.0.0.0:8080
+  # Default: /run/cedana/cedana.sock
+  address: /run/cedana/cedana.sock
   # Specify the protocol to use for daemon service
-  # Default: tcp (other protocols might not be supported properly, update with caution)
+  # Default: unix (uses no host port)
   # Options:
-  # - tcp: TCP socket
   # - unix: Unix Socket
+  # - tcp: TCP socket (binds a port on the host network)
   # - vsock: VSock for VM and hypervisor communication, useful for supporting VM based migrations
-  protocol: tcp
+  protocol: unix
 
   # Specify path to directory for storing checkpoints.
   # - `cedana://<path>` for Cedana-managed global storage
@@ -53,13 +53,13 @@ config:
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
   pluginsBuilds: release
-  pluginsCriuVersion: v4.2.1-cedana.01
+  pluginsCriuVersion: v4.2.1-cedana.07
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
-  pluginsContainerdRuntimeVersion: v0.8.3
-  pluginsGpuVersion: v0.8.1
-  pluginsStreamerVersion: v0.1.2
-  
+  pluginsContainerdRuntimeVersion: v0.8.6
+  pluginsGpuVersion: v0.8.5
+  pluginsStreamerVersion: v0.1.4
+
   profiling: true
   metrics: true
   logLevel: info
@@ -72,6 +72,10 @@ config:
   awsEndpoint: # AWS endpoint if using S3-compatible storage
 
   criuLogLevel: 2
+  # Omit all-zero shared memory and ghost file pages from dumps (restored as zero-fill). Needs a CRIU with --zero-elide.
+  criuZeroElide: true
+  # Threads that scan and write shared memory segments on dump
+  criuShmemDumpThreads: 1
 
   # Fall back to a normal (cold) start of the container if a Cedana restore fails, instead of failing the pod.
   fallbackColdStart: true
@@ -98,11 +102,9 @@ daemonHelper:
     name: cedana-helper
     automount: false
     annotations: {}
-  service:
-    annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.309
+    tag: v0.9.404
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -160,7 +162,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.6.12
+      tag: v0.7.2
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -227,7 +229,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: v0.6.12
+    tag: v0.7.2
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
@@ -247,7 +249,7 @@ dynamoWatcher:
 csx:
   image:
     repository: cedana/cedana-csx
-    tag: v0.2.1
+    tag: v0.2.3
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
