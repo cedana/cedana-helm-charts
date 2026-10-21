@@ -1,0 +1,66 @@
+# CED-2538: pull GLM-5.2 onto the shared model volume, if it is not already there.
+#
+# Downloads in the Hub cache layout cedana's own fetcher uses (models--org--name/ at the volume root), so the serving
+# pods resolve it offline with HF_HUB_CACHE pointed at the mount. Additive -- it creates one new
+# directory and modifies nothing else.
+#
+# RUNS IN cedana-provisioning, NOT cedana-systems. That namespace holds the read-WRITE claim on the
+# volume (model-preload-access); the serving pods mount the same data read-only through
+# cedana-systems/hf-models-rwx. Nothing cedana-owned is changed.
+#
+# CHECK FIRST -- it may already be staged, in which case skip this entirely:
+#   kubectl -n cedana-systems exec glm52-native -- ls -d /data/modelpreload/huggingface/models--*GLM*
+# or without a running pod:
+#   kubectl -n cedana-provisioning run lsmodels --rm -it --restart=Never --image=busybox \
+#     --overrides='{"spec":{"containers":[{"name":"lsmodels","image":"busybox","command":["ls","/models"],
+#     "volumeMounts":[{"name":"m","mountPath":"/models"}]}],"volumes":[{"name":"m",
+#     "persistentVolumeClaim":{"claimName":"model-preload-access"}}]}}'
+#
+#   kubectl -n cedana-provisioning apply -f 01-model-fetch.yaml --dry-run=server   # sanity
+#   kubectl -n cedana-provisioning apply -f 01-model-fetch.yaml
+#   kubectl -n cedana-provisioning logs -f job/ced2538-model-fetch
+#   kubectl -n cedana-provisioning delete job ced2538-model-fetch                  # when complete
+#
+# TWO THINGS THAT WILL BITE:
+#   - GLM-5.2 is a large FP8 checkpoint. Expect hundreds of GiB and a long transfer; check the
+#     volume has headroom before starting. The job is idempotent -- snapshot_download resumes.
+#   - The repo may be gated. If the log shows 401/403, create the token secret and uncomment the
+#     env block below:
+#       kubectl -n cedana-provisioning create secret generic hf-token --from-literal=token=hf_xxx
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ced2538-model-fetch
+  namespace: cedana-provisioning
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: fetch
+        image: lmsysorg/sglang:v0.5.15.post1-cu129   # same tag the servers use; has huggingface_hub
+        command: ["python3", "-c"]
+        args:
+        - |
+          import os
+          from huggingface_hub import snapshot_download
+          repo = os.environ.get("MODEL_REPO", "zai-org/GLM-5.2")
+          path = snapshot_download(repo, cache_dir="/models", max_workers=16)
+          print("snapshot at", path, flush=True)
+        env:
+        # Confirm this is the right repo id before running -- production serves a Together-built
+        # variant (the GLM-5.3 manifests in cedana-bench point at
+        # togethercomputer/GLM-5.3-TQuark-C2P-GPTQ-NVFP4, not the upstream zai-org repo), so the
+        # GLM-5.2 equivalent may also be a private/quantised build rather than zai-org/GLM-5.2.
+        - {name: MODEL_REPO, value: "zai-org/GLM-5.2"}
+        - {name: HF_HUB_ENABLE_HF_TRANSFER, value: "1"}   # faster if hf_transfer is present
+        # - name: HF_TOKEN
+        #   valueFrom: {secretKeyRef: {name: hf-token, key: token}}
+        resources:
+          requests: {cpu: "8", memory: 16Gi}
+        volumeMounts:
+        - {name: models, mountPath: /models}
+      volumes:
+      - name: models
+        persistentVolumeClaim: {claimName: model-preload-access}
