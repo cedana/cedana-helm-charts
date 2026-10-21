@@ -54,6 +54,11 @@ spec:
           securityContext:
             privileged: true
             allowPrivilegeEscalation: true
+          {{- with include "cedana-helm.daemonSocketDir" . }}
+          volumeMounts:
+            - name: daemon-socket
+              mountPath: {{ . }}
+          {{- end }}
           command: ["/bin/bash", "-c"]
           args: 
           - |
@@ -257,3 +262,10 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: shm-config-min-size
+      {{- with include "cedana-helm.daemonSocketDir" . }}
+      volumes:
+        - name: daemon-socket
+          hostPath:
+            path: {{ . }}
+            type: DirectoryOrCreate
+      {{- end }}
