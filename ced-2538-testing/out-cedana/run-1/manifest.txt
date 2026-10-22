@@ -1,2 +1,0 @@
-cuda-copy-hist /out/cuda-copy-hist.cedana.20261022T033806Z.log
-transport /out/transport.cedana.20261022T033806Z.log

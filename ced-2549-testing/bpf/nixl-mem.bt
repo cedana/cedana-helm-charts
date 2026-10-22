@@ -1,0 +1,238 @@
+#!/usr/bin/env bpftrace
+/*
+ * nixl-mem.bt -- CED-2549. The driver calls NIXL/UCX makes to get GPU memory registered with the
+ * HCA, with their return codes, on both sides of the A/B.
+ *
+ * WHY THIS EXACT SET OF CALLS. The decode pod sets WITH_NVIDIA_PEERMEM=0 with
+ * UCX_IB_GPU_DIRECT_RDMA=1. Without nv_peer_mem, UCX cannot hand the HCA a device pointer the old
+ * way -- it has to export the allocation as a dmabuf fd first, and its export path is exactly:
+ *
+ *     cuMemRetainAllocationHandle(&h, addr)          <- the call the report sees return 1
+ *       -> cuMemExportToShareableHandle(&fd, h, POSIX_FILE_DESCRIPTOR, 0)
+ *       -> cuMemRelease(h)
+ *     fallback:
+ *     cuMemGetHandleForAddressRange(&fd, addr, len, CU_MEM_RANGE_HANDLE_TYPE_DMA_BUF_FD, 0)
+ *
+ * so every one of those is on the critical path for every IB registration of KV cache memory.
+ *
+ * THE POINT OF THE SCRIPT IS THE A/B, NOT THE ERROR. 1 is CUDA_ERROR_INVALID_VALUE, and it is the
+ * DOCUMENTED return of cuMemRetainAllocationHandle for an address that is not backed by a
+ * cuMemCreate (VMM) allocation. vLLM only uses its VMM allocator for sleep mode, which is not on
+ * here, so a plain cudaMalloc'd KV cache very likely returns 1 on native too -- and the report
+ * notes the error fires on the requests that SUCCEED, which fits. Running the identical script
+ * against the native pair is what settles it:
+ *
+ *   native @ret[cuMemRetainAllocationHandle, 1] non-zero  -> normal UCX probing, red herring;
+ *                                                            the finding moves to @fallback below
+ *   native @ret[cuMemRetainAllocationHandle, 0] non-zero  -> cedana's pointers are not recognised
+ *                                                            as VMM allocations and the whole
+ *                                                            dmabuf path diverges
+ *
+ * @fallback is the row that matters either way: it pairs each retain result with the result of the
+ * cuMemGetHandleForAddressRange that followed it on the same thread. [1, 0] means the fallback
+ * rescued it and registration is fine. [1, non-zero] means there is no dmabuf fd at all, and
+ * nothing can have been registered for GPUDirect.
+ *
+ * ROWS
+ *   @ret[func, ret]        every call by return code. 0 = CUDA_SUCCESS, 1 = INVALID_VALUE,
+ *                          400 = INVALID_HANDLE, 801 = NOT_SUPPORTED.
+ *   @us[func]              latency per call.
+ *   @fallback[retain, range]  the pairing above. THE headline row.
+ *   @range_type[type, ret] cuMemGetHandleForAddressRange by CUmemRangeHandleType. 1 = DMA_BUF_FD.
+ *   @export_type[type, ret] cuMemExportToShareableHandle by CUmemAllocationHandleType.
+ *                          1 = POSIX_FILE_DESCRIPTOR, 2 = WIN32, 4 = FABRIC.
+ *   @ptr_attr[attr, ret]   cuPointerGetAttribute by attribute. UCX_MEMTYPE_CACHE=n means this is
+ *                          queried per operation rather than cached, so it is hot AND it is how
+ *                          UCX decides which transport a buffer can use. 2 = MEMORY_TYPE,
+ *                          7 = IS_MANAGED, 11 = MAPPED, 15 = MEMPOOL_HANDLE.
+ *   @vmm[func]             cuMemCreate/Map/AddressReserve/SetAccess counts. Non-zero means some
+ *                          device memory here IS VMM-backed, which changes how @ret reads.
+ *   @ipc[func, ret]        cuIpc*; cuda_ipc is in UCX_TLS. P-to-D is cross-node so this should be
+ *                          quiet on the transfer path -- noise here means UCX chose something
+ *                          other than IB.
+ *   FAIL lines             any non-zero return, with mono+wall so it joins bench.jsonl and the
+ *                          snapshots. Rate-limited by nothing: these should be rare per region.
+ *
+ * __LIB__ is substituted by watcher/attach.sh -- the interceptor on the cedana side, the real
+ * libcuda on native, resolved from /proc/<pid>/maps. Blocks marked >>>REQUIRES are dropped when
+ * the glob matches no symbol in that library, because bpftrace refuses to run a script naming a
+ * symbol that does not exist. A dropped block is itself a finding: attach.sh logs which.
+ */
+
+BEGIN
+{
+	printf("# ced-2549 nixl-mem attached\n");
+	printf("# mono=<boot ns> wall=<epoch s> EVENT comm pid tid detail\n");
+}
+
+/* ------------------------------------------------------------------ the dmabuf export path */
+uprobe:__LIB__:cuMemRetainAllocationHandle*
+{
+	@start[tid] = nsecs;
+	@fn[tid] = func;
+	@addr[tid] = arg1;
+}
+
+uretprobe:__LIB__:cuMemRetainAllocationHandle*
+/@start[tid]/
+{
+	@ret[@fn[tid], retval] = count();
+	@us[@fn[tid]] = hist((nsecs - @start[tid]) / 1000);
+	/* Kept for the pairing below. Not deleted on success: UCX only calls the fallback after a
+	 * failure, so a stale 0 here simply never gets read. */
+	@retain_ret[tid] = retval;
+	if (retval != 0) {
+		printf("mono=%llu wall=%s FAIL %s %d %d %s addr=0x%llx ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid,
+		       @fn[tid], @addr[tid], retval);
+	}
+	delete(@start[tid]); delete(@fn[tid]); delete(@addr[tid]);
+}
+
+/* >>>REQUIRES cuMemGetHandleForAddressRange* @dmabuf_ */
+uprobe:__LIB__:cuMemGetHandleForAddressRange*
+{
+	@start[tid] = nsecs;
+	@fn[tid] = func;
+	@addr[tid] = arg1;
+	@dmabuf_type[tid] = arg3;
+}
+
+uretprobe:__LIB__:cuMemGetHandleForAddressRange*
+/@start[tid]/
+{
+	@ret[@fn[tid], retval] = count();
+	@us[@fn[tid]] = hist((nsecs - @start[tid]) / 1000);
+	@dmabuf_range_type[@dmabuf_type[tid], retval] = count();
+	/* THE headline row: what the retain returned, and whether the fallback then worked. */
+	@dmabuf_fallback[@retain_ret[tid], retval] = count();
+	if (retval != 0) {
+		printf("mono=%llu wall=%s FAIL %s %d %d %s addr=0x%llx type=%d ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid,
+		       @fn[tid], @addr[tid], @dmabuf_type[tid], retval);
+	}
+	delete(@start[tid]); delete(@fn[tid]); delete(@addr[tid]); delete(@dmabuf_type[tid]);
+}
+/* <<<REQUIRES */
+
+uprobe:__LIB__:cuMemExportToShareableHandle*
+{
+	@start[tid] = nsecs;
+	@fn[tid] = func;
+	@exp_type[tid] = arg2;
+}
+
+uretprobe:__LIB__:cuMemExportToShareableHandle*
+/@start[tid]/
+{
+	@ret[@fn[tid], retval] = count();
+	@us[@fn[tid]] = hist((nsecs - @start[tid]) / 1000);
+	@export_type[@exp_type[tid], retval] = count();
+	if (retval != 0) {
+		printf("mono=%llu wall=%s FAIL %s %d %d %s type=%d ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid,
+		       @fn[tid], @exp_type[tid], retval);
+	}
+	delete(@start[tid]); delete(@fn[tid]); delete(@exp_type[tid]);
+}
+
+uprobe:__LIB__:cuMemImportFromShareableHandle*,
+uprobe:__LIB__:cuMemRelease*,
+uprobe:__LIB__:cuMemGetAddressRange*
+{
+	@start[tid] = nsecs;
+	@fn[tid] = func;
+}
+
+uretprobe:__LIB__:cuMemImportFromShareableHandle*,
+uretprobe:__LIB__:cuMemRelease*,
+uretprobe:__LIB__:cuMemGetAddressRange*
+/@start[tid]/
+{
+	@ret[@fn[tid], retval] = count();
+	@us[@fn[tid]] = hist((nsecs - @start[tid]) / 1000);
+	if (retval != 0) {
+		printf("mono=%llu wall=%s FAIL %s %d %d %s ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @fn[tid], retval);
+	}
+	delete(@start[tid]); delete(@fn[tid]);
+}
+
+/* ------------------------------------------------ is any of this memory VMM-backed at all?
+ * Init-time only, so counts not latencies. If these are all zero then nothing the engine
+ * allocated came from cuMemCreate, and cuMemRetainAllocationHandle returning 1 is simply
+ * correct -- which is the single most likely reading of the reported error. */
+uprobe:__LIB__:cuMemCreate*,
+uprobe:__LIB__:cuMemMap*,
+uprobe:__LIB__:cuMemAddressReserve*,
+uprobe:__LIB__:cuMemSetAccess*
+{
+	@vmm[func] = count();
+}
+
+/* ------------------------------------------------------------- how UCX classifies each buffer
+ * UCX_MEMTYPE_CACHE=n: this is asked per operation, not once per region, so it is the hottest
+ * probe here. Histogram and counts only, no per-event printf. */
+uprobe:__LIB__:cuPointerGetAttribute*
+{
+	@pstart[tid] = nsecs;
+	@pattr[tid] = arg1;
+}
+
+uretprobe:__LIB__:cuPointerGetAttribute*
+/@pstart[tid]/
+{
+	@ptr_attr[@pattr[tid], retval] = count();
+	@us[func] = hist((nsecs - @pstart[tid]) / 1000);
+	delete(@pstart[tid]); delete(@pattr[tid]);
+}
+
+/* >>>REQUIRES cuIpcGetMemHandle* @ipc */
+uprobe:__LIB__:cuIpcGetMemHandle*,
+uprobe:__LIB__:cuIpcOpenMemHandle*,
+uprobe:__LIB__:cuIpcCloseMemHandle*
+{
+	@ipcstart[tid] = nsecs;
+	@ipcfn[tid] = func;
+}
+
+uretprobe:__LIB__:cuIpcGetMemHandle*,
+uretprobe:__LIB__:cuIpcOpenMemHandle*,
+uretprobe:__LIB__:cuIpcCloseMemHandle*
+/@ipcstart[tid]/
+{
+	@ipc[@ipcfn[tid], retval] = count();
+	@us[@ipcfn[tid]] = hist((nsecs - @ipcstart[tid]) / 1000);
+	delete(@ipcstart[tid]); delete(@ipcfn[tid]);
+}
+/* <<<REQUIRES */
+
+interval:s:30
+{
+	printf("\n===== ced-2549 nixl-mem window mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@ret);
+	print(@dmabuf_fallback);
+	print(@dmabuf_range_type);
+	print(@export_type);
+	print(@ptr_attr);
+	print(@vmm);
+	print(@ipc);
+	print(@us);
+	clear(@us);
+	/* Counts stay cumulative. "Did this ever fail" is the question, not "how often this minute". */
+}
+
+END
+{
+	clear(@start);
+	clear(@fn);
+	clear(@addr);
+	clear(@retain_ret);
+	clear(@pstart);
+	clear(@pattr);
+	clear(@exp_type);
+	clear(@ipcstart);
+	clear(@ipcfn);
+	clear(@dmabuf_type);
+}

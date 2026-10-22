@@ -1,0 +1,159 @@
+#!/usr/bin/env bpftrace
+/*
+ * inflight.bt -- CED-2549. Which driver call is stuck, on which thread, and for how long.
+ *
+ * THE HYPOTHESIS THIS EXISTS TO TEST. Single requests work; 8 concurrent hang. Decode is DP8, so
+ * those 8 requests land on 8 INDEPENDENT engine-core processes, each TP1 on its own GPU, and each
+ * round-trips its driver calls through one cedana-gpu-controller. A shared lock, a single socket,
+ * or any per-process serialisation in that path turns 8 simultaneous NIXL reads into a stall. The
+ * reported cuMemRetainAllocationHandle error fires on the requests that SUCCEED too, so it does
+ * not discriminate; "which call entered and never came back" does.
+ *
+ * It is decisive in both directions:
+ *   - a call in flight for minutes, named, with its pid/tid  -> the hang is in the driver path,
+ *     and @drv_inflight says whether the controller is blocked underneath it or not;
+ *   - nothing in flight while the engine is wedged           -> the hang is ABOVE the driver:
+ *     Python, the NIXL side channel (ZMQ on :5600), or the notification path. Equally useful,
+ *     and it redirects the whole investigation to snapshot.sh's py-spy dumps.
+ *
+ * HOW IT READS A MAP WITHOUT ITERATING ONE. bpftrace only grew `for (kv : @map)` in 0.20, and the
+ * build available on these nodes may be 0.14.x. So the sweep does not scan for old entries -- it
+ * prints its own nsecs and then the entire map, and the comparison is done by eye or by the join
+ * script. An entry whose value is far below the SWEEP line's mono= is a call that has not
+ * returned. Nothing here needs a modern bpftrace.
+ *
+ *   ===== ced-2549 SWEEP mono=812934511000 wall=...
+ *   @inflight[1842, 1907, cuStreamSynchronize]: 812930002000     <- 4.5 ms old, normal
+ *   @inflight[1843, 1912, cuMemGetHandleForAddressRange]: 751002911000   <- 61 s old, STUCK
+ *
+ * ROWS
+ *   @inflight[pid, tid, func]  entry nsecs, deleted on return. Multi-key on func so nesting
+ *                              inside the interceptor does not clobber an outer frame.
+ *   @drv_inflight[...]         the same, on the GPU controller's real libcuda. Present only when
+ *                              a controller had libcuda mapped at attach time.
+ *   @calls[comm, func]         call counts, so the hot path is visible and the overhead of this
+ *                              script is itself auditable.
+ *   @us[func]                  latency distribution per call.
+ *   SLOW lines                 any call that DID return but took over THRESH_MS. A 60 s call that
+ *                              completes is as much of a finding as one that never does.
+ *
+ * SCOPE AND COST. The probe list is the families that can block: cuMem*, cuStream*, cuEvent*,
+ * cuCtx*, cuPointer*, cuIpc*. cuLaunch* is deliberately excluded -- it is the hottest call in the
+ * process by an order of magnitude and an indefinitely blocked kernel launch would show as a
+ * stuck cuStreamSynchronize anyway. To widen to everything for one run, add `uprobe:__LIB__:cu*`
+ * to both probe lists below and expect single-digit percent overhead on the engine.
+ *
+ * Entries leak if a thread exits between entry and return, so @inflight grows slowly over a long
+ * run. That is harmless for a run of hours and visible as old entries with dead pids.
+ *
+ * __LIB__ (interceptor, or real libcuda on the native side) and __LIBCUDA__ (the controller's
+ * libcuda, cedana side only) are substituted by watcher/attach.sh.
+ */
+
+BEGIN
+{
+	@THRESH_MS = 1000;
+	printf("# ced-2549 inflight attached; SLOW lines above %d ms\n", @THRESH_MS);
+	printf("# an @inflight value far below a SWEEP line's mono= is a call that never returned\n");
+}
+
+uprobe:__LIB__:cuMem*,
+uprobe:__LIB__:cuStream*,
+uprobe:__LIB__:cuEvent*,
+uprobe:__LIB__:cuCtx*,
+uprobe:__LIB__:cuPointer*
+{
+	@inflight[pid, tid, func] = nsecs;
+	@calls[comm, func] = count();
+}
+
+uretprobe:__LIB__:cuMem*,
+uretprobe:__LIB__:cuStream*,
+uretprobe:__LIB__:cuEvent*,
+uretprobe:__LIB__:cuCtx*,
+uretprobe:__LIB__:cuPointer*
+/@inflight[pid, tid, func]/
+{
+	$us = (nsecs - @inflight[pid, tid, func]) / 1000;
+	@us[func] = hist($us);
+	if ($us > @THRESH_MS * 1000) {
+		printf("mono=%llu wall=%s SLOW %s %d %d %s us=%llu ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, func, $us, retval);
+	}
+	delete(@inflight[pid, tid, func]);
+}
+
+/* >>>REQUIRES cuIpcGetMemHandle* @ipc */
+uprobe:__LIB__:cuIpc*
+{
+	@inflight[pid, tid, func] = nsecs;
+	@calls[comm, func] = count();
+	@ipc_seen[func] = count();
+}
+
+uretprobe:__LIB__:cuIpc*
+/@inflight[pid, tid, func]/
+{
+	@us[func] = hist((nsecs - @inflight[pid, tid, func]) / 1000);
+	delete(@inflight[pid, tid, func]);
+}
+/* <<<REQUIRES */
+
+/* >>>LIBCUDA_SECTION (attach.sh deletes this when no controller had libcuda mapped)
+ * The other half of the chain. If a rank is stuck in the interceptor AND the controller is stuck
+ * in the real driver underneath it, the driver is genuinely blocked. If the rank is stuck and the
+ * controller is idle, the stall is in cedana's own round trip -- which is the deadlock
+ * hypothesis, confirmed. */
+uprobe:__LIBCUDA__:cuMem*,
+uprobe:__LIBCUDA__:cuStream*,
+uprobe:__LIBCUDA__:cuEvent*,
+uprobe:__LIBCUDA__:cuCtx*
+{
+	@drv_inflight[pid, tid, func] = nsecs;
+	@drv_calls[comm, func] = count();
+}
+
+uretprobe:__LIBCUDA__:cuMem*,
+uretprobe:__LIBCUDA__:cuStream*,
+uretprobe:__LIBCUDA__:cuEvent*,
+uretprobe:__LIBCUDA__:cuCtx*
+/@drv_inflight[pid, tid, func]/
+{
+	$dus = (nsecs - @drv_inflight[pid, tid, func]) / 1000;
+	@drv_us[func] = hist($dus);
+	if ($dus > @THRESH_MS * 1000) {
+		printf("mono=%llu wall=%s SLOW-DRV %s %d %d %s us=%llu ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, func, $dus, retval);
+	}
+	delete(@drv_inflight[pid, tid, func]);
+}
+/* <<<LIBCUDA_SECTION */
+
+interval:s:10
+{
+	printf("\n===== ced-2549 SWEEP mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@inflight);
+	print(@drv_inflight);
+}
+
+interval:s:60
+{
+	printf("\n===== ced-2549 inflight profile mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@calls);
+	print(@us);
+	print(@drv_calls);
+	print(@drv_us);
+	print(@ipc_seen);
+	clear(@us);
+	clear(@drv_us);
+}
+
+END
+{
+	/* @inflight is NOT cleared: whatever is still in it at shutdown is the hang, and it is the
+	 * last thing printed. */
+	clear(@calls);
+	clear(@drv_calls);
+}

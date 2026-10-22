@@ -1,0 +1,153 @@
+{
+  "pods": {
+    "decode": {
+      "pod": "cedana-glm53-pd-decode",
+      "ip": "10.245.128.228",
+      "ready": true
+    },
+    "frontend": {
+      "pod": "cedana-glm53-pd-frontend",
+      "ip": "10.245.131.89",
+      "ready": true
+    },
+    "prefill": {
+      "pod": "cedana-glm53-pd-prefill",
+      "ip": "10.245.131.91",
+      "ready": true
+    }
+  },
+  "verified_utc": "2026-10-15T22:12:55.401592+00:00",
+  "responses": [
+    {
+      "http_status": 200,
+      "seconds": 2.366,
+      "response": {
+        "id": "chatcmpl-QjKbG0QZGReJLodnp93nk1hn",
+        "object": "chat.completion",
+        "created": 1792102370,
+        "model": "cedana-eval-glm53-pd",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "2 + 2 = 4",
+              "reasoning_content": "The user is asking a simple arithmetic question: 2 + 2. They want a short answer. This is straightforward - the answer is 4. I should just give the answer briefly as requested."
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 25,
+          "completion_tokens": 50,
+          "total_tokens": 75,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 41
+          }
+        },
+        "system_fingerprint": "default"
+      }
+    },
+    {
+      "http_status": 200,
+      "seconds": 2.152,
+      "response": {
+        "id": "chatcmpl-Mx9wYt73hFKRVNWvpLyHvzc6",
+        "object": "chat.completion",
+        "created": 1792102373,
+        "model": "cedana-eval-glm53-pd",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Paris",
+              "reasoning_content": "The user is asking for the capital of France in one word. The answer is Paris."
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 21,
+          "completion_tokens": 21,
+          "total_tokens": 42,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 18
+          }
+        },
+        "system_fingerprint": "default"
+      }
+    }
+  ],
+  "metric_aggregation": "sum across engine/worker labels within each Pod",
+  "transfer_metrics_before": {
+    "prefill": {
+      "vllm:nixl_xfer_time_seconds_count": 0,
+      "vllm:nixl_xfer_time_seconds_sum": 0,
+      "vllm:nixl_post_time_seconds_count": 0,
+      "vllm:nixl_post_time_seconds_sum": 0,
+      "vllm:nixl_bytes_transferred_count": 0,
+      "vllm:nixl_bytes_transferred_sum": 0,
+      "vllm:nixl_num_descriptors_count": 0,
+      "vllm:nixl_num_descriptors_sum": 0,
+      "vllm:nixl_num_failed_transfers_total": 0,
+      "vllm:nixl_num_failed_notifications_total": 0,
+      "vllm:nixl_num_kv_expired_reqs_total": 48,
+      "vllm:nixl_num_stale_xfer_notifs_total": 0,
+      "vllm:prompt_tokens_by_source_total": 0
+    },
+    "decode": {
+      "vllm:nixl_xfer_time_seconds_count": 4,
+      "vllm:nixl_xfer_time_seconds_sum": 0.003784,
+      "vllm:nixl_post_time_seconds_count": 4,
+      "vllm:nixl_post_time_seconds_sum": 0.001809,
+      "vllm:nixl_bytes_transferred_count": 4,
+      "vllm:nixl_bytes_transferred_sum": 12392448,
+      "vllm:nixl_num_descriptors_count": 4,
+      "vllm:nixl_num_descriptors_sum": 404,
+      "vllm:nixl_num_failed_transfers_total": 0,
+      "vllm:nixl_num_failed_notifications_total": 0,
+      "vllm:nixl_num_kv_expired_reqs_total": 0,
+      "vllm:nixl_num_stale_xfer_notifs_total": 0,
+      "vllm:prompt_tokens_by_source_total": 92
+    }
+  },
+  "transfer_metrics_after": {
+    "prefill": {
+      "vllm:nixl_xfer_time_seconds_count": 0,
+      "vllm:nixl_xfer_time_seconds_sum": 0,
+      "vllm:nixl_post_time_seconds_count": 0,
+      "vllm:nixl_post_time_seconds_sum": 0,
+      "vllm:nixl_bytes_transferred_count": 0,
+      "vllm:nixl_bytes_transferred_sum": 0,
+      "vllm:nixl_num_descriptors_count": 0,
+      "vllm:nixl_num_descriptors_sum": 0,
+      "vllm:nixl_num_failed_transfers_total": 0,
+      "vllm:nixl_num_failed_notifications_total": 0,
+      "vllm:nixl_num_kv_expired_reqs_total": 48,
+      "vllm:nixl_num_stale_xfer_notifs_total": 0,
+      "vllm:prompt_tokens_by_source_total": 0
+    },
+    "decode": {
+      "vllm:nixl_xfer_time_seconds_count": 6,
+      "vllm:nixl_xfer_time_seconds_sum": 0.005811,
+      "vllm:nixl_post_time_seconds_count": 6,
+      "vllm:nixl_post_time_seconds_sum": 0.00301,
+      "vllm:nixl_bytes_transferred_count": 6,
+      "vllm:nixl_bytes_transferred_sum": 18588672,
+      "vllm:nixl_num_descriptors_count": 6,
+      "vllm:nixl_num_descriptors_sum": 606,
+      "vllm:nixl_num_failed_transfers_total": 0,
+      "vllm:nixl_num_failed_notifications_total": 0,
+      "vllm:nixl_num_kv_expired_reqs_total": 0,
+      "vllm:nixl_num_stale_xfer_notifs_total": 0,
+      "vllm:prompt_tokens_by_source_total": 138
+    }
+  }
+}

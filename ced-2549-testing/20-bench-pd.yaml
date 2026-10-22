@@ -1,0 +1,71 @@
+# CED-2549: the load generator. Runs bench/pd_bench.py against the Dynamo frontend.
+#
+# THE LABEL IS LOAD-BEARING. This cluster runs a default-deny egress policy in `default`, and
+# cedana-glm53-pd-egress opens it only for pods labelled together.ai/cedana-pd=glm53. A bench pod
+# without that label gets no egress at all and every request fails with a connect timeout, which
+# is indistinguishable at a glance from the hang being investigated. If egress still blocks after
+# this, do not debug it in the cluster -- run the bench from the operator's machine instead:
+#
+#   kubectl --kubeconfig <installer> port-forward pod/cedana-glm53-pd-frontend 8990:8990
+#   HOST=localhost PORT=8990 OUT=./bench.jsonl python3 bench/pd_bench.py
+#
+# The image is the baseline's own pinned digest with imagePullPolicy: Never, because it is already
+# on both worker nodes and there is no egress here to pull anything else.
+#
+# PREREQ -- the ConfigMap:
+#   kubectl -n default create configmap ced2549-bench --from-file=bench/
+#
+# Watch it:   kubectl -n default logs -f job/ced2549-bench
+#
+# A POD THAT STAYS UP after the stages finish, so /out survives for kubectl cp: an emptyDir dies
+# with the pod, and a Job's pod is the first thing a cleanup reaps.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ced2549-bench
+  namespace: default
+spec:
+  backoffLimit: 0          # a failed run must not silently re-run against a different engine state
+  template:
+    metadata:
+      labels:
+        app: ced2549-bench
+        together.ai/cedana-pd: glm53      # <-- egress; see the note above
+    spec:
+      serviceAccountName: cedana-tester
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      # The frontend's node. Client CPU load is identical on the native and cedana runs, so it
+      # cancels out in the A/B.
+      nodeName: gpu-dp-ckck8-4pcmf
+      containers:
+      - name: bench
+        image: 598726163780.dkr.ecr.us-west-2.amazonaws.com/smg@sha256:a81eebc35ed6581ca886e8f8912e97957b1101359a509f27d29e0d479f60e0de
+        imagePullPolicy: Never
+        command: ["python3", "-u", "/bench/pd_bench.py"]
+        env:
+        - {name: HOST,  value: "cedana-glm53-pd-frontend"}
+        - {name: PORT,  value: "8990"}            # SMG's HTTP port, the documented entry point
+        - {name: MODEL, value: "cedana-eval-glm53-pd"}
+        - {name: OUT,   value: "/out/bench.jsonl"}
+        # The prompt length from the report. The server's own usage.prompt_tokens is the authority;
+        # pd_bench.py calibrates against it and records the real count on every request.
+        - {name: PROMPT_TOKENS, value: "5800"}
+        - {name: MAX_TOKENS,    value: "64"}
+        # c=1 is the control that must pass, c=8 is the repro, c=16 is the reported 2x16 case.
+        - {name: STAGES, value: "1x4,8x3,16x2"}
+        - {name: IDLE_S, value: "20"}
+        # Shorter than vLLM's 300 s RPC timeout on purpose: the hang gets recorded and snapshotted
+        # while the engine is still alive to dump. See the module docstring.
+        - {name: DEADLINE_S, value: "120"}
+        volumeMounts:
+        - {name: bench, mountPath: /bench}
+        - {name: out,   mountPath: /out}
+        resources:
+          requests: {cpu: "2", memory: 4Gi}
+          limits:   {cpu: "4", memory: 8Gi}
+      volumes:
+      - name: bench
+        configMap: {name: ced2549-bench}
+      - name: out
+        emptyDir: {}

@@ -1,0 +1,141 @@
+#!/usr/bin/env bpftrace
+/*
+ * ibreg.bt -- CED-2549. Did the HCA actually accept the GPU memory, and did the queue pairs stay
+ * healthy? The last link in the chain nixl-mem.bt traces.
+ *
+ * WHY. With WITH_NVIDIA_PEERMEM=0 the only way KV cache memory reaches the NIC is as a dmabuf fd,
+ * so cuMemGetHandleForAddressRange's fd has to survive one more call -- ibv_reg_dmabuf_mr -- to be
+ * worth anything. A dmabuf fd that CUDA happily exported and the HCA then refused is invisible to
+ * every CUDA-side probe, and it produces exactly the reported shape: decode issues reads, nothing
+ * lands, prefill expires the blocks as "retrieved by 0 remote worker(s)".
+ *
+ * ibv_reg_mr is a MACRO in modern rdma-core, resolving to ibv_reg_mr_iova2. Probing the name a
+ * reader expects would attach to nothing, so all three forms are probed and each is dropped if
+ * absent. attach.sh logs which were dropped. Every block owns its maps outright rather than
+ * sharing a result table, so any subset of them can be dropped and the rest still runs.
+ *
+ * THE OTHER HALF IS THE QP. "Reads posted, no completion, no error at the API" is the signature of
+ * a queue pair that went to ERR: the posts succeed, the completions never come, and the only
+ * notification is an async event nobody logs. ibv_get_async_event blocks until one arrives, so a
+ * uretprobe on it fires exactly when something went wrong on the wire, with a timestamp that
+ * joins to bench.jsonl. IBV_QPS_ERR is 6; IBV_EVENT_QP_FATAL is 0, QP_REQ_ERR 1, QP_ACCESS_ERR 2.
+ *
+ * ROWS
+ *   @dmabuf_reg[ok]         dmabuf registrations by outcome. ok=0 means the call returned NULL,
+ *                           i.e. FAILED. Any such row on decode is the finding.
+ *   @regmr_reg[func, ok]    the same for the plain ibv_reg_mr forms.
+ *   @dmabuf_us / @regmr_us  registration latency.
+ *   @dmabuf_len             length distribution of dmabuf registrations.
+ *   @qp_state[state]        states ibv_modify_qp was asked for. A 6 is a QP being moved to ERR.
+ *   @async[type]            async events delivered. Any row here on a hung run is the answer.
+ *   REG-FAIL / QP-ERR / ASYNC lines, with mono+wall.
+ *
+ * __LIBIBV__ is libibverbs as mapped by the engine processes, resolved by watcher/attach.sh. UCX
+ * reaches the NIC through mlx5 direct verbs for the fast path, so posts and completions are inline
+ * and NOT probeable here -- that is what the IB port counters in the runner's ib.csv are for. What
+ * is probeable is every control-path call, which is where this class of failure lives.
+ */
+
+BEGIN
+{
+	printf("# ced-2549 ibreg attached\n");
+}
+
+/* >>>REQUIRES ibv_reg_dmabuf_mr @dmabuf */
+uprobe:__LIBIBV__:ibv_reg_dmabuf_mr
+{
+	@dmabuf_start[tid] = nsecs;
+	@dmabuf_arglen[tid] = arg2;
+}
+
+uretprobe:__LIBIBV__:ibv_reg_dmabuf_mr
+/@dmabuf_start[tid]/
+{
+	$ok = (uint64)0;
+	if (retval != 0) { $ok = (uint64)1; }
+	@dmabuf_reg[$ok] = count();
+	@dmabuf_us = hist((nsecs - @dmabuf_start[tid]) / 1000);
+	@dmabuf_len = hist(@dmabuf_arglen[tid]);
+	if (retval == 0) {
+		printf("mono=%llu wall=%s REG-FAIL %s %d %d ibv_reg_dmabuf_mr len=%llu\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @dmabuf_arglen[tid]);
+	}
+	delete(@dmabuf_start[tid]);
+	delete(@dmabuf_arglen[tid]);
+}
+/* <<<REQUIRES */
+
+/* >>>REQUIRES ibv_reg_mr* @regmr */
+uprobe:__LIBIBV__:ibv_reg_mr*
+{
+	@regmr_start[tid] = nsecs;
+	@regmr_fn[tid] = func;
+	@regmr_arglen[tid] = arg2;
+}
+
+uretprobe:__LIBIBV__:ibv_reg_mr*
+/@regmr_start[tid]/
+{
+	$ok = (uint64)0;
+	if (retval != 0) { $ok = (uint64)1; }
+	@regmr_reg[@regmr_fn[tid], $ok] = count();
+	@regmr_us[@regmr_fn[tid]] = hist((nsecs - @regmr_start[tid]) / 1000);
+	if (retval == 0) {
+		printf("mono=%llu wall=%s REG-FAIL %s %d %d %s len=%llu\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid,
+		       @regmr_fn[tid], @regmr_arglen[tid]);
+	}
+	delete(@regmr_start[tid]);
+	delete(@regmr_fn[tid]);
+	delete(@regmr_arglen[tid]);
+}
+/* <<<REQUIRES */
+
+/* >>>REQUIRES ibv_modify_qp @qp
+ * qp_state is the first member of struct ibv_qp_attr, so it reads without BTF for the struct. */
+uprobe:__LIBIBV__:ibv_modify_qp
+{
+	$state = *uptr((uint32 *)arg1);
+	@qp_state[$state] = count();
+	if ($state == 6) {
+		printf("mono=%llu wall=%s QP-ERR %s %d %d moving qp to IBV_QPS_ERR\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid);
+	}
+}
+/* <<<REQUIRES */
+
+/* >>>REQUIRES ibv_get_async_event @async
+ * Blocks until the HCA reports something. Every line here is an event the application saw and
+ * most likely did not log. */
+uretprobe:__LIBIBV__:ibv_get_async_event
+/retval == 0/
+{
+	@async_n = count();
+	printf("mono=%llu wall=%s ASYNC %s %d %d event delivered\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid);
+}
+/* <<<REQUIRES */
+
+interval:s:30
+{
+	printf("\n===== ced-2549 ibreg window mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@dmabuf_reg);
+	print(@dmabuf_us);
+	print(@dmabuf_len);
+	print(@regmr_reg);
+	print(@regmr_us);
+	print(@qp_state);
+	print(@async_n);
+	clear(@dmabuf_us);
+	clear(@regmr_us);
+}
+
+END
+{
+	clear(@dmabuf_start);
+	clear(@dmabuf_arglen);
+	clear(@regmr_start);
+	clear(@regmr_fn);
+	clear(@regmr_arglen);
+}

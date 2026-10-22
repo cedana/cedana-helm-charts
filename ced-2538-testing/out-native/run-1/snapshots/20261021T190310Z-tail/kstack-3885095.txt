@@ -1,2 +1,0 @@
-[<0>] do_syscall_64+0x94/0x180
-[<0>] entry_SYSCALL_64_after_hwframe+0x78/0x80

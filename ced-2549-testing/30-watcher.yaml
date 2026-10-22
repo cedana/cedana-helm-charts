@@ -1,0 +1,105 @@
+# CED-2549: the watcher. TEMPLATED -- __ROLE__ and __NODE__ are substituted by the runners, which
+# apply it TWICE, once per node. 2538 needed one watcher because the whole workload was one pod;
+# the P/D pair is split across two nodes, and the prefill side's view is what tells us whether the
+# blocks were ever read.
+#
+#   __ROLE__ = prefill | decode
+#   __NODE__ = gpu-dp-ckck8-4pcmf (prefill) | gpu-dp-ckck8-zl9zz (decode)
+#
+# Two containers, because no one image has both tools:
+#   bpf   -- bpftrace, running bpf/*.bt through watcher/attach.sh. Continuous, always on.
+#   snap  -- stacks / sockets / IB counters, running watcher/snapshot.sh. Expensive, triggered.
+# They share /var/tmp/ced2549.
+#
+# WHY A hostPath AND NOT AN emptyDir. There is no egress in this cluster, so bpftrace may have to
+# come from the host through nsenter -- and a bpftrace running in the HOST mount namespace cannot
+# see an emptyDir. The hostPath is mounted at the SAME path it has on the host, so the rendered
+# script and its log are at one path in both namespaces and attach.sh needs no translation.
+#
+# A POD, NOT A DAEMONSET, ON PURPOSE: a DaemonSet would land a privileged hostPID pod with uprobes
+# on every node in a shared cluster, including nodes this investigation has no business touching.
+#
+# PREREQ -- the two ConfigMaps:
+#   kubectl -n cedana-systems create configmap ced2549-bpf     --from-file=bpf/
+#   kubectl -n cedana-systems create configmap ced2549-watcher --from-file=watcher/
+#
+# Stop it cleanly -- bpftrace prints its END block, and in inflight.bt that END block contains the
+# calls STILL IN FLIGHT, which on a hung run is the entire result:
+#   kubectl -n cedana-systems exec ced2549-watcher-__ROLE__ -c bpf -- pkill -TERM -f attach.sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ced2549-watcher-__ROLE__
+  namespace: cedana-systems
+  labels:
+    app: ced2549-watcher
+    role: __ROLE__
+spec:
+  restartPolicy: Never
+  hostPID: true          # mandatory: the cedana GPU controller runs on the host, outside any pod
+  nodeName: __NODE__
+  containers:
+  # ------------------------------------------------------------------ continuous eBPF layer
+  - name: bpf
+    # The baseline's own pinned digest: it is already on both worker nodes and nothing else can be
+    # pulled here. It has no bpftrace, so attach.sh falls back to the host's through nsenter.
+    image: 598726163780.dkr.ecr.us-west-2.amazonaws.com/smg@sha256:a81eebc35ed6581ca886e8f8912e97957b1101359a509f27d29e0d479f60e0de
+    imagePullPolicy: Never
+    command: ["bash", "-c"]
+    args:
+    - |
+      # cedana-systems may have egress even though `default` does not. Try, do not insist.
+      if ! command -v bpftrace >/dev/null; then
+        echo "[ced-2549] no bpftrace in image; trying apt, then the host's via nsenter"
+        apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq bpftrace >/dev/null 2>&1 || true
+      fi
+      exec sh /watcher/attach.sh /bpf/inflight.bt /bpf/nixl-mem.bt /bpf/ibreg.bt
+    env:
+    - {name: OUTDIR,   value: "/var/tmp/ced2549"}
+    - {name: SIDE,     value: "auto"}   # auto-detects cedana vs native from /proc; see attach.sh
+    - {name: DURATION, value: "0"}      # run until terminated
+    securityContext:
+      privileged: true                  # CAP_BPF + CAP_PERFMON + CAP_SYS_ADMIN for uprobes
+    volumeMounts:
+    - {name: out,     mountPath: /var/tmp/ced2549}
+    - {name: bpf,     mountPath: /bpf}
+    - {name: watcher, mountPath: /watcher}
+    - {name: debugfs, mountPath: /sys/kernel/debug}
+    - {name: bpffs,   mountPath: /sys/fs/bpf}
+    - {name: modules, mountPath: /lib/modules, readOnly: true}
+  # ------------------------------------------------------------------ triggered snapshot layer
+  - name: snap
+    image: 598726163780.dkr.ecr.us-west-2.amazonaws.com/smg@sha256:a81eebc35ed6581ca886e8f8912e97957b1101359a509f27d29e0d479f60e0de
+    imagePullPolicy: Never
+    command: ["/bin/sh", "/watcher/snapshot.sh"]
+    env:
+    - {name: ROLE,       value: "__ROLE__"}
+    - {name: OUTDIR,     value: "/var/tmp/ced2549"}
+    # The runner drives the trigger: it already samples both pods' vllm:nixl_* for nixl.csv and,
+    # unlike this pod, it is not subject to the workload namespace's egress policy.
+    - {name: STALL_S,    value: "30"}
+    - {name: COOLDOWN_S, value: "60"}
+    - {name: MAX_SNAPS,  value: "20"}   # a hang is not a timed run; snapshots cost nothing here
+    - {name: ALLOW_GDB,  value: "0"}    # read snapshot.sh before ever setting this to 1
+    - {name: METRICS_URL, value: ""}    # set only if this pod can actually reach the engine
+    # Gets the driver into the container without claiming a GPU the engines hold.
+    - {name: NVIDIA_VISIBLE_DEVICES,     value: "all"}
+    - {name: NVIDIA_DRIVER_CAPABILITIES, value: "utility"}
+    securityContext:
+      privileged: true                  # /proc/<pid>/stack and /proc/<pid>/task/*/stack of host pids
+    volumeMounts:
+    - {name: out,     mountPath: /var/tmp/ced2549}
+    - {name: watcher, mountPath: /watcher}
+  volumes:
+  - name: out
+    hostPath: {path: /var/tmp/ced2549, type: DirectoryOrCreate}
+  - name: bpf
+    configMap: {name: ced2549-bpf}
+  - name: watcher
+    configMap: {name: ced2549-watcher, defaultMode: 0755}
+  - name: debugfs
+    hostPath: {path: /sys/kernel/debug}
+  - name: bpffs
+    hostPath: {path: /sys/fs/bpf}
+  - name: modules
+    hostPath: {path: /lib/modules}

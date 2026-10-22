@@ -1,0 +1,984 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cedana-glm53-pd-tools
+  namespace: default
+data:
+  launch.py: |
+    """Run one container's command with node preflight.
+
+    Every engine flag lives in the pod spec, as argv after `--`, so `kubectl get
+    pod -o yaml` is the source of truth for how a worker was started. This wrapper
+    carries only what a pod spec cannot express: node-local NIC selection, whose
+    exports have to land in the engine's own environment rather than an
+    initContainer's, and the Mooncake config file that depends on them.
+
+    Stdout stays on the container stream (kubelet). Teeing into a hostPath file
+    kept an extra Python copier and an unbounded live-log process in the worker
+    cgroup, which grows RSS on a chatty prefill worker.
+
+        launch.py --role prefill --gpu-prelude -- python3 -m dynamo.vllm --model ...
+    """
+
+    import argparse
+    import json
+    import os
+    import shlex
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    TOOLS = Path(__file__).resolve().parent
+
+
+    def gpu_preflight(note):
+        """Refuse to start over someone else's compute processes."""
+        result = subprocess.run(
+            ["nvidia-smi", "--query-compute-apps=pid", "--format=csv,noheader"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            # Without this the check fails OPEN: no stdout means no pids, which
+            # reads as "no other processes" and the engine starts anyway.
+            sys.stderr.write(result.stderr)
+            raise RuntimeError(
+                f"nvidia-smi failed ({result.returncode}); cannot verify the GPUs "
+                "are idle"
+            )
+        pids = sorted({line.strip() for line in result.stdout.splitlines() if line.strip()})
+        if pids:
+            raise RuntimeError(
+                f"assigned GPU already has compute processes: {' '.join(pids)}"
+            )
+        note("GPU_PREFLIGHT clear")
+
+
+    def ucx_affinity(note):
+        """Pair each visible GPU to its PIX/PXB 400G NDR compute rail.
+
+        UCX_NET_DEVICES is deliberately left unset: vLLM prepends the affine
+        device onto whatever is already there, so a leftover 8-rail value would
+        keep every rank on every HCA.
+        """
+        result = subprocess.run(
+            [sys.executable, "-u", str(TOOLS / "select-ucx.py")],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        sys.stderr.write(result.stderr)
+        sys.stderr.flush()
+        if result.returncode != 0:
+            raise RuntimeError("GPU-local UCX device selection failed")
+        for line in result.stdout.splitlines():
+            fields = shlex.split(line)
+            if len(fields) != 2 or fields[0] != "export":
+                continue
+            name, _, value = fields[1].partition("=")
+            os.environ[name] = value
+        os.environ.pop("UCX_NET_DEVICES", None)
+        for name in (
+            "UCX_AFFINE_DEVICES",
+            "VLLM_GPU_NIC_PCIE_MAPPING",
+            "VLLM_NIC_SELECTION_VARS",
+            "NCCL_IB_HCA",
+        ):
+            note(f"{name}={os.environ.get(name, '')}")
+
+
+    def mooncake_config(note):
+        """Stamp this node's rails into the Mooncake config file.
+
+        Fail closed on an empty rail list: Mooncake would silently fall back to
+        TCP, which reads as a mysteriously slow store rather than a config error.
+        """
+        device = os.environ.get("MOONCAKE_DEVICE_NAME", "")
+        if not device:
+            raise RuntimeError("no compute rail available for Mooncake")
+        config = json.loads(os.environ["MOONCAKE_CONFIG_JSON"])
+        config["device_name"] = device
+        rendered = json.dumps(config)
+        Path(os.environ["MOONCAKE_CONFIG_PATH"]).write_text(rendered)
+        note(f"MOONCAKE_CONFIG {rendered}")
+
+
+    def note(text):
+        sys.stdout.write(text.rstrip("\n") + "\n")
+        sys.stdout.flush()
+
+
+    def main() -> int:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--role", required=True)
+        parser.add_argument("--gpu-prelude", action="store_true")
+        # argparse would claim the engine's own flags as unknown options, so the
+        # split is done by hand on the first `--`.
+        if "--" not in sys.argv:
+            parser.error("missing `--` before the command to run")
+        separator = sys.argv.index("--")
+        args = parser.parse_args(sys.argv[1:separator])
+        command = sys.argv[separator + 1 :]
+        if not command:
+            parser.error("no command after `--`")
+
+        try:
+            if args.gpu_prelude:
+                gpu_preflight(note)
+                ucx_affinity(note)
+                if "MOONCAKE_CONFIG_JSON" in os.environ:
+                    mooncake_config(note)
+        except (OSError, RuntimeError, ValueError) as exc:
+            note(f"ERROR {exc}")
+            return 1
+
+        note(f"LAUNCH role={args.role} {shlex.join(command)}")
+        try:
+            os.execvp(command[0], command)
+        except OSError as exc:
+            note(f"ERROR exec {command[0]}: {exc}")
+            return 1
+
+
+    if __name__ == "__main__":
+        raise SystemExit(main())
+  select-ucx.py: |
+    """Select GPU-local 400G NDR HCAs and emit vLLM's per-rank NIC PCI map.
+
+    vLLM prepends the affine device onto any existing UCX_NET_DEVICES
+    (vllm_net_devices.py). Leaving that variable unset is what makes each rank
+    use exactly one PXB SuperNIC instead of all eight rails.
+    """
+
+    from __future__ import annotations
+
+    import re
+    import shlex
+    import subprocess
+    import sys
+    from dataclasses import dataclass
+    from pathlib import Path
+
+    ANSI = re.compile(r"\x1b\[[0-9;]*m")
+    NIC_HEADER = re.compile(r"^NIC\d+$")
+    GPU_ROW = re.compile(r"^GPU(\d+)$")
+    NIC_LEGEND = re.compile(r"^(NIC\d+):\s+(\S+)$")
+    # 400G NDR compute rails on use3a-b200-2. Deliberately NOT a bare
+    # "InfiniBand" test -- see discover_compute_rails.
+    COMPUTE_RAIL_RATE = re.compile(r"400\s*Gb/sec|4X\s*NDR", re.IGNORECASE)
+    # SYS is the other GPU tray; using it is the silent GDR-to-host-staging path.
+    REL_PRIORITY = {"PIX": 0, "PXB": 1, "NODE": 2}
+
+
+    @dataclass(frozen=True)
+    class GpuNic:
+        gpu_index: int
+        device: str
+        rel: str
+        gpu_pci: str
+        nic_pci: str
+
+
+    def discover_compute_rails(
+        ib_root: Path | None = None, dev_root: Path | None = None
+    ) -> set[str]:
+        ib_root = ib_root or Path("/sys/class/infiniband")
+        dev_root = dev_root or Path("/dev/infiniband")
+        names: set[str] = set()
+        if not ib_root.is_dir():
+            return names
+        for path in sorted(ib_root.iterdir()):
+            if not path.is_dir():
+                continue
+            try:
+                link = (path / "ports/1/link_layer").read_text().strip()
+                rate = (path / "ports/1/rate").read_text()
+                state = (path / "ports/1/state").read_text()
+                gid = (path / "ports/1/gids/0").read_text()
+            except OSError:
+                continue
+            # use3a-b200-2 rails are 400 Gb/sec (4X NDR), not the B300 fleet's
+            # XDR, so an "XDR" match rejects every rail and the prelude dies with
+            # "no active allocated compute InfiniBand HCA".
+            #
+            # The rate match is what excludes nvlink0-3, which report
+            # link_layer=InfiniBand and state ACTIVE at 100 Gb/sec (2X HDR). A
+            # filter of "InfiniBand + ACTIVE" alone admits them, and NCCL/UCX then
+            # mix link types and wedge at the first cross-node transfer (infra PR
+            # #39535). The eth* HCAs are already excluded by the link_layer test.
+            #
+            # A zero GID is the third trap: the rail is the right link type, the
+            # right speed and ACTIVE, but unaddressable. It passes readiness and
+            # then hangs cross-node init, so it is rejected here the same way
+            # ib-fabric.sh rejects it.
+            if (
+                link != "InfiniBand"
+                or "ACTIVE" not in state
+                or not COMPUTE_RAIL_RATE.search(rate)
+                or not gid.strip(":0 \n")
+            ):
+                continue
+            verbs = path / "device/infiniband_verbs"
+            try:
+                for item in verbs.glob("uverbs*"):
+                    if (dev_root / item.name).exists():
+                        names.add(path.name)
+                        break
+            except OSError:
+                continue
+        return names
+
+
+    def nic_pci_by_name(devices: set[str], ib_root: Path | None = None) -> dict[str, str]:
+        ib_root = ib_root or Path("/sys/class/infiniband")
+        out: dict[str, str] = {}
+        for name in devices:
+            link = ib_root / name / "device"
+            try:
+                out[name] = link.resolve().name
+            except OSError as exc:
+                raise RuntimeError(f"no PCI BDF for InfiniBand device {name}") from exc
+        return out
+
+
+    def gpu_pci_by_index() -> dict[int, str]:
+        raw = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=index,pci.bus_id", "--format=csv,noheader"],
+            text=True,
+        )
+        out: dict[int, str] = {}
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            idx_s, pci = line.split(",", 1)
+            out[int(idx_s.strip())] = pci.strip()
+        if not out:
+            raise RuntimeError("nvidia-smi returned no GPU PCI addresses")
+        return out
+
+
+    def nvidia_smi_topo() -> str:
+        return subprocess.check_output(["nvidia-smi", "topo", "-m"], text=True)
+
+
+    def parse_topo(text: str) -> tuple[list[str], list[list[str]], dict[str, str]]:
+        text = ANSI.sub("", text)
+        header: list[str] | None = None
+        gpu_rows: list[list[str]] = []
+        legend: dict[str, str] = {}
+        in_legend = False
+        for line in text.splitlines():
+            if line.startswith("NIC Legend"):
+                in_legend = True
+                continue
+            if in_legend:
+                match = NIC_LEGEND.match(line.strip())
+                if match:
+                    legend[match.group(1)] = match.group(2)
+                continue
+            if header is None and "NIC0" in line and "GPU0" in line:
+                header = line.split("\t")
+                continue
+            if header is not None and GPU_ROW.match(line.split("\t", 1)[0].strip()):
+                gpu_rows.append(line.split("\t"))
+        if header is None:
+            raise RuntimeError("nvidia-smi topo -m: missing GPU/NIC header")
+        if not gpu_rows:
+            raise RuntimeError("nvidia-smi topo -m: no GPU rows")
+        if not legend:
+            raise RuntimeError("nvidia-smi topo -m: missing NIC legend")
+        return header, gpu_rows, legend
+
+
+    def select_pairs(
+        header: list[str],
+        gpu_rows: list[list[str]],
+        legend: dict[str, str],
+        rails: set[str],
+        gpu_pci: dict[int, str],
+        nic_pci: dict[str, str],
+    ) -> list[GpuNic]:
+        nic_cols = [
+            (index, name.strip())
+            for index, name in enumerate(header)
+            if NIC_HEADER.match(name.strip())
+        ]
+        if not nic_cols:
+            raise RuntimeError("nvidia-smi topo -m: no NIC columns")
+        pairs: list[GpuNic] = []
+        for row in gpu_rows:
+            gpu_match = GPU_ROW.match(row[0].strip())
+            if gpu_match is None:
+                continue
+            gpu_index = int(gpu_match.group(1))
+            best: tuple[int, int, str, str] | None = None
+            for col, nic_key in nic_cols:
+                if col >= len(row):
+                    continue
+                rel = row[col].strip()
+                rank = REL_PRIORITY.get(rel)
+                if rank is None:
+                    continue
+                device = legend.get(nic_key)
+                if device not in rails:
+                    continue
+                if best is None or rank < best[0] or (rank == best[0] and col < best[1]):
+                    best = (rank, col, device, rel)
+            gpu_name = f"GPU{gpu_index}"
+            if best is None:
+                raise RuntimeError(f"no PIX/PXB/NODE compute-rail HCA for {gpu_name}")
+            if gpu_index not in gpu_pci:
+                raise RuntimeError(f"no PCI BDF for {gpu_name}")
+            device = best[2]
+            if device not in nic_pci:
+                raise RuntimeError(f"no PCI BDF for {device}")
+            pairs.append(
+                GpuNic(
+                    gpu_index=gpu_index,
+                    device=device,
+                    rel=best[3],
+                    gpu_pci=gpu_pci[gpu_index],
+                    nic_pci=nic_pci[device],
+                )
+            )
+        if not pairs:
+            raise RuntimeError("no GPU to compute-rail HCA pairings")
+        return pairs
+
+
+    def affine_devices(pairs: list[GpuNic]) -> str:
+        seen: list[str] = []
+        for pair in pairs:
+            token = f"{pair.device}:1"
+            if token not in seen:
+                seen.append(token)
+        return ",".join(seen)
+
+
+    def pci_mapping(pairs: list[GpuNic]) -> str:
+        return ",".join(f"{pair.gpu_pci}={pair.nic_pci}" for pair in pairs)
+
+
+    def _device_sort_key(name: str) -> tuple[str, int, str]:
+        match = re.search(r"^(.*?)(\d+)$", name)
+        if match is None:
+            return (name, 0, name)
+        return (match.group(1), int(match.group(2)), name)
+
+
+    def store_devices(devices: set[str]) -> str:
+        """Every rail, for Mooncake's transfer engine.
+
+        Unlike UCX_AFFINE_DEVICES this is deliberately not GPU-local: the store
+        segments live on other hosts, so restricting the requester to one rail
+        would cap store bandwidth at a single NIC. Mooncake wants bare names,
+        not UCX's `<device>:<port>` form.
+        """
+        return ",".join(sorted(devices, key=_device_sort_key))
+
+
+    def nccl_hca(devices: set[str]) -> str:
+        """NCCL's rail list, in its EXACT-MATCH form.
+
+        The leading "=" is load-bearing. Without it every entry is a PREFIX, so a
+        list containing `mlx5_1` also admits mlx5_10..mlx5_19 -- which on a host
+        with sixteen HCAs is how a 100 Gb/sec link ends up in a 400 Gb/sec
+        communicator.
+
+        Derived from the same rail set as everything else here rather than written
+        into the pod spec, because the device NAMES are not portable. The pod spec
+        used to carry the bare prefix `mlx5`, which selected exactly the eight
+        rails on use3a-b200-2 (its non-rail HCAs are named `nvlink0..3` and
+        `eth0..2`) and selects all SIXTEEN on krustykrab, where the four 100 Gb/sec
+        NVLink HCAs are `mlx5_0..3`, the four 200 Gb/sec Ethernet ones are
+        `mlx5_5/6/11/12`, and the rails are the non-contiguous
+        `mlx5_{4,7,8,9,10,13,14,15}` (measured on all six workers 2026-09-18).
+
+        That mixes link types in exactly the way infra PR #39535 describes. It is
+        probably INERT on both fleets today -- one worker is one node, so TP8 and
+        DEP=8 collectives stay on NVLink and NCCL never opens an IB QP -- but the
+        value is wrong on the host either way, and "no collective crosses a node
+        yet" is not a property to hang it on.
+        """
+        return "=" + store_devices(devices)
+
+
+    def emit_shell(pairs: list[GpuNic], rails: set[str]) -> None:
+        for pair in pairs:
+            print(
+                f"UCX_GPU_NIC gpu={pair.gpu_index} device={pair.device} "
+                f"rel={pair.rel} gpu_pci={pair.gpu_pci} nic_pci={pair.nic_pci}",
+                file=sys.stderr,
+                flush=True,
+            )
+        print(f"export UCX_AFFINE_DEVICES={shlex.quote(affine_devices(pairs))}")
+        print(f"export VLLM_GPU_NIC_PCIE_MAPPING={shlex.quote(pci_mapping(pairs))}")
+        print("export VLLM_NIC_SELECTION_VARS=UCX_NET_DEVICES:1")
+        print(f"export MOONCAKE_DEVICE_NAME={shlex.quote(store_devices(rails))}")
+        print(f"export NCCL_IB_HCA={shlex.quote(nccl_hca(rails))}")
+
+
+    def main() -> int:
+        try:
+            rails = discover_compute_rails()
+            if not rails:
+                raise RuntimeError("no active allocated compute InfiniBand HCA")
+            header, gpu_rows, legend = parse_topo(nvidia_smi_topo())
+            pairs = select_pairs(
+                header,
+                gpu_rows,
+                legend,
+                rails,
+                gpu_pci_by_index(),
+                nic_pci_by_name(rails),
+            )
+        except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as exc:
+            print(f"ERROR {exc}", file=sys.stderr)
+            return 1
+        emit_shell(pairs, rails)
+        return 0
+
+
+    if __name__ == "__main__":
+        sys.exit(main())
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cedana-glm53-pd-frontend
+  namespace: default
+  labels:
+    together.ai/cedana-eval: "true"
+    together.ai/cedana-pd: glm53
+    together.ai/cedana-pd-role: frontend
+  annotations:
+    together.ai/source-revision: togethercomputer/together-dynamo@1a4796f903984d601991fa14d7444fe73edc466a
+    together.ai/model-artifact: togethercomputer/GLM-5.3-TQuark-C2P-GPTQ-NVFP4@a1e9d28594bc905c89261ffc01fd0c4a8232252a
+spec:
+  serviceAccountName: cedana-tester
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: gpu-dp-ckck8-4pcmf
+  terminationGracePeriodSeconds: 300
+  containers:
+  - image: 598726163780.dkr.ecr.us-west-2.amazonaws.com/smg@sha256:a81eebc35ed6581ca886e8f8912e97957b1101359a509f27d29e0d479f60e0de
+    imagePullPolicy: Never
+    command:
+    - python3
+    - -u
+    - /opt/glm53-tools/launch.py
+    args:
+    - --role
+    - frontend
+    - --
+    - python3
+    - -u
+    - -m
+    - dynamo.frontend
+    - --dyn-chat-processor
+    - dynamo
+    - --router-mode
+    - kv
+    - --http-port
+    - '8000'
+    - --trtllm-grpc-server
+    - --grpc-metrics-port
+    - '8788'
+    - --router-kv-overlap-score-credit-decay
+    - '1.0'
+    env:
+    - name: DYN_DISCOVERY_BACKEND
+      value: etcd
+    - name: DYN_EVENT_PLANE
+      value: zmq
+    - &id001
+      name: DYN_NAMESPACE
+      value: cedana-glm53-pd
+    - &id002
+      name: ETCD_ENDPOINTS
+      value: http://dynamo-platform-etcd.dynamo-system.svc.cluster.local:2379
+    - &id003
+      name: NATS_SERVER
+      value: nats://dynamo-platform-nats.dynamo-system.svc.cluster.local:4222
+    - name: DYN_COMPONENT
+      value: Frontend
+    volumeMounts:
+    - name: tools
+      mountPath: /opt/glm53-tools
+      readOnly: true
+    - name: models
+      mountPath: /data/modelpreload/huggingface
+      readOnly: true
+    ports:
+    - name: dyn-metrics
+      containerPort: 8788
+      protocol: TCP
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: dyn-metrics
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    name: dynamo-frontend
+    resources:
+      requests:
+        cpu: '2'
+        memory: 8Gi
+      limits:
+        memory: 64Gi
+  - name: smg
+    image: 598726163780.dkr.ecr.us-west-2.amazonaws.com/smg@sha256:a81eebc35ed6581ca886e8f8912e97957b1101359a509f27d29e0d479f60e0de
+    imagePullPolicy: Never
+    command:
+    - python3
+    - -u
+    - /opt/glm53-tools/launch.py
+    args:
+    - --role
+    - smg
+    - --
+    - smg
+    - launch
+    - --backend
+    - dynamo
+    - --worker-urls
+    - grpc://localhost:8000
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8990'
+    - --prometheus-port
+    - '29000'
+    - --model-path
+    - /data/modelpreload/huggingface/models--togethercomputer--GLM-5.3-TQuark-C2P-GPTQ-NVFP4/snapshots/a1e9d28594bc905c89261ffc01fd0c4a8232252a
+    - --reasoning-parser
+    - glm45
+    - --tool-call-parser
+    - glm47_moe
+    - --disable-health-check
+    - --disable-circuit-breaker
+    - --worker-startup-timeout-secs
+    - '7200'
+    - --log-level
+    - info
+    env:
+    - name: HF_HOME
+      value: /data/modelpreload/huggingface
+    - name: HF_HUB_CACHE
+      value: /data/modelpreload/huggingface
+    - name: HUGGINGFACE_HUB_CACHE
+      value: /data/modelpreload/huggingface
+    - name: HF_HUB_OFFLINE
+      value: '1'
+    - name: SMG_TOKENIZER_BACKEND
+      value: huggingface
+    - *id001
+    - *id002
+    - *id003
+    - name: DYN_COMPONENT
+      value: Frontend
+    volumeMounts:
+    - name: tools
+      mountPath: /opt/glm53-tools
+      readOnly: true
+    - name: models
+      mountPath: /data/modelpreload/huggingface
+      readOnly: true
+    ports:
+    - name: smg-http
+      containerPort: 8990
+      protocol: TCP
+    - name: smg-metrics
+      containerPort: 29000
+      protocol: TCP
+    resources:
+      requests:
+        cpu: '2'
+        memory: 8Gi
+      limits:
+        memory: 64Gi
+    readinessProbe:
+      httpGet:
+        path: /health_generate
+        port: smg-http
+      periodSeconds: 30
+      timeoutSeconds: 30
+      failureThreshold: 3
+  volumes:
+  - name: tools
+    configMap:
+      name: cedana-glm53-pd-tools
+  - name: models
+    persistentVolumeClaim:
+      claimName: hf-models-rwx
+      readOnly: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cedana-glm53-pd-prefill
+  namespace: default
+  labels:
+    together.ai/cedana-eval: "true"
+    together.ai/cedana-pd: glm53
+    together.ai/cedana-pd-role: prefill
+  annotations:
+    together.ai/source-revision: togethercomputer/together-dynamo@1a4796f903984d601991fa14d7444fe73edc466a
+    together.ai/model-artifact: togethercomputer/GLM-5.3-TQuark-C2P-GPTQ-NVFP4@a1e9d28594bc905c89261ffc01fd0c4a8232252a
+spec:
+  serviceAccountName: cedana-tester
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: gpu-dp-ckck8-4pcmf
+  terminationGracePeriodSeconds: 300
+  containers:
+  - image: 598726163780.dkr.ecr.us-west-2.amazonaws.com/smg@sha256:a81eebc35ed6581ca886e8f8912e97957b1101359a509f27d29e0d479f60e0de
+    imagePullPolicy: Never
+    command:
+    - python3
+    - -u
+    - /opt/glm53-tools/launch.py
+    args:
+    - --role
+    - prefill
+    - --gpu-prelude
+    - --
+    - python3
+    - -u
+    - -m
+    - dynamo.vllm
+    - --model
+    - /data/modelpreload/huggingface/models--togethercomputer--GLM-5.3-TQuark-C2P-GPTQ-NVFP4/snapshots/a1e9d28594bc905c89261ffc01fd0c4a8232252a
+    - --served-model-name
+    - cedana-eval-glm53-pd
+    - --block-size
+    - '64'
+    - --cpu-distributed-timeout-seconds
+    - '600'
+    - --disaggregation-mode
+    - prefill
+    - --dyn-reasoning-parser
+    - glm45
+    - --dyn-tool-call-parser
+    - glm47
+    - --enable-chunked-prefill
+    - --enable-prefix-caching
+    - --gpu-memory-utilization
+    - '0.88'
+    - --jit-monitor-verbose
+    - --kernel-config
+    - '{"enable_flashinfer_autotune":false}'
+    - --kv-cache-dtype
+    - fp8
+    - --language-model-only
+    - --load-format
+    - auto
+    - --long-prefill-token-threshold
+    - '16384'
+    - --max-model-len
+    - '1048576'
+    - --max-num-batched-tokens
+    - '65472'
+    - --max-num-seqs
+    - '16'
+    - --no-disable-hybrid-kv-cache-manager
+    - --safetensors-load-strategy
+    - prefetch
+    - --shutdown-timeout
+    - '300'
+    - --speculative-config
+    - '{"method":"mtp","num_speculative_tokens":5}'
+    - --tensor-parallel-size
+    - '8'
+    - --trust-remote-code
+    - --kv-transfer-config
+    - '{"kv_connector":"NixlConnector","kv_role":"kv_producer"}'
+    - --kv-events-config
+    - '{"publisher":"zmq","topic":"kv-events","endpoint":"tcp://*:20081","enable_kv_cache_events":true}'
+    env:
+    - name: HF_HOME
+      value: /data/modelpreload/huggingface
+    - name: HF_HUB_CACHE
+      value: /data/modelpreload/huggingface
+    - name: HUGGINGFACE_HUB_CACHE
+      value: /data/modelpreload/huggingface
+    - name: HF_HUB_OFFLINE
+      value: '1'
+    - name: VLLM_USE_V2_MODEL_RUNNER
+      value: '1'
+    - name: VLLM_ENGINE_READY_TIMEOUT_S
+      value: '7200'
+    - name: DYN_SYSTEM_PORT
+      value: '9090'
+    - name: DYN_DISCOVERY_BACKEND
+      value: etcd
+    - name: DYN_EVENT_PLANE
+      value: zmq
+    - name: DYN_HEALTH_CHECK_ENABLED
+      value: "true"
+    - name: DYN_HEALTH_CHECK_REQUEST_TIMEOUT
+      value: '60'
+    - name: DYN_CANARY_WAIT_TIME
+      value: '10'
+    - name: WITH_NVIDIA_PEERMEM
+      value: '0'
+    - name: UCX_TLS
+      value: rc_x,rc,dc_x,dc,cuda_copy,cuda_ipc
+    - name: UCX_MEMTYPE_CACHE
+      value: "n"
+    - name: UCX_IB_GPU_DIRECT_RDMA
+      value: '1'
+    - name: UCX_RCACHE_MAX_UNRELEASED
+      value: '1024'
+    - name: NCCL_SOCKET_IFNAME
+      value: eth0
+    - name: GLOO_SOCKET_IFNAME
+      value: eth0
+    - name: VLLM_NIXL_SIDE_CHANNEL_HOST
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: VLLM_NIXL_SIDE_CHANNEL_PORT
+      value: '5600'
+    - name: DYN_NAMESPACE
+      value: cedana-glm53-pd
+    - name: ETCD_ENDPOINTS
+      value: http://dynamo-platform-etcd.dynamo-system.svc.cluster.local:2379
+    - name: NATS_SERVER
+      value: nats://dynamo-platform-nats.dynamo-system.svc.cluster.local:4222
+    - name: DYN_COMPONENT
+      value: VllmPrefillWorker
+    volumeMounts:
+    - name: tools
+      mountPath: /opt/glm53-tools
+      readOnly: true
+    - name: models
+      mountPath: /data/modelpreload/huggingface
+      readOnly: true
+    - name: shm
+      mountPath: /dev/shm
+    securityContext:
+      runAsUser: 0
+      capabilities:
+        add:
+        - IPC_LOCK
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 9090
+      periodSeconds: 10
+      timeoutSeconds: 20
+      failureThreshold: 3
+    name: prefill
+    resources:
+      requests:
+        cpu: '8'
+        memory: 192Gi
+        nvidia.com/gpu: 8
+        rdma/infiniband: 1
+      limits:
+        nvidia.com/gpu: 8
+        rdma/infiniband: 1
+  volumes:
+  - name: tools
+    configMap:
+      name: cedana-glm53-pd-tools
+  - name: models
+    persistentVolumeClaim:
+      claimName: hf-models-rwx
+      readOnly: true
+  - name: shm
+    emptyDir:
+      medium: Memory
+      sizeLimit: 128Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cedana-glm53-pd-decode
+  namespace: default
+  labels:
+    together.ai/cedana-eval: "true"
+    together.ai/cedana-pd: glm53
+    together.ai/cedana-pd-role: decode
+  annotations:
+    together.ai/source-revision: togethercomputer/together-dynamo@1a4796f903984d601991fa14d7444fe73edc466a
+    together.ai/model-artifact: togethercomputer/GLM-5.3-TQuark-C2P-GPTQ-NVFP4@a1e9d28594bc905c89261ffc01fd0c4a8232252a
+spec:
+  serviceAccountName: cedana-tester
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: gpu-dp-ckck8-zl9zz
+  terminationGracePeriodSeconds: 300
+  containers:
+  - image: 598726163780.dkr.ecr.us-west-2.amazonaws.com/smg@sha256:a81eebc35ed6581ca886e8f8912e97957b1101359a509f27d29e0d479f60e0de
+    imagePullPolicy: Never
+    command:
+    - python3
+    - -u
+    - /opt/glm53-tools/launch.py
+    args:
+    - --role
+    - decode
+    - --gpu-prelude
+    - --
+    - python3
+    - -u
+    - -m
+    - dynamo.vllm
+    - --model
+    - /data/modelpreload/huggingface/models--togethercomputer--GLM-5.3-TQuark-C2P-GPTQ-NVFP4/snapshots/a1e9d28594bc905c89261ffc01fd0c4a8232252a
+    - --served-model-name
+    - cedana-eval-glm53-pd
+    - --block-size
+    - '64'
+    - --compilation-config
+    - '{"cudagraph_mode":"FULL_DECODE_ONLY"}'
+    - --cpu-distributed-timeout-seconds
+    - '600'
+    - --data-parallel-size
+    - '8'
+    - --data-parallel-size-local
+    - '8'
+    - --disable-custom-all-reduce
+    - --disaggregation-mode
+    - decode
+    - --dyn-reasoning-parser
+    - glm45
+    - --dyn-tool-call-parser
+    - glm47
+    - --enable-ep-weight-filter
+    - --enable-expert-parallel
+    - --gpu-memory-utilization
+    - '0.94'
+    - --jit-monitor-verbose
+    - --kernel-config
+    - '{"enable_flashinfer_autotune":false}'
+    - --kv-cache-dtype
+    - fp8
+    - --language-model-only
+    - --load-format
+    - auto
+    - --max-cudagraph-capture-size
+    - '96'
+    - --max-model-len
+    - '1048576'
+    - --max-num-batched-tokens
+    - '96'
+    - --max-num-seqs
+    - '16'
+    - --no-disable-hybrid-kv-cache-manager
+    - --no-enable-prefix-caching
+    - --safetensors-load-strategy
+    - prefetch
+    - --shutdown-timeout
+    - '300'
+    - --speculative-config
+    - '{"method":"mtp","num_speculative_tokens":5,"use_local_argmax_reduction":true}'
+    - --tensor-parallel-size
+    - '1'
+    - --trust-remote-code
+    - --kv-transfer-config
+    - '{"kv_connector":"NixlConnector","kv_role":"kv_consumer"}'
+    env:
+    - name: HF_HOME
+      value: /data/modelpreload/huggingface
+    - name: HF_HUB_CACHE
+      value: /data/modelpreload/huggingface
+    - name: HUGGINGFACE_HUB_CACHE
+      value: /data/modelpreload/huggingface
+    - name: HF_HUB_OFFLINE
+      value: '1'
+    - name: VLLM_USE_V2_MODEL_RUNNER
+      value: '1'
+    - name: VLLM_ENGINE_READY_TIMEOUT_S
+      value: '7200'
+    - name: DYN_SYSTEM_PORT
+      value: '9090'
+    - name: DYN_DISCOVERY_BACKEND
+      value: etcd
+    - name: DYN_EVENT_PLANE
+      value: zmq
+    - name: DYN_HEALTH_CHECK_ENABLED
+      value: "true"
+    - name: DYN_HEALTH_CHECK_REQUEST_TIMEOUT
+      value: '60'
+    - name: DYN_CANARY_WAIT_TIME
+      value: '10'
+    - name: WITH_NVIDIA_PEERMEM
+      value: '0'
+    - name: UCX_TLS
+      value: rc_x,rc,dc_x,dc,cuda_copy,cuda_ipc
+    - name: UCX_MEMTYPE_CACHE
+      value: "n"
+    - name: UCX_IB_GPU_DIRECT_RDMA
+      value: '1'
+    - name: UCX_RCACHE_MAX_UNRELEASED
+      value: '1024'
+    - name: NCCL_SOCKET_IFNAME
+      value: eth0
+    - name: GLOO_SOCKET_IFNAME
+      value: eth0
+    - name: VLLM_NIXL_SIDE_CHANNEL_HOST
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: VLLM_NIXL_SIDE_CHANNEL_PORT
+      value: '5600'
+    - name: DYN_NAMESPACE
+      value: cedana-glm53-pd
+    - name: ETCD_ENDPOINTS
+      value: http://dynamo-platform-etcd.dynamo-system.svc.cluster.local:2379
+    - name: NATS_SERVER
+      value: nats://dynamo-platform-nats.dynamo-system.svc.cluster.local:4222
+    - name: DYN_COMPONENT
+      value: VllmDecodeWorker
+    volumeMounts:
+    - name: tools
+      mountPath: /opt/glm53-tools
+      readOnly: true
+    - name: models
+      mountPath: /data/modelpreload/huggingface
+      readOnly: true
+    - name: shm
+      mountPath: /dev/shm
+    securityContext:
+      runAsUser: 0
+      capabilities:
+        add:
+        - IPC_LOCK
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 9090
+      periodSeconds: 10
+      timeoutSeconds: 20
+      failureThreshold: 3
+    name: decode
+    resources:
+      requests:
+        cpu: '8'
+        memory: 192Gi
+        nvidia.com/gpu: 8
+        rdma/infiniband: 1
+      limits:
+        nvidia.com/gpu: 8
+        rdma/infiniband: 1
+  volumes:
+  - name: tools
+    configMap:
+      name: cedana-glm53-pd-tools
+  - name: models
+    persistentVolumeClaim:
+      claimName: hf-models-rwx
+      readOnly: true
+  - name: shm
+    emptyDir:
+      medium: Memory
+      sizeLimit: 128Gi

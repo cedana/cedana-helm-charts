@@ -1,5 +1,0 @@
-reason=baseline
-wall_epoch=1792675154.507250159
-mono_uptime=581859.21
-iso=20261022T131914.503615378Z
-trigger_s=8
