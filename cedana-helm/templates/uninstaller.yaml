@@ -101,6 +101,8 @@ spec:
                 echo "I am the leader ($POD_NAME)";
                 echo "Removing cedana.ai/not-ready:NoSchedule taint from all nodes";
                 kubectl taint nodes --all cedana.ai/not-ready:NoSchedule-;
+                echo "Removing the P/D disagg webhook";
+                kubectl delete mutatingwebhookconfiguration cedana-pd-disagg --ignore-not-found;
                 echo "Deleting the namespace ($POD_NAMESPACE)...";
                 kubectl delete namespace $POD_NAMESPACE --wait=true;
               else
