@@ -140,6 +140,12 @@ controllerManager:
   # off a node until Cedana is ready). Set false to manage node readiness yourself;
   # the controller then never adds or removes the taint.
   taintNodes: true
+  # Disaggregated prefill/decode worker restores and scaling: the controller sets up pods
+  # annotated cedana.ai/pd-disagg (Dynamo snapshot mode, Cedana's vLLM/SGLang patch, the Cedana
+  # env). When enabled, the controller creates the webhook's Service, self-signed cert and
+  # MutatingWebhookConfiguration itself; turning it off removes them on the controller's next start.
+  pdDisaggWebhook:
+    enabled: false
   autoscaling:
     enabled: false
     replicaCount: 1
