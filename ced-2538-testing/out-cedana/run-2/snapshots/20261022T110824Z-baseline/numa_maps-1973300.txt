@@ -1,0 +1,42 @@
+5f6f43729000 default file=/usr/bin/bash
+5f6f43759000 default file=/usr/bin/bash anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+5f6f43848000 default file=/usr/bin/bash
+5f6f4387d000 default file=/usr/bin/bash anon=4 dirty=4 active=0 N1=4 kernelpagesize_kB=4
+5f6f43881000 default file=/usr/bin/bash anon=9 dirty=9 active=0 N1=9 kernelpagesize_kB=4
+5f6f4388a000 default anon=4 dirty=4 active=0 N1=4 kernelpagesize_kB=4
+5f6f58325000 default heap anon=47 dirty=47 active=0 N1=47 kernelpagesize_kB=4
+7d2650d00000 default file=/usr/lib/locale/locale-archive
+7d2650feb000 default anon=3 dirty=3 active=0 N1=3 kernelpagesize_kB=4
+7d2650fee000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6
+7d2651016000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=16 mapmax=33 active=0 N0=15 N1=1 kernelpagesize_kB=4
+7d265119e000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6
+7d26511ed000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=4 dirty=4 active=0 N1=4 kernelpagesize_kB=4
+7d26511f1000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+7d26511f3000 default anon=6 dirty=6 active=0 N1=6 kernelpagesize_kB=4
+7d2651200000 default file=/usr/local/lib/libcuda.so.1
+7d26512ea000 default file=/usr/local/lib/libcuda.so.1
+7d26515ba000 default file=/usr/local/lib/libcuda.so.1
+7d265165a000 default file=/usr/local/lib/libcuda.so.1 anon=15 dirty=15 active=0 N1=15 kernelpagesize_kB=4
+7d2651669000 default file=/usr/local/lib/libcuda.so.1 anon=5 dirty=5 active=0 N1=5 kernelpagesize_kB=4
+7d265166e000 default anon=12 dirty=12 active=0 N1=12 kernelpagesize_kB=4
+7d265167c000 default anon=5 dirty=5 active=0 N1=5 kernelpagesize_kB=4
+7d2651683000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6
+7d2651693000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6
+7d2651712000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6
+7d265176a000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+7d265176b000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+7d265176c000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4
+7d265177a000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4
+7d265178d000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4
+7d265179b000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4 anon=4 dirty=4 active=0 N1=4 kernelpagesize_kB=4
+7d265179f000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4 anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+7d26517aa000 default file=/usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache
+7d26517b1000 default anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+7d26517b3000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7d26517b4000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7d26517df000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7d26517e9000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+7d26517eb000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+7fff36e7f000 default stack anon=7 dirty=7 active=0 N1=7 kernelpagesize_kB=4
+7fff36f9f000 default
+7fff36fa3000 default

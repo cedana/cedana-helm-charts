@@ -1,0 +1,30 @@
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner.py", line 547, in __init__
+    self.pre_model_load_memory = self.init_torch_distributed()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner.py", line 1302, in init_torch_distributed
+    init_distributed_environment(
+  File "/sgl-workspace/sglang/python/sglang/srt/distributed/parallel_state.py", line 1948, in init_distributed_environment
+    torch.distributed.init_process_group(
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+    func_return = func(*args, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/distributed_c10d.py", line 1831, in init_process_group
+    store, rank, world_size = next(rendezvous_iterator)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/rendezvous.py", line 232, in _tcp_rendezvous_handler
+    store = _create_c10d_store(
+            ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/rendezvous.py", line 199, in _create_c10d_store
+    return TCPStore(
+           ^^^^^^^^^
+torch.distributed.DistNetworkError: The client socket has timed out after 600000ms while trying to connect to (0.0.0.0, 35373).
+
+[2026-10-22 03:03:10] Received sigquit from a child process. It usually means the child failed.
+[2026-10-22 03:03:10] kill_process_tree called: parent_pid=54, include_parent=True, pid=54
+bash: line 34:    54 Killed                  python3 -m sglang.launch_server --model-path "$MODEL_PATH" --served-model-name zai-org/GLM-5.2 --tp-size 8 --host 0.0.0.0 --port 30000 --context-length 262144 --trust-remote-code --kv-cache-dtype fp8_e4m3 --mem-fraction-static 0.85 --chunked-prefill-size 8192 --max-running-requests 32 --enable-hierarchical-cache --hicache-size 128 --hicache-write-policy write_through_selective --hicache-io-backend direct --enable-metrics --enable-cache-report --enable-request-time-stats-logging 2>&1
+        55 Done                    | tee /logs/server.log
+[ced-2538] server exited; logs ready in /logs
+[cedana] GPU worker exited prematurely.

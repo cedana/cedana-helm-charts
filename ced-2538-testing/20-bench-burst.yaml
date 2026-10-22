@@ -44,7 +44,7 @@ spec:
         env:
         # Point at the server under test. Switch to glm52-native for the baseline run; everything
         # else must stay identical or the two sides are not comparable.
-        - {name: HOST, value: "glm52-native"}   # <-- glm52-cedana for the cedana run
+        - {name: HOST, value: "glm52-cedana"}   # <-- glm52-cedana for the cedana run
         - {name: PORT, value: "30000"}
         - {name: OUT,  value: "/out/bench.jsonl"}
         # The two prompt lengths from the report. Exact, because the driver sends input_ids

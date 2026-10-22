@@ -1,0 +1,11 @@
+[restored] 02:29:13 clearing previous experiment pods
+pod "glm52-cedana" deleted from cedana-systems namespace
+pod "ced2538-watcher" deleted from cedana-systems namespace
+job.batch "ced2538-bench" deleted from cedana-systems namespace
+[restored] 02:29:16 phase: cold-start
+pod/glm52-cedana created
+service/glm52-cedana unchanged
+[restored] 02:41:33 cold glm52-cedana Ready
+[restored] 02:41:34 phase: checkpoint
+[restored] 02:41:35 FAIL: checkpoint not accepted: {"message":"pod e2a8d66a-961d-43ea-9f67-10607ea4220d not found; pass pod_name and namespace if it was just created"}
+404

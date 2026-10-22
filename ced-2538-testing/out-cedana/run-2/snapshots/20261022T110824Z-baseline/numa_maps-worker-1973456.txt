@@ -1,0 +1,36 @@
+33b68b29d000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=2 mapmax=58 N0=2 kernelpagesize_kB=4
+33b68b29f000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=42 mapmax=59 N0=42 kernelpagesize_kB=4
+33b68b2c9000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=11 mapmax=58 N0=11 kernelpagesize_kB=4
+33b68b2d5000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+33b68b2d7000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+33b68b2d9000 default anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+33b68b2e4000 default file=/usr/lib/x86_64-linux-gnu/libselinux.so.1 mapped=6 mapmax=38 N0=6 kernelpagesize_kB=4
+33b68b2ea000 default file=/usr/lib/x86_64-linux-gnu/libselinux.so.1 mapped=16 mapmax=38 N0=16 kernelpagesize_kB=4
+33b68b304000 default file=/usr/lib/x86_64-linux-gnu/libselinux.so.1 mapped=7 mapmax=38 N0=7 kernelpagesize_kB=4
+33b68b30b000 default file=/usr/lib/x86_64-linux-gnu/libselinux.so.1
+33b68b30c000 default file=/usr/lib/x86_64-linux-gnu/libselinux.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+33b68b30d000 default file=/usr/lib/x86_64-linux-gnu/libselinux.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+33b68b30e000 default
+33b68b310000 default file=/usr/lib/x86_64-linux-gnu/libpcre2-8.so.0.10.4 mapped=2 mapmax=38 N0=2 kernelpagesize_kB=4
+33b68b312000 default file=/usr/lib/x86_64-linux-gnu/libpcre2-8.so.0.10.4 mapped=16 mapmax=38 N0=16 kernelpagesize_kB=4
+33b68b37d000 default file=/usr/lib/x86_64-linux-gnu/libpcre2-8.so.0.10.4
+33b68b3a5000 default file=/usr/lib/x86_64-linux-gnu/libpcre2-8.so.0.10.4 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+33b68b3a6000 default file=/usr/lib/x86_64-linux-gnu/libpcre2-8.so.0.10.4 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+33b68b3a7000 default anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+33b68b400000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=40 mapmax=59 N0=40 kernelpagesize_kB=4
+33b68b428000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=293 mapmax=61 N0=293 kernelpagesize_kB=4
+33b68b5bd000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=48 mapmax=60 N0=43 N1=5 kernelpagesize_kB=4
+33b68b615000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6
+33b68b616000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=4 dirty=4 active=0 N0=4 kernelpagesize_kB=4
+33b68b61a000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+33b68b61c000 default anon=5 dirty=5 active=0 N0=5 kernelpagesize_kB=4
+33b68b800000 default file=/usr/lib/locale/locale-archive mapped=100 mapmax=32 active=0 N0=100 kernelpagesize_kB=4
+6231779ac000 default file=/usr/bin/nsenter mapped=2 mapmax=18 active=0 N1=2 kernelpagesize_kB=4
+6231779ae000 default file=/usr/bin/nsenter mapped=2 mapmax=18 active=0 N1=2 kernelpagesize_kB=4
+6231779b0000 default file=/usr/bin/nsenter mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+6231779b2000 default file=/usr/bin/nsenter anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+6231779b3000 default file=/usr/bin/nsenter anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+6231b5c52000 default heap anon=4 dirty=4 active=0 N0=4 kernelpagesize_kB=4
+7ffce25e3000 default stack anon=5 dirty=5 active=0 N0=5 kernelpagesize_kB=4
+7ffce2682000 default
+7ffce2686000 default

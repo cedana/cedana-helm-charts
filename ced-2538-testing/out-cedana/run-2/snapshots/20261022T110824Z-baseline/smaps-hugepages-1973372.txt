@@ -1,0 +1,7 @@
+KernelPageSize: 17912 kB
+Rss: 1019232 kB
+SwapPss: 0 kB
+AnonHugePages: 0 kB
+Pss_Dirty: 1011600 kB
+Locked: 16 kB
+Pss: 1014369 kB

@@ -1,0 +1,284 @@
+#!/usr/bin/env bpftrace
+/*
+ * cuda-copy-hist.bt -- CED-2538. Per-call size and latency distributions for the driver calls a
+ * long-prompt prefill burst actually makes, on BOTH sides of the split-process design, so cedana
+ * overhead can be separated from driver cost rather than inferred.
+ *
+ * WHY THIS AND NOT THE BUILT-IN PROFILER: CEDANA_GPU_PROFILING_ENABLED keeps only call_count and
+ * total_duration_cycles per function (src/common/cuda_tsc_profiler.h), i.e. averages, and dumps
+ * only on SIGTERM. A multi-second stall among millions of calls does not move a mean. This script
+ * keeps distributions and prints an outlier line per slow call, which is the whole point.
+ *
+ * ---------------------------------------------------------------------------------------------
+ * SYMBOL NAMES -- READ THIS BEFORE EDITING
+ *
+ * src/intercepter/hooks/driver_api.cpp:50-67 remaps every memcpy entry point to its _v2 name:
+ *     #define cuMemcpyDtoHAsync cuMemcpyDtoHAsync_v2
+ * so libcedana-gpu.so exports cuMemcpyDtoHAsync_v2 and NOT cuMemcpyDtoHAsync. A probe on the
+ * unsuffixed name attaches to nothing and prints nothing -- it does not error, it just silently
+ * reports no copies, which reads exactly like "the staging path is not being taken". Do not
+ * trust an empty result without checking attachment first:
+ *     nm -D /usr/local/lib/libcedana-gpu.so | grep -E 'cuMemcpy(Dto|Hto)[HD]'
+ * cuMemHostRegister and cuModuleLoad* are NOT remapped, so those stay unsuffixed on the
+ * interceptor. The real libcuda exports both cuMemHostRegister and cuMemHostRegister_v2, hence
+ * the wildcard on that side.
+ *
+ * PATHS are substituted by watcher/attach.sh, which resolves them from /proc/<pid>/maps rather
+ * than assuming a layout -- the interceptor is bind-mounted into the application container by the
+ * runtime shim, so its path differs between the host's and the container's view, and a uprobe
+ * attaches by inode. /proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 may be empty if no worker had libcuda mapped yet, in which case
+ * attach.sh drops that section; expect only INTERCEPTOR rows then.
+ * ---------------------------------------------------------------------------------------------
+ *
+ * READING IT. "comm" tells you which side a row came from: the application ranks show as python3 /
+ * sglang::*, the GPU worker shows as cedana-gpu-cont (comm truncates at 15 chars).
+ *
+ *   @copy_bytes[...]      size distribution per function. THE fingerprint: a tall spike at exactly
+ *                         16777216 means copies are being split by kMaxShmCopyBytes
+ *                         (hooks/driver_api.cpp:2453), which only happens when isHostMem() is
+ *                         false -- i.e. the host buffer is not a published region and every chunk
+ *                         costs a segment allocation, a round trip and an extra host->host memcpy.
+ *                         @copy_16m counts those exactly. Native has no such spike at all.
+ *   @copy_us[...]        latency distribution per function.
+ *   @hostreg_us          cuMemHostRegister latency. Watch for ~1 s: host_mem.cpp:907-913 retries
+ *                        a shared-anonymous pool that another process maps every 50 ms for up to
+ *                        1 s, then fails. TP8 means 8 rank processes, so this is reachable.
+ *   @hostreg_fail[ret]   non-zero CUresult from cuMemHostRegister. ANY row here is significant:
+ *                        every later copy on that buffer takes the staging path above. 801 is
+ *                        CUDA_ERROR_NOT_SUPPORTED, 712 is HOST_MEMORY_ALREADY_REGISTERED,
+ *                        208 is ALREADY_MAPPED.
+ *   @modload_us          cuModuleLoad/LoadData/LoadFatBinary latency, and @modload_n its count.
+ *                        If the tail decays over a burst run this is the suspect; if it persists
+ *                        it is not.
+ *   SLOW lines           any single call over THRESH_MS, with mono+wall timestamps so it joins to
+ *                        the bench's JSONL and the watcher's snapshots.
+ *
+ * Run (attach.sh does this for you):
+ *   bpftrace -f text cuda-copy-hist.rendered.bt
+ */
+
+BEGIN
+{
+	@THRESH_MS = 50;                /* outlier line above this; raise if the log floods */
+	@CHUNK = (uint64)16777216;      /* kMaxShmCopyBytes, hooks/driver_api.cpp:2453 */
+	printf("# ced-2538 cuda-copy-hist attached; outliers above %d ms\n", @THRESH_MS);
+	printf("# mono=<boot ns> wall=<epoch s> EVENT comm pid tid detail\n");
+}
+
+/* ------------------------------------------------------------------ interceptor: host copies */
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemcpyDtoHAsync_v2,
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemcpyHtoDAsync_v2,
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemcpyDtoH_v2,
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemcpyHtoD_v2
+{
+	@cstart[tid] = nsecs;
+	/* arg2 is byteCount for all four: (dst, src, byteCount[, stream]) */
+	@csize[tid] = arg2;
+	@cfunc[tid] = func;
+}
+
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemcpyDtoHAsync_v2,
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemcpyHtoDAsync_v2,
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemcpyDtoH_v2,
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemcpyHtoD_v2
+/@cstart[tid]/
+{
+	$us = (nsecs - @cstart[tid]) / 1000;
+	$sz = @csize[tid];
+	@copy_bytes[@cfunc[tid]] = hist($sz);
+	@copy_us[@cfunc[tid]] = hist($us);
+	@copy_n[comm, @cfunc[tid]] = count();
+	@copy_total_bytes[comm] = sum($sz);
+	if ($sz == @CHUNK) {
+		@copy_16m[comm, @cfunc[tid]] = count();
+	}
+	if ($us > @THRESH_MS * 1000) {
+		printf("mono=%llu wall=%s SLOW-COPY %s %d %d %s bytes=%llu us=%llu\n",
+		       nsecs, strftime("%s.%f", nsecs),
+		       comm, pid, tid, @cfunc[tid], $sz, $us);
+	}
+	delete(@cstart[tid]); delete(@csize[tid]); delete(@cfunc[tid]);
+}
+
+/* -------------------------------------------------- interceptor: host memory registration */
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemHostRegister
+{
+	@hrstart[tid] = nsecs;
+	@hrsize[tid] = arg1;            /* (void* p, size_t bytesize, unsigned Flags) */
+	@hrptr[tid] = arg0;
+	printf("mono=%llu wall=%s HOSTREG-ENTER %s %d %d ptr=0x%lx bytes=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs),
+	       comm, pid, tid, arg0, arg1);
+}
+
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemHostRegister
+/@hrstart[tid]/
+{
+	$us = (nsecs - @hrstart[tid]) / 1000;
+	@hostreg_us = hist($us);
+	@hostreg_bytes = hist(@hrsize[tid]);
+	@hostreg_n[comm] = count();
+	if (retval != 0) {
+		@hostreg_fail[retval] = count();
+	}
+	/* Always printed: there are few of these and each one decides whether every subsequent copy
+	 * on that buffer runs in place or through the shm segment. */
+	printf("mono=%llu wall=%s HOSTREG-EXIT %s %d %d ptr=0x%lx bytes=%llu ret=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs),
+	       comm, pid, tid, @hrptr[tid], @hrsize[tid], retval, $us);
+	delete(@hrstart[tid]); delete(@hrsize[tid]); delete(@hrptr[tid]);
+}
+
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemHostUnregister
+{
+	@hostunreg_n[comm] = count();
+}
+
+/* ------------------------------------------------- interceptor: PINNED HOST ALLOCATION
+ * The native run showed ZERO cuMemHostRegister calls while HiCache was plainly doing async host
+ * copies, which means the pool is ALLOCATED pinned (cuMemHostAlloc / cuMemAllocHost) rather than
+ * registered after the fact. Those are different entry points, so the registration probes above
+ * see nothing and the real pinning cost was invisible. Both exist in libcuda and in the
+ * interceptor, so this attaches on both sides.
+ *   Note the asymmetry in names: cuMemAllocHost is remapped to _v2 by the interceptor, while
+ *   cuMemHostAlloc and cuMemFreeHost are not.
+ * Watch @pinalloc_bytes for the 128 GiB pool arriving, and @pinalloc_us for how long pinning it
+ * blocks -- a multi-second pin inside a request's forward is a direct TTFT stall. */
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemHostAlloc,
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemAllocHost_v2
+{
+	@pastart[tid] = nsecs;
+	@pasize[tid] = arg1;            /* (void** pp, size_t bytesize [, unsigned flags]) */
+	@pafunc[tid] = func;
+}
+
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemHostAlloc,
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemAllocHost_v2
+/@pastart[tid]/
+{
+	$us = (nsecs - @pastart[tid]) / 1000;
+	@pinalloc_us[@pafunc[tid]] = hist($us);
+	@pinalloc_bytes[@pafunc[tid]] = hist(@pasize[tid]);
+	@pinalloc_n[comm, @pafunc[tid]] = count();
+	@pinalloc_total[comm] = sum(@pasize[tid]);
+	if (retval != 0) {
+		@pinalloc_fail[retval] = count();
+	}
+	/* Always printed: these are few, large, and each one decides how a whole pool behaves. */
+	printf("mono=%llu wall=%s PINALLOC %s %d %d %s bytes=%llu ret=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs),
+	       comm, pid, tid, @pafunc[tid], @pasize[tid], retval, $us);
+	delete(@pastart[tid]); delete(@pasize[tid]); delete(@pafunc[tid]);
+}
+
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuMemFreeHost
+{
+	@pinfree_n[comm] = count();
+}
+
+/* --------------------------------------------------------- interceptor: module / JIT loading */
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuModuleLoad,
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuModuleLoadData,
+uprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuModuleLoadFatBinary
+{
+	@mstart[tid] = nsecs;
+	@mfunc[tid] = func;
+}
+
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuModuleLoad,
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuModuleLoadData,
+uretprobe:/proc/1049080/root/usr/local/lib/libcuda.so.1:cuModuleLoadFatBinary
+/@mstart[tid]/
+{
+	$us = (nsecs - @mstart[tid]) / 1000;
+	@modload_us[@mfunc[tid]] = hist($us);
+	@modload_n[comm, @mfunc[tid]] = count();
+	if ($us > @THRESH_MS * 1000) {
+		printf("mono=%llu wall=%s SLOW-MODLOAD %s %d %d %s us=%llu ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs),
+		       comm, pid, tid, @mfunc[tid], $us, retval);
+	}
+	delete(@mstart[tid]); delete(@mfunc[tid]);
+}
+
+/* >>>LIBCUDA_SECTION (watcher/attach.sh deletes to <<<LIBCUDA_SECTION when no worker libcuda) */
+/* --------------------------------------------------------------- real driver, worker-side cost
+ * Same calls as measured by the driver itself. @copy_us minus @drv_copy_us for the same size
+ * bucket is cedana's share; without this section a slow copy cannot be blamed on either side.
+ * attach.sh removes this block when no worker has libcuda mapped. */
+uprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemcpyDtoHAsync_v2,
+uprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemcpyHtoDAsync_v2,
+uprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemcpyDtoH_v2,
+uprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemcpyHtoD_v2
+{
+	@dstart[tid] = nsecs;
+	@dsize[tid] = arg2;
+	@dfunc[tid] = func;
+}
+
+uretprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemcpyDtoHAsync_v2,
+uretprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemcpyHtoDAsync_v2,
+uretprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemcpyDtoH_v2,
+uretprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemcpyHtoD_v2
+/@dstart[tid]/
+{
+	$us = (nsecs - @dstart[tid]) / 1000;
+	@drv_copy_us[@dfunc[tid]] = hist($us);
+	@drv_copy_bytes[@dfunc[tid]] = hist(@dsize[tid]);
+	@drv_copy_n[comm, @dfunc[tid]] = count();
+	delete(@dstart[tid]); delete(@dsize[tid]); delete(@dfunc[tid]);
+}
+
+uprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemHostRegister*
+{
+	@drv_hrstart[tid] = nsecs;
+}
+
+uretprobe:/proc/1049021/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08:cuMemHostRegister*
+/@drv_hrstart[tid]/
+{
+	$us = (nsecs - @drv_hrstart[tid]) / 1000;
+	@drv_hostreg_us = hist($us);
+	printf("mono=%llu wall=%s DRV-HOSTREG %s %d %d ret=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs),
+	       comm, pid, tid, retval, $us);
+	delete(@drv_hrstart[tid]);
+}
+
+/* <<<LIBCUDA_SECTION */
+
+/* ----------------------------------------------------------------------------- periodic dump
+ * Printed and cleared every 10 s so each burst window can be read on its own; a single cumulative
+ * histogram at exit would smear the bursts into the idle gaps and hide the thing we are after. */
+interval:s:10
+{
+	printf("\n===== ced-2538 window end mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@copy_n); print(@copy_16m); print(@copy_total_bytes);
+	print(@copy_bytes); print(@copy_us);
+	print(@hostreg_n); print(@hostreg_fail); print(@hostreg_us); print(@hostreg_bytes);
+	print(@pinalloc_n); print(@pinalloc_total); print(@pinalloc_us); print(@pinalloc_bytes);
+	print(@modload_n); print(@modload_us);
+	print(@drv_copy_n); print(@drv_copy_us); print(@drv_copy_bytes); print(@drv_hostreg_us);
+	clear(@copy_n); clear(@copy_16m); clear(@copy_total_bytes);
+	clear(@copy_bytes); clear(@copy_us);
+	clear(@hostreg_us); clear(@hostreg_bytes);
+	clear(@pinalloc_us); clear(@pinalloc_bytes);
+	clear(@modload_n); clear(@modload_us);
+	clear(@drv_copy_n); clear(@drv_copy_us); clear(@drv_copy_bytes); clear(@drv_hostreg_us);
+	/* @hostreg_n, @hostreg_fail and @hostunreg_n are deliberately NOT cleared: they are small,
+	 * cumulative, and a single failure anywhere in the run is the headline result. */
+}
+
+END
+{
+	printf("\n===== ced-2538 cumulative =====\n");
+	print(@hostreg_n); print(@hostreg_fail); print(@hostunreg_n);
+	print(@pinalloc_n); print(@pinalloc_total); print(@pinalloc_fail); print(@pinfree_n);
+	clear(@cstart); clear(@csize); clear(@cfunc);
+	clear(@hrstart); clear(@hrsize); clear(@hrptr);
+	clear(@mstart); clear(@mfunc);
+	clear(@pastart); clear(@pasize); clear(@pafunc);
+	clear(@dstart); clear(@dsize); clear(@dfunc); clear(@drv_hrstart);
+	clear(@THRESH_MS); clear(@CHUNK);
+}

@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: glm52-cedana
+  namespace: cedana-systems
+  labels:
+    app: glm52-cedana
+    ced-2538/side: cedana
+  annotations:
+    ced-2538/hicache-gb: '128'
+    ced-2538/hicache-io-backend: kernel
+spec:
+  restartPolicy: Never
+  nodeName: gpu-dp-ckck8-4pcmf
+  runtimeClassName: cedana
+  serviceAccountName: cedana-tester
+  automountServiceAccountToken: false
+  terminationGracePeriodSeconds: 120
+  containers:
+  - name: server
+    image: lmsysorg/sglang:v0.5.15.post1-cu129
+    imagePullPolicy: IfNotPresent
+    command:
+    - bash
+    - -c
+    args:
+    - "set -o pipefail\n# Resolve the Hub snapshot directory instead of hardcoding\
+      \ a hash; 01-model-fetch.yaml puts\n# it here. Override with MODEL_PATH.\nif\
+      \ [ -z \"${MODEL_PATH:-}\" ]; then\n  MODEL_PATH=$(ls -d /data/modelpreload/huggingface/models--*GLM-5.2*/snapshots/*/\
+      \ 2>/dev/null | head -1)\nfi\nif [ -z \"$MODEL_PATH\" ]; then\n  echo \"[ced-2538]\
+      \ no GLM-5.2 snapshot under /data/modelpreload/huggingface; available:\"\n \
+      \ ls -d /data/modelpreload/huggingface/models--* 2>/dev/null | sed 's/^/  /'\n\
+      \  echo \"[ced-2538] run 01-model-fetch.yaml first, or set MODEL_PATH\"\n  sleep\
+      \ infinity\nfi\necho \"[ced-2538] serving $MODEL_PATH\"\npython3 -m sglang.launch_server\
+      \ \\\n  --model-path \"$MODEL_PATH\" \\\n  --served-model-name zai-org/GLM-5.2\
+      \ \\\n  --tp-size 8 \\\n  --host 0.0.0.0 \\\n  --port 30000 \\\n  --context-length\
+      \ 262144 \\\n  --trust-remote-code \\\n  --kv-cache-dtype fp8_e4m3 \\\n  --mem-fraction-static\
+      \ 0.85 \\\n  --chunked-prefill-size 8192 \\\n  --max-running-requests 32 \\\n\
+      \  --enable-hierarchical-cache \\\n  --hicache-size 128 \\\n  --hicache-write-policy\
+      \ write_through_selective \\\n  --hicache-io-backend kernel \\\n  --enable-metrics\
+      \ \\\n  --enable-cache-report \\\n  --enable-request-time-stats-logging \\\n\
+      \  2>&1\n# No `| tee /logs/server.log`: cedana force-replaces the /logs mount\n\
+      # (FORCE_PERSISTENT_MOUNTS), and if tee dies the engine takes a SIGPIPE on its\
+      \ next\n# write. Output goes to stdout only; collect.sh saves it with `kubectl\
+      \ logs`.\necho '[ced-2538] server exited'\nsleep infinity\n"
+    env:
+    - name: SGLANG_ENABLE_HEALTH_ENDPOINT_GENERATION
+      value: '0'
+    - name: HF_HOME
+      value: /data/modelpreload/huggingface
+    - name: HF_HUB_CACHE
+      value: /data/modelpreload/huggingface
+    - name: HUGGINGFACE_HUB_CACHE
+      value: /data/modelpreload/huggingface
+    - name: HF_HUB_OFFLINE
+      value: '1'
+    - name: SGLANG_DG_CACHE_DIR
+      value: /tmp/dg-cache
+    - name: SGLANG_JIT_DEEPGEMM_FAST_WARMUP
+      value: '1'
+    - name: NCCL_DEBUG
+      value: INFO
+    - name: NCCL_DEBUG_SUBSYS
+      value: INIT,GRAPH
+    - name: CEDANA_PERSISTENT_MOUNTS
+      value: /dev/shm,/root/.triton,/root/.cache,/root/.nv
+    - name: CEDANA_CRIU_OPTS
+      value: '{"link_remap": true, "tcp_established": true}'
+    - name: CEDANA_CHECKPOINT_PATH
+      value: /scratch/60d2066e-ff9d-4a22-8bc2-092c22c288ab
+    ports:
+    - containerPort: 30000
+    resources:
+      limits:
+        nvidia.com/gpu: 8
+    volumeMounts:
+    - name: logs
+      mountPath: /logs
+    - name: models
+      mountPath: /data/modelpreload/huggingface
+    - name: dshm
+      mountPath: /dev/shm
+    readinessProbe:
+      httpGet:
+        path: /get_model_info
+        port: 30000
+      initialDelaySeconds: 120
+      periodSeconds: 15
+      timeoutSeconds: 10
+      failureThreshold: 480
+  volumes:
+  - name: logs
+    emptyDir: {}
+  - name: models
+    persistentVolumeClaim:
+      claimName: hf-models-rwx
+      readOnly: true
+  - name: dshm
+    emptyDir:
+      medium: Memory
+      sizeLimit: 64Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: glm52-cedana
+  namespace: cedana-systems
+spec:
+  selector:
+    app: glm52-cedana
+  ports:
+  - port: 30000
+    targetPort: 30000

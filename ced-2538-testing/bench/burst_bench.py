@@ -58,6 +58,9 @@ SLOW_MS = float(os.environ.get("SLOW_MS", "8000"))
 VOCAB_LO = int(os.environ.get("VOCAB_LO", "1000"))
 VOCAB_HI = int(os.environ.get("VOCAB_HI", "60000"))
 WARM_ONLY = os.environ.get("WARM_ONLY", "0") == "1"
+# Which stages to run, e.g. STAGES=C for a short load-back-only pass. Used for the expensive
+# kernel-launch probe, which must not be attached during the timed full run.
+STAGES = [x.strip().upper() for x in os.environ.get("STAGES", "A,B,C").split(",") if x.strip()]
 
 URL = f"http://{HOST}:{PORT}/generate"
 out_fh = None
@@ -234,9 +237,13 @@ def main():
     if WARM_ONLY:
         banner("WARM_ONLY set; stopping")
         return
-    stage_a()
-    stage_b()
-    stage_c()
+    banner(f"stages: {','.join(STAGES)}")
+    if "A" in STAGES:
+        stage_a()
+    if "B" in STAGES:
+        stage_b()
+    if "C" in STAGES:
+        stage_c()
     summarize()
     banner(f"all stages done; records in {OUT}")
 

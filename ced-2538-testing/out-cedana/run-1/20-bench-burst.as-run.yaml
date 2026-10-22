@@ -1,0 +1,77 @@
+# CED-2538: the load generator. Runs bench/burst_bench.py against whichever server is up.
+#
+# Why not sglang.bench_serving: it drives a steady request rate against a dataset, and the reported
+# symptom only appears under a burst of 127k-151k-token prompts with HiCache load-back. The arrival
+# pattern and the cache state ARE the repro, so they have to be controlled directly. bench_serving
+# also cannot re-send a byte-identical prompt on demand, which is what stage C needs to force a
+# genuine load-back rather than a fresh prefill. See the module docstring for the three stages.
+#
+# PREREQ -- the ConfigMap, in cedana-systems (see README step 3):
+#   kubectl -n cedana-systems create configmap ced2538-bench --from-file=ced-2538-testing/bench/
+#
+#   kubectl apply -n cedana-systems -f 20-bench-burst.yaml
+#
+# Watch it:   kubectl -n cedana-systems logs -f job/ced2538-bench
+# Collect:    kubectl -n cedana-systems cp <pod>:/out/bench.jsonl ./bench-<side>.jsonl
+#
+# A POD THAT STAYS UP after the stages finish, so /out survives for kubectl cp (an emptyDir dies
+# with the pod, and a Job's pod is the first thing a cleanup reaps).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ced2538-bench
+  namespace: cedana-systems
+spec:
+  backoffLimit: 0          # a failed run must not silently re-run against a different cache state
+  template:
+    metadata:
+      labels:
+        app: ced2538-bench
+    spec:
+      restartPolicy: Never
+      # Same node as the server: zl9zz is in use by other work. The client's CPU load is
+      # identical on both the native and cedana runs, so it cancels out in the A/B.
+      nodeName: gpu-dp-ckck8-4pcmf
+      containers:
+      - name: bench
+        image: lmsysorg/sglang:v0.5.15.post1-cu129
+        command: ["bash", "-c"]
+        args:
+        - |
+          python3 /bench/burst_bench.py
+          echo '[ced-2538] bench finished; /out/bench.jsonl ready for kubectl cp'
+          sleep infinity
+        env:
+        # Point at the server under test. Switch to glm52-native for the baseline run; everything
+        # else must stay identical or the two sides are not comparable.
+        - {name: HOST, value: "glm52-cedana"}   # <-- glm52-cedana for the cedana run
+        - {name: PORT, value: "30000"}
+        - {name: OUT,  value: "/out/bench.jsonl"}
+        # The two prompt lengths from the report. Exact, because the driver sends input_ids
+        # directly rather than text the server would re-tokenize to some nearby length.
+        - {name: LEN_A, value: "127000"}
+        - {name: LEN_B, value: "151000"}
+        # Stage B: 8 prompts released at once after 20 s of idle, 12 times. 8 x 151k = 1.2M tokens
+        # arriving instantaneously, which is what should push prefill into the tail.
+        - {name: BURST_K,      value: "8"}
+        - {name: BURST_ROUNDS, value: "12"}
+        - {name: BURST_IDLE_S, value: "20"}
+        # Stage C: 6 prefixes populated, 8 unrelated long requests to evict them GPU-side, then the
+        # 6 re-sent. Raise C_FLOOD if cached_tokens on the re-sends comes back ~= prompt_len
+        # (nothing was evicted, so nothing loaded back); lower it if cached_tokens comes back ~= 0
+        # (evicted past the host tier too, so there was nothing to load back either).
+        - {name: C_PREFIXES, value: "6"}
+        - {name: C_FLOOD,    value: "8"}
+        # Matches the watcher's TRIGGER_S so the bench's SLOW lines and the snapshots line up.
+        - {name: SLOW_MS, value: "8000"}
+        volumeMounts:
+        - {name: bench, mountPath: /bench}
+        - {name: out,   mountPath: /out}
+        resources:
+          requests: {cpu: "4", memory: 8Gi}
+          limits:   {cpu: "8", memory: 16Gi}
+      volumes:
+      - name: bench
+        configMap: {name: ced2538-bench}
+      - name: out
+        emptyDir: {}

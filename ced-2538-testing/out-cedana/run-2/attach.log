@@ -1,0 +1,17 @@
+[attach] 11:08:43 interceptor pids: 1973300 1973372 1973379 1973380 1973381 1973382 1973384 1973385 1973387 1973388 1973389 1973390 1973391 1973392 1973394 1973395 1973397 1973398 1973399 1973400 
+[attach] 11:08:43 worker pids:      1973154 1973383 1973393 1973423 1973425 1973432 1973434 1973440 1973441 1973448 1973449 1973456 1973457 1973464 1973465 1973472 1973473 1973480 1973481 1973488 1973489 1973495 1973497 1973503 1973505 1973509 1973510 1973512 1973513 1973516 1973517 1973519 1973520 1973530 1973531 1973533 1973534 
+[attach] 11:08:43 sglang pids:      1973300 1973372 1973379 1973380 1973381 1973382 1973384 1973385 1973388 1973391 1973395 
+[attach] 11:08:43 interceptor is mounted as libcuda.so (matched by content)
+[attach] 11:08:43 side=cedana
+[attach] 11:08:43 LIB=/proc/1973300/root/usr/local/lib/libcuda.so.1
+[attach] 11:08:43 LIBCUDA=/proc/1973154/root/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08
+[attach] 11:08:43 symbol check on /proc/1973300/root/usr/local/lib/libcuda.so.1:
+  cuMemcpyDtoHAsync_v2         ok (1)
+  cuMemcpyHtoDAsync_v2         ok (1)
+  cuMemHostRegister            ok (1)
+  cuModuleLoadData             ok (1)
+[attach] 11:08:44 cuda-copy-hist: no ncclCommInit* in /proc/1973300/root/usr/local/lib/libcuda.so.1, NCCL section removed
+[attach] 11:08:44 launching cuda-copy-hist -> /out/cuda-copy-hist.cedana.20261022T110844Z.log
+[attach] 11:08:44 transport: no ncclCommInit* in /proc/1973300/root/usr/local/lib/libcuda.so.1, NCCL section removed
+[attach] 11:08:44 launching transport -> /out/transport.cedana.20261022T110844Z.log
+[attach] 11:08:44 running until terminated

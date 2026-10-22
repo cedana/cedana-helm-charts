@@ -1,0 +1,64 @@
+#!/usr/bin/env bpftrace
+/*
+ * kernel-launch.bt -- CED-2538. Kernel launch rate and latency.
+ *
+ * SEPARATE SCRIPT, AND OPT-IN, BECAUSE IT IS EXPENSIVE. cuLaunchKernel fires tens of thousands of
+ * times a second during inference; a uprobe/uretprobe pair on it costs roughly a microsecond each,
+ * so this perturbs the very latency it measures. Do NOT run it alongside a timed A/B. Run it for a
+ * short window against ONE side when the copy probes have gone quiet and you need to know what the
+ * GPU is actually being asked to do -- which is exactly the situation with
+ * --hicache-io-backend kernel, where load-back is a device kernel and not a cuMemcpy.
+ *
+ * Deliberately no per-event printf: counts and histograms only, with one line for launches over
+ * THRESH_MS, or the log would be larger than the run.
+ *
+ *   @launch_us        latency distribution of the launch call itself (not the kernel's runtime)
+ *   @launch_n         launches per comm -- a cedana-vs-native count difference is the headline
+ *   @launch_gap_us    time between consecutive launches on a thread: during a load-back stall the
+ *                     interesting thing is the gaps, not the launches
+ *
+ * Run:  OUTDIR=/out SIDE=cedana sh /watcher/attach.sh /bpf/kernel-launch.bt
+ */
+
+BEGIN
+{
+	@THRESH_MS = 10;
+	printf("# ced-2538 kernel-launch attached (EXPENSIVE -- short windows only)\n");
+}
+
+uprobe:__LIB__:cuLaunchKernel,
+uprobe:__LIB__:cuLaunchKernelEx
+{
+	@lstart[tid] = nsecs;
+	@lfunc[tid] = func;
+	if (@llast[tid] > 0) {
+		@launch_gap_us[comm] = hist((nsecs - @llast[tid]) / 1000);
+	}
+}
+
+uretprobe:__LIB__:cuLaunchKernel,
+uretprobe:__LIB__:cuLaunchKernelEx
+/@lstart[tid]/
+{
+	$us = (nsecs - @lstart[tid]) / 1000;
+	@launch_us[@lfunc[tid]] = hist($us);
+	@launch_n[comm, @lfunc[tid]] = count();
+	if ($us > @THRESH_MS * 1000) {
+		printf("mono=%llu wall=%s SLOW-LAUNCH %s %d %d %s us=%llu\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @lfunc[tid], $us);
+	}
+	@llast[tid] = nsecs;
+	delete(@lstart[tid]); delete(@lfunc[tid]);
+}
+
+interval:s:10
+{
+	printf("\n===== ced-2538 launch window mono=%llu wall=%s =====\n", nsecs, strftime("%s.%f", nsecs));
+	print(@launch_n); print(@launch_us); print(@launch_gap_us);
+	clear(@launch_n); clear(@launch_us); clear(@launch_gap_us);
+}
+
+END
+{
+	clear(@lstart); clear(@lfunc); clear(@llast); clear(@THRESH_MS);
+}

@@ -267,6 +267,31 @@ or add an `extraEnv` passthrough to the chart — worth doing anyway if this nee
 - `nodeName` is commented out in both servers. Pin both sides to the same node, and check nothing
   else is on it first.
 
+## Findings so far
+
+**`CEDANA_GPU_PROFILING_ENABLED=1` kills the GPU worker on the kernel io-backend.** With
+`--hicache-io-backend kernel`, the interceptor's TSC profiler makes the worker die at startup:
+
+```
+GPU worker <pid> is not a child of this process (ECHILD)
+Worker <pid> (application pid N) failed with status 0, signal 13, signaling GPU controller to exit
+[cedana] GPU worker exited prematurely.
+```
+
+Signal 13 is SIGPIPE, not EACCES. The same manifest with `--hicache-io-backend direct` (run-1)
+started fine with profiling on, and native is unaffected because it has no worker. The profiler
+was also writing to `/tmp/cedana-gpu.container/` rather than the `CEDANA_GPU_LOG_DIR` it was given.
+Both server manifests now run without it; `bpf/cuda-copy-hist.bt` covers the same calls with real
+distributions instead of SIGTERM-time averages, so nothing is lost. Reportable to the cedana team
+as-is.
+
+**The `direct` backend shows no regression at all.** Post-restore cedana vs native, same bench:
+1.01-1.02x on stages A and B, and stage C load-back was *faster* under cedana at p90 (729 ms vs
+1585 ms). Every instrumented hypothesis came back negative: no 16 MiB staging, no
+`cuMemHostRegister` calls let alone failures, no SHM transport fallback, no IPC errors, and
+`SLOW-MODLOAD` identical at 8 on both sides. See `out-cedana/run-1/`. This is the control the
+`kernel` runs are measured against.
+
 ## Open questions
 
 - Does stock `lmsysorg/sglang:v0.5.15.post1-cu129` serve GLM-5.2, and does it carry sm_100 kernels?

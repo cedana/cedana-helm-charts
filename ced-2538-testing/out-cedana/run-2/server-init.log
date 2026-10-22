@@ -1,0 +1,214 @@
+/usr/local/bin/criu: /lib/x86_64-linux-gnu/libnl-3.so.200: no version information available (required by /usr/local/bin/criu)
+/usr/local/bin/criu: /lib/x86_64-linux-gnu/libnl-3.so.200: no version information available (required by /usr/local/bin/criu)
+Exception in thread Thread-1 (monitor):
+Exception in thread Thread-1 (monitor):
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/threading.py", line 1073, in _bootstrap_inner
+Traceback (most recent call last):
+    self.run()
+  File "/usr/lib/python3.12/threading.py", line 1073, in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1010, in run
+    self._target(*self._args, **self._kwargs)
+  File "/sgl-workspace/sglang/python/sglang/srt/observability/cpu_monitor.py", line 26, in monitor
+    self.run()
+  File "/usr/lib/python3.12/threading.py", line 1010, in run
+    cpu_seconds_total.labels(component=component).inc(delta)
+  File "/usr/local/lib/python3.12/dist-packages/prometheus_client/metrics.py", line 339, in inc
+    self._target(*self._args, **self._kwargs)
+  File "/sgl-workspace/sglang/python/sglang/srt/observability/cpu_monitor.py", line 26, in monitor
+    cpu_seconds_total.labels(component=component).inc(delta)
+  File "/usr/local/lib/python3.12/dist-packages/prometheus_client/metrics.py", line 339, in inc
+    raise ValueError('Counters can only be incremented by non-negative amounts.')
+ValueError: Counters can only be incremented by non-negative amounts.
+    raise ValueError('Counters can only be incremented by non-negative amounts.')
+ValueError: Counters can only be incremented by non-negative amounts.
+      25.966058ms                               [90mcedana.(*Cedana).Restore.New[...][0m                
+         17.517µs                               [90mdefaults.FillMissingRestoreDefaults[0m              
+          3.211µs                               [90mvalidation.ValidateRestoreRequest[0m                
+         30.683µs                               [90mprocess.WritePIDFileForRestore[0m                   
+       5.240486ms                               [90mcedana.pluginRestoreStorage[0m                      
+       4.954716ms                      465 GiB  [90mfilesystem.RestoreFilesystem[0m                     
+      11.884873ms                               [90mprocess.ReloadProcessStateForRestore[0m             
+         17.125µs                               [90mnetwork.DetectNetworkOptionsForRestore[0m           
+      16.730491ms                               [90mcedana.(*Cedana).Restore.Restore[0m                 
+     2.224392547s  [33mgpu[0m                          [90mgpu.Manager.Attach-fm[0m                            
+      29.712317ms                               [90mgpu.InheritFilesForRestore[0m                       
+       4.164905ms                               [90mgpu.AddMountsForRestore[0m                          
+         52.212µs                               [90mcedana.pluginRestoreMiddleware[0m                   
+          9.981µs  [36mrunc[0m                         [90mdefaults.FillMissingRestoreDefaults[0m              
+          3.508µs  [36mrunc[0m                         [90mvalidation.ValidateRestoreRequest[0m                
+        899.041µs  [36mrunc[0m                         [90mcontainer.LoadSpecFromBundle[...][0m                
+        131.238µs  [36mrunc[0m                         [90mfilesystem.ConfigurePersistentMounts[...][0m        
+         91.295µs                               [90mprocess.InheritFilesForRestore[0m                   
+          5.102µs                               [90mprocess.AddExternalMountsForRestore[0m              
+          4.942µs                               [90mprocess.SetupIO[...][0m                             
+          20.06µs                               [90mprocess.ForwardSignals[...][0m                      
+       3.142253ms                               [90mcriu.CheckOptsForRestore[0m                         
+         73.771µs                               [90mcedana.(*Cedana).Restore.pluginRestoreHandler[0m    
+      14.408687ms                               [90mgpu.InterceptionRestore[0m                          
+      13.253708ms  [36mrunc[0m                         [90mgpu.Interception[...][0m                            
+        291.013µs  [36mrunc[0m                         [90mcontainer.CreateContainerForRestore[0m              
+       2.515845ms  [36mrunc[0m                         [90mfilesystem.RestoreRWLayer[0m                        
+        641.133µs  [36mrunc[0m                         [90mfilesystem.MountRootDirForRestore[0m                
+      13.581695ms  [36mrunc[0m                         [90mfilesystem.AddMountsForRestore[0m                   
+     148.386528ms  [36mrunc[0m                         [90mfilesystem.SetupMountsForRestore[0m                 
+          9.599µs  [36mrunc[0m                         [90mfilesystem.AddMaskedPathsForRestore[0m              
+          4.471µs  [36mrunc[0m                         [90mrunc.init.IgnoreNamespacesForRestore[0m             
+       2.955435ms  [36mrunc[0m                         [90mrunc.init.InheritExternalNamespacesForRestore[0m    
+         10.351µs  [36mrunc[0m                         [90mnamespace.JoinOtherExternalNamespacesForRestore[0m  
+         30.852µs  [36mrunc[0m                         [90mnamespace.PreserveJoinedHostnameForRestore[0m       
+         10.541µs  [36mrunc[0m                         [90mdevice.AddDevicesForRestore[0m                      
+         93.393µs  [36mrunc[0m                         [90mdevice.RemapGPUDevicesForRestore[0m                 
+          2.864µs  [36mrunc[0m                         [90mdevice.HandleEvasiveDevicesForRestore[0m            
+          3.299µs  [36mrunc[0m                         [90mnetwork.RestoreNetworkConfiguration[0m              
+           2.84µs  [36mrunc[0m                         [90mnetwork.UnlockNetworkAfterRestore[0m                
+        159.244µs  [36mrunc[0m                         [90mnetwork.AddIPv4Redirect[0m                          
+          5.802µs  [36mrunc[0m                         [90mcgroup.ApplyCgroupsOnRestore[0m                     
+          3.746µs  [36mrunc[0m                         [90mcontainer.RunHooksOnRestore[0m                      
+          3.226µs  [36mrunc[0m                         [90mcontainer.RestoreConsole[0m                         
+          3.654µs  [36mrunc[0m                         [90mcontainer.UpdateStateOnRestore[0m                   
+          5.624µs  [36mrunc[0m                         [90mprocess.SetUsChildSubReaperForRestore[0m            
+         35.829µs  [36mrunc[0m                         [90mdynamo.SignalRestoreComplete[0m                     
+       2.941398ms                               [90mcriu.Restore[0m                                     
+     1.738815798s  [33mcriu[0m                         [90mcriu.(*Criu).Restore-fm[0m                          
+      21.667849ms  [33mcriu[0m                         [90mcriu.NotifyCallback.Initialize[0m                   
+         45.805µs  [33mcriu[0m                         [90mcriu.NotifyCallback.SetupNamespaces[0m              
+       1.064767ms  [33mcriu[0m                         [90mcriu.NotifyCallback.PostRestore[0m                  
+         53.865µs  [33mcriu[0m                         [90mcriu.NotifyCallback.NetworkUnlock[0m                
+         17.671µs  [33mgpu[0m                          [90mcriu.NotifyCallback.InitializeRestore[0m            
+          6.709µs  [33mgpu[0m                          [90mcriu.NotifyCallback.PreRestore[0m                   
+           1.64µs  [33mgpu[0m                          [90mcriu.NotifyCallback.SetupNamespaces[0m              
+       5.798376ms  [33mgpu[0m                          [90mcriu.NotifyCallback.PostSetupNamespaces[0m          
+        554.434µs  [33mgpu[0m                          [90mcriu.NotifyCallback.PostRestore[0m                  
+  1m42.596923398s  [33mgpu[0m                          [90mcriu.NotifyCallback.PreResume[0m                    
+      [90m26.653µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw1 restoreShareableHandles (pid=2713, fastest)[0m   
+      [90m30.371µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw2 restoreShareableHandles (pid=2714)[0m            
+      [90m99.474µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw3 restoreShareableHandles (pid=2715)[0m            
+     [90m100.017µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw4 restoreShareableHandles (pid=53)[0m              
+   [90m3.73291216s──┤[0m  [33mgpu[0m                   [90m4 KiB[0m  [90mw5 restoreShareableHandles (pid=202)[0m             
+   [90m1.13253623s──┤[0m  [33mgpu[0m                   [90m5 KiB[0m  [90mw6 restoreShareableHandles (pid=214)[0m             
+  [90m4.933864822s──┤[0m  [33mgpu[0m                   [90m5 KiB[0m  [90mw7 restoreShareableHandles (pid=210)[0m             
+  [90m7.009821451s──┤[0m  [33mgpu[0m                   [90m5 KiB[0m  [90mw8 restoreShareableHandles (pid=212)[0m             
+  [90m8.524244725s──┤[0m  [33mgpu[0m                   [90m5 KiB[0m  [90mw9 restoreShareableHandles (pid=204, slowest)[0m    
+     [90m151.683µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw10 restoreShareableHandles (pid=2711)[0m           
+     [90m121.115µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw11 restoreShareableHandles (pid=217)[0m            
+   [90m62.707547ms──┤[0m  [33mgpu[0m                   [90m5 KiB[0m  [90mw12 restoreShareableHandles (pid=208)[0m            
+     [90m135.469µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw13 restoreShareableHandles (pid=2710)[0m           
+   [90m2.89769008s──┤[0m  [33mgpu[0m                   [90m4 KiB[0m  [90mw14 restoreShareableHandles (pid=216)[0m            
+     [90m112.507µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw15 restoreShareableHandles (pid=2712)[0m           
+  [90m709.226884ms──┤[0m  [33mgpu[0m                   [90m5 KiB[0m  [90mw16 restoreShareableHandles (pid=206)[0m            
+     [90m200.406µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw17 restoreShareableHandles (pid=2709)[0m           
+      [90m38.577µs──┤[0m  [33mgpu[0m                [90m16 bytes[0m  [90mw18 restoreShareableHandles (pid=2716)[0m           
+      [90m97.548µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw1 replayContextlessCalls (pid=2713)[0m             
+      [90m61.681µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw2 replayContextlessCalls (pid=2714, fastest)[0m    
+     [90m135.261µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw3 replayContextlessCalls (pid=2715)[0m             
+     [90m177.662µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw4 replayContextlessCalls (pid=53)[0m               
+     [90m570.659µs──┤[0m  [33mgpu[0m                   [90m2 KiB[0m  [90mw5 replayContextlessCalls (pid=202, slowest)[0m     
+     [90m237.396µs──┤[0m  [33mgpu[0m                   [90m2 KiB[0m  [90mw6 replayContextlessCalls (pid=214)[0m              
+     [90m198.612µs──┤[0m  [33mgpu[0m                   [90m2 KiB[0m  [90mw7 replayContextlessCalls (pid=210)[0m              
+     [90m184.304µs──┤[0m  [33mgpu[0m                   [90m2 KiB[0m  [90mw8 replayContextlessCalls (pid=212)[0m              
+     [90m335.432µs──┤[0m  [33mgpu[0m                   [90m2 KiB[0m  [90mw9 replayContextlessCalls (pid=204)[0m              
+      [90m71.386µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw10 replayContextlessCalls (pid=2711)[0m            
+      [90m64.797µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw11 replayContextlessCalls (pid=217)[0m             
+     [90m206.601µs──┤[0m  [33mgpu[0m                   [90m2 KiB[0m  [90mw12 replayContextlessCalls (pid=208)[0m             
+     [90m117.822µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw13 replayContextlessCalls (pid=2710)[0m            
+     [90m179.402µs──┤[0m  [33mgpu[0m                   [90m2 KiB[0m  [90mw14 replayContextlessCalls (pid=216)[0m             
+      [90m150.67µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw15 replayContextlessCalls (pid=2712)[0m            
+     [90m202.205µs──┤[0m  [33mgpu[0m                   [90m2 KiB[0m  [90mw16 replayContextlessCalls (pid=206)[0m             
+      [90m62.579µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw17 replayContextlessCalls (pid=2709)[0m            
+      [90m95.406µs──┤[0m  [33mgpu[0m               [90m238 bytes[0m  [90mw18 replayContextlessCalls (pid=2716)[0m            
+      [90m87.306µs──┤[0m  [33mgpu[0m                          [90mw1 restoreVirtualMemory (pid=2713)[0m               
+      [90m85.072µs──┤[0m  [33mgpu[0m                          [90mw2 restoreVirtualMemory (pid=2714)[0m               
+      [90m72.397µs──┤[0m  [33mgpu[0m                          [90mw3 restoreVirtualMemory (pid=2715)[0m               
+     [90m105.275µs──┤[0m  [33mgpu[0m                          [90mw4 restoreVirtualMemory (pid=53)[0m                 
+  [90m3.849400553s──┤[0m  [33mgpu[0m                  [90m10 MiB[0m  [90mw5 restoreVirtualMemory (pid=202)[0m                
+  [90m5.876756441s──┤[0m  [33mgpu[0m                 [90m402 KiB[0m  [90mw6 restoreVirtualMemory (pid=214, slowest)[0m       
+  [90m5.822395043s──┤[0m  [33mgpu[0m                 [90m338 KiB[0m  [90mw7 restoreVirtualMemory (pid=210)[0m                
+  [90m5.784202582s──┤[0m  [33mgpu[0m                 [90m338 KiB[0m  [90mw8 restoreVirtualMemory (pid=212)[0m                
+  [90m5.806816308s──┤[0m  [33mgpu[0m                 [90m338 KiB[0m  [90mw9 restoreVirtualMemory (pid=204)[0m                
+      [90m90.324µs──┤[0m  [33mgpu[0m                          [90mw10 restoreVirtualMemory (pid=2711)[0m              
+      [90m67.157µs──┤[0m  [33mgpu[0m                          [90mw11 restoreVirtualMemory (pid=217, fastest)[0m      
+  [90m5.818222607s──┤[0m  [33mgpu[0m                 [90m338 KiB[0m  [90mw12 restoreVirtualMemory (pid=208)[0m               
+      [90m68.957µs──┤[0m  [33mgpu[0m                          [90mw13 restoreVirtualMemory (pid=2710)[0m              
+  [90m5.828208875s──┤[0m  [33mgpu[0m                 [90m334 KiB[0m  [90mw14 restoreVirtualMemory (pid=216)[0m               
+      [90m77.774µs──┤[0m  [33mgpu[0m                          [90mw15 restoreVirtualMemory (pid=2712)[0m              
+  [90m5.750313452s──┤[0m  [33mgpu[0m                 [90m338 KiB[0m  [90mw16 restoreVirtualMemory (pid=206)[0m               
+      [90m83.179µs──┤[0m  [33mgpu[0m                          [90mw17 restoreVirtualMemory (pid=2709)[0m              
+      [90m95.092µs──┤[0m  [33mgpu[0m                          [90mw18 restoreVirtualMemory (pid=2716)[0m              
+  [90m13.46574603s──┤[0m  [33mgpu[0m                  [90m55 GiB[0m  [90mw5 restoreMemory (pid=202)[0m                       
+ [90m12.553956766s──┤[0m  [33mgpu[0m                  [90m55 GiB[0m  [90mw6 restoreMemory (pid=214)[0m                       
+ [90m12.682513121s──┤[0m  [33mgpu[0m                  [90m55 GiB[0m  [90mw7 restoreMemory (pid=210)[0m                       
+ [90m12.526760683s──┤[0m  [33mgpu[0m                  [90m55 GiB[0m  [90mw8 restoreMemory (pid=212, fastest)[0m              
+ [90m12.590725728s──┤[0m  [33mgpu[0m                  [90m55 GiB[0m  [90mw9 restoreMemory (pid=204)[0m                       
+ [90m12.621477959s──┤[0m  [33mgpu[0m                  [90m55 GiB[0m  [90mw12 restoreMemory (pid=208)[0m                      
+ [90m14.270597685s──┤[0m  [33mgpu[0m                  [90m55 GiB[0m  [90mw14 restoreMemory (pid=216, slowest)[0m             
+ [90m13.164581611s──┤[0m  [33mgpu[0m                  [90m55 GiB[0m  [90mw16 restoreMemory (pid=206)[0m                      
+ [90m11.671869616s──┤[0m  [33mgpu[0m                 [90m671 MiB[0m  [90mw5 restoreCalls (pid=202, slowest)[0m               
+  [90m2.820751873s──┤[0m  [33mgpu[0m                 [90m673 MiB[0m  [90mw6 restoreCalls (pid=214)[0m                        
+  [90m2.843464597s──┤[0m  [33mgpu[0m                 [90m680 MiB[0m  [90mw7 restoreCalls (pid=210)[0m                        
+  [90m2.863163344s──┤[0m  [33mgpu[0m                 [90m669 MiB[0m  [90mw8 restoreCalls (pid=212)[0m                        
+  [90m2.768633273s──┤[0m  [33mgpu[0m                 [90m669 MiB[0m  [90mw9 restoreCalls (pid=204)[0m                        
+  [90m2.832837061s──┤[0m  [33mgpu[0m                 [90m673 MiB[0m  [90mw12 restoreCalls (pid=208)[0m                       
+  [90m2.625492364s──┤[0m  [33mgpu[0m                 [90m671 MiB[0m  [90mw14 restoreCalls (pid=216, fastest)[0m              
+  [90m2.786931001s──┤[0m  [33mgpu[0m                 [90m673 MiB[0m  [90mw16 restoreCalls (pid=206)[0m                       
+   [90m36.743498ms──┤[0m  [33mgpu[0m                   [90m2 MiB[0m  [90mw5 readHostMemory (pid=202)[0m                      
+    [90m84.63997ms──┤[0m  [33mgpu[0m                   [90m2 MiB[0m  [90mw6 readHostMemory (pid=214)[0m                      
+   [90m84.537775ms──┤[0m  [33mgpu[0m                   [90m2 MiB[0m  [90mw7 readHostMemory (pid=210)[0m                      
+  [90m111.675309ms──┤[0m  [33mgpu[0m                   [90m2 MiB[0m  [90mw8 readHostMemory (pid=212, slowest)[0m             
+   [90m39.141891ms──┤[0m  [33mgpu[0m                   [90m2 MiB[0m  [90mw9 readHostMemory (pid=204)[0m                      
+   [90m85.649503ms──┤[0m  [33mgpu[0m                   [90m2 MiB[0m  [90mw12 readHostMemory (pid=208)[0m                     
+    [90m8.129405ms──┤[0m  [33mgpu[0m                   [90m2 MiB[0m  [90mw14 readHostMemory (pid=216, fastest)[0m            
+   [90m17.798814ms──┤[0m  [33mgpu[0m                   [90m2 MiB[0m  [90mw16 readHostMemory (pid=206)[0m                     
+[90m1m0.944793083s──┤[0m  [33mgpu[0m                          [90mw5 host_registrations (pid=202, fastest)[0m         
+[90m1m8.756025371s──┤[0m  [33mgpu[0m                          [90mw6 host_registrations (pid=214)[0m                  
+[90m1m8.641118412s──┤[0m  [33mgpu[0m                          [90mw7 host_registrations (pid=210)[0m                  
+[90m1m8.811471827s──┤[0m  [33mgpu[0m                          [90mw8 host_registrations (pid=212)[0m                  
+[90m1m8.824511511s──┤[0m  [33mgpu[0m                          [90mw9 host_registrations (pid=204, slowest)[0m         
+[90m1m8.773119631s──┤[0m  [33mgpu[0m                          [90mw12 host_registrations (pid=208)[0m                 
+[90m1m7.110129388s──┤[0m  [33mgpu[0m                          [90mw14 host_registrations (pid=216)[0m                 
+[90m1m8.236247014s──┤[0m  [33mgpu[0m                          [90mw16 host_registrations (pid=206)[0m                 
+   [90m50.605314ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw1 other (pid=2713)[0m                              
+   [90m49.857614ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw2 other (pid=2714, fastest)[0m                     
+   [90m50.046753ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw3 other (pid=2715)[0m                              
+   [90m50.401985ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw4 other (pid=53)[0m                                
+  [90m403.283807ms──┤[0m  [33mgpu[0m                  [90m79 MiB[0m  [90mw5 other (pid=202)[0m                               
+  [90m571.015567ms──┤[0m  [33mgpu[0m                  [90m79 MiB[0m  [90mw6 other (pid=214)[0m                               
+   [90m598.20429ms──┤[0m  [33mgpu[0m                  [90m79 MiB[0m  [90mw7 other (pid=210)[0m                               
+  [90m572.653596ms──┤[0m  [33mgpu[0m                  [90m79 MiB[0m  [90mw8 other (pid=212)[0m                               
+  [90m561.881528ms──┤[0m  [33mgpu[0m                  [90m79 MiB[0m  [90mw9 other (pid=204)[0m                               
+   [90m49.988061ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw10 other (pid=2711)[0m                             
+   [90m50.919031ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw11 other (pid=217)[0m                              
+  [90m565.728465ms──┤[0m  [33mgpu[0m                  [90m79 MiB[0m  [90mw12 other (pid=208)[0m                              
+   [90m50.973821ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw13 other (pid=2710)[0m                             
+  [90m601.169446ms──┤[0m  [33mgpu[0m                  [90m79 MiB[0m  [90mw14 other (pid=216, slowest)[0m                     
+   [90m50.290209ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw15 other (pid=2712)[0m                             
+  [90m582.835462ms──┤[0m  [33mgpu[0m                  [90m79 MiB[0m  [90mw16 other (pid=206)[0m                              
+   [90m49.887868ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw17 other (pid=2709)[0m                             
+   [90m50.610738ms──┤[0m  [33mgpu[0m                [90m28 bytes[0m  [90mw18 other (pid=2716)[0m                             
+         18.396µs  [33mgpu[0m                          [90mcriu.NotifyCallback.FinalizeRestore[0m              
+       1.236395ms  [33mrw layer[0m                     [90mcriu.NotifyCallback.PreRestore[0m                   
+        401.602µs  [33mgpu device remap[0m             [90mcriu.NotifyCallback.PostRestore[0m                  
+        110.861µs  [33mjoined hostname[0m              [90mcriu.NotifyCallback.PreResume[0m                    
+       [90m8.111ms──┤[0m  [33mcriu[0m                         [90mPreRestore[0m                                       
+     [90m1.680581s──┤[0m  [33mcriu[0m                         [90mRestore[0m                                          
+     [90m175.447ms──┤[0m  [33mcriu[0m                         [90mSlowestPID=1=RestoreNsCgroupsProc[0m                
+      [90m31.763ms──┤[0m  [33mcriu[0m                         [90mSlowestPID=202=RestoreResources[0m                  
+      [90m33.444ms──┤[0m  [33mcriu[0m                         [90mSlowestPID=1=PreparePIE[0m                          
+     [90m1.312742s──┤[0m  [33mcriu[0m                         [90mSlowestPID=202=PIERestoreMemory[0m                  
+      [90m11.101ms──┤[0m  [33mcriu[0m                         [90mSlowestPID=208=PIERestoreResources[0m               
+          [90m70µs──┤[0m  [33mcriu[0m                         [90mSlowestPID=53=PIERestoreSignals[0m                  
+       [90m3.736ms──┤[0m  [33mcriu[0m                         [90mSlowestPID=2709=PIERestoreCreds[0m                  
+  [90m1m42.651669s──┤[0m  [33mcriu[0m                         [90mPostRestore[0m                                      
+  1m46.893626675s                      465 GiB  restore (total)                                  
+
+   119.462102ms   0.11%  465 GiB  [90mother[0m             
+1m44.827713171s  98.07%           [33mgpu[0m               
+    183.05446ms   0.17%           [36mrunc[0m              
+   1.761648084s   1.65%           [33mcriu[0m              
+     1.236395ms   0.00%           [33mrw layer[0m          
+      401.602µs   0.00%           [33mgpu device remap[0m  
+      110.861µs   0.00%           [33mjoined hostname[0m   
+1m46.893626675s          465 GiB  restore (total)   
+
+[2026-10-22 11:03:00] Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.
+[2026-10-22 11:03:00] INFO:     10.41.37.166:45120 - "GET /get_model_info HTTP/1.1" 200 OK

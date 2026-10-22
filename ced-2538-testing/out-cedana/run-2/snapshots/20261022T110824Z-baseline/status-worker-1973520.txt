@@ -1,0 +1,61 @@
+Name:	cedana-gpu-cont
+Umask:	0022
+State:	S (sleeping)
+Tgid:	1973520
+Ngid:	1973520
+Pid:	1973520
+PPid:	1973519
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	256
+Groups:	 
+NStgid:	1973520	5738
+NSpid:	1973520	5738
+NSpgid:	1973154	0
+NSsid:	1973154	0
+Kthread:	0
+VmPeak:	12996559844 kB
+VmSize:	12995257948 kB
+VmLck:	       0 kB
+VmPin:	       0 kB
+VmHWM:	157873936 kB
+VmRSS:	157116272 kB
+RssAnon:	 2916876 kB
+RssFile:	  520868 kB
+RssShmem:	153678528 kB
+VmData:	 3462244 kB
+VmStk:	     136 kB
+VmExe:	   16252 kB
+VmLib:	   20676 kB
+VmPTE:	  308632 kB
+VmSwap:	       0 kB
+HugetlbPages:	       0 kB
+CoreDumping:	0
+THP_enabled:	1
+untag_mask:	0xffffffffffffffff
+Threads:	13
+SigQ:	20/7223481
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000000000
+SigCgt:	00000001000044ea
+CapInh:	0000000000000000
+CapPrm:	000001ffffffffff
+CapEff:	000001ffffffffff
+CapBnd:	000001ffffffffff
+CapAmb:	0000000000000000
+NoNewPrivs:	0
+Seccomp:	0
+Seccomp_filters:	0
+Speculation_Store_Bypass:	thread vulnerable
+SpeculationIndirectBranch:	conditional enabled
+Cpus_allowed:	ffffffff,ffffffff,ffffffff,ffffffff,ffffffff
+Cpus_allowed_list:	0-159
+Mems_allowed:	00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000003
+Mems_allowed_list:	0-1
+voluntary_ctxt_switches:	1928
+nonvoluntary_ctxt_switches:	18
+x86_Thread_features:	
+x86_Thread_features_locked:	

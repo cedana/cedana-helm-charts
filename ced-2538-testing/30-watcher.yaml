@@ -75,12 +75,14 @@ spec:
     command: ["/bin/sh", "/watcher/snapshot.sh"]
     env:
     # The server Service, so the trigger reads the same /metrics a human would.
-    - {name: HOST,       value: "glm52-native"}   # <-- glm52-cedana for the cedana run
+    - {name: HOST,       value: "glm52-cedana"}   # <-- glm52-cedana for the cedana run
     - {name: PORT,       value: "30000"}
     - {name: OUTDIR,     value: "/out"}
     - {name: TRIGGER_S,  value: "8"}      # the reported tail starts around here; p50 is 2.3-4.5 s
     - {name: COOLDOWN_S, value: "60"}
-    - {name: MAX_SNAPS,  value: "20"}     # bounds disk on the emptyDir; raise deliberately
+    - {name: MAX_SNAPS,  value: "0"}      # tail snapshots perturbed the timed run; the baseline
+                                          # snapshot (NUMA/THP dump) runs regardless. Raise to
+                                          # 20 only when hunting a stall, not for an A/B.
     - {name: ALLOW_GDB,  value: "0"}      # read snapshot.sh before ever setting this to 1
     # Gets the driver into the container without claiming one of the 8 GPUs the server holds.
     # If your nvidia container runtime is not the default runtime these do nothing, and nvidia-smi

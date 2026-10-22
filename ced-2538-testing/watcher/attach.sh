@@ -43,8 +43,19 @@ proc_match() {
 # ---------------------------------------------------------------- find the processes to probe
 # Application ranks: any process with the interceptor mapped. On the native side there are none,
 # which is itself the signal that we are looking at the baseline.
-CEDANA_PIDS=$(grep -l libcedana-gpu /proc/[0-9]*/maps 2>/dev/null \
-                | sed 's#/proc/\([0-9]*\)/maps#\1#' | tr '\n' ' ')
+# The k8s runtime shim does NOT mount the interceptor as libcedana-gpu.so -- it bind-mounts it
+# OVER /usr/local/lib/libcuda.so.1, so the application loads it as the driver. Matching on the
+# name therefore finds nothing on the cedana side, and this script would fall through to
+# SIDE=native and label a cedana run's output "native". Match on CONTENT instead: the interceptor
+# carries cedana strings that the real NVIDIA driver does not.
+CEDANA_PIDS=$(
+  for _d in /proc/[0-9]*; do
+    _lib=$(awk '$6 ~ /libcuda\.so|libcedana-gpu/ {print $6; exit}' "$_d/maps" 2>/dev/null)
+    [ -n "$_lib" ] || continue
+    _path="$_d/root$_lib"; [ -e "$_path" ] || _path="$_lib"
+    if [ "${_lib#*libcedana-gpu}" != "$_lib" ]; then echo "${_d#/proc/}"; continue; fi
+    if grep -aqm1 'cedana' "$_path" 2>/dev/null; then echo "${_d#/proc/}"; fi
+  done | tr '\n' ' ')
 # The GPU worker/controller. Matched on full argv, so the 15-char comm truncation that makes this
 # process show up as "cedana-gpu-cont" in ps does not matter here.
 WORKER_PIDS=$(proc_match 'cedana-gpu-controller' | tr '\n' ' ')
@@ -68,8 +79,11 @@ LIB=""; LIBCUDA=""
 if [ "$SIDE" = "cedana" ] || { [ "$SIDE" = "auto" ] && [ -n "$CEDANA_PIDS" ]; }; then
   SIDE=cedana
   for pid in $CEDANA_PIDS; do
+    # Same reason: the interceptor is usually mapped under the libcuda name.
     LIB=$(map_path "$pid" "libcedana-gpu") && [ -n "$LIB" ] && break
+    LIB=$(map_path "$pid" "libcuda\.so") && [ -n "$LIB" ] && break
   done
+  case "$LIB" in *libcedana-gpu*) : ;; *) log "interceptor is mounted as libcuda.so (matched by content)" ;; esac
   for pid in $WORKER_PIDS; do
     LIBCUDA=$(map_path "$pid" "libcuda\\.so") && [ -n "$LIBCUDA" ] && break
   done

@@ -1,0 +1,108 @@
+# CED-2538: the watcher. Two containers, because no one image has both tools:
+#   bpf   -- bpftrace, running bpf/*.bt via watcher/attach.sh. Continuous, cheap, always on.
+#   snap  -- py-spy / curl / nvidia-smi, running watcher/snapshot.sh. Expensive, triggered only.
+# They share /out (an emptyDir), so one `kubectl cp` collects the whole run.
+#
+# A POD, NOT A DAEMONSET, ON PURPOSE. The cedana helper DaemonSet is the natural shape to copy, but
+# on a shared test cluster a DaemonSet lands a privileged hostPID pod with uprobes on EVERY node,
+# including nodes this investigation has no business touching. This pod co-locates with the server
+# pinned to the server's node instead (nodeName below). Switch the HOST env between runs.
+#
+# PREREQ -- the two ConfigMaps, in cedana-systems (see README step 3):
+#   kubectl -n cedana-systems create configmap ced2538-bpf     --from-file=ced-2538-testing/bpf/
+#   kubectl -n cedana-systems create configmap ced2538-watcher --from-file=ced-2538-testing/watcher/
+#
+#   kubectl apply -n cedana-systems -f 30-watcher.yaml
+#
+# Stop it cleanly -- bpftrace prints its cumulative END block (the host-registration counters, the
+# headline result) only on SIGTERM:
+#   kubectl -n cedana-systems exec ced2538-watcher -c bpf -- pkill -TERM -f attach.sh
+# Then collect:
+#   kubectl -n cedana-systems cp ced2538-watcher:/out ./ced2538-out -c snap
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ced2538-watcher
+  namespace: cedana-systems
+  labels:
+    app: ced2538-watcher
+spec:
+  restartPolicy: Never
+  hostPID: true          # mandatory: the GPU worker runs on the host, outside the pod cgroup
+  # Pinned to the same node as the server (both servers set nodeName). Simpler and more robust
+  # than pod affinity, which breaks whenever the side's label changes.
+  nodeName: gpu-dp-ckck8-4pcmf
+  containers:
+  # ------------------------------------------------------------------ continuous eBPF layer
+  - name: bpf
+    # The sglang image, because it is already on the node -- the published bpftrace images have no
+    # stable tag we can rely on here. bpftrace comes from apt at startup; Ubuntu 22.04's build is
+    # older than upstream but this kernel (6.8, BTF) is what it needs, and attach.sh only uses
+    # uprobes, tracepoints and histograms.
+    image: lmsysorg/sglang:v0.5.15.post1-cu129
+    command: ["bash", "-c"]
+    args:
+    - |
+      if ! command -v bpftrace >/dev/null; then
+        echo "[ced-2538] installing bpftrace"
+        apt-get update -qq && apt-get install -y -qq bpftrace || true
+      fi
+      if ! command -v bpftrace >/dev/null; then
+        echo "[ced-2538] no bpftrace and apt failed (no egress?). Check the host has one:"
+        echo "           nsenter -t 1 -m -- bpftrace --version"
+        sleep infinity
+      fi
+      bpftrace --version
+      exec sh /watcher/attach.sh /bpf/cuda-copy-hist.bt /bpf/transport.bt
+    env:
+    - {name: OUTDIR,   value: "/out"}
+    - {name: SIDE,     value: "auto"}   # auto-detects cedana vs native from /proc; see attach.sh
+    - {name: DURATION, value: "0"}      # run until terminated
+    securityContext:
+      privileged: true                  # CAP_BPF + CAP_PERFMON + CAP_SYS_ADMIN for uprobes
+    volumeMounts:
+    - {name: out,       mountPath: /out}
+    - {name: bpf,       mountPath: /bpf}
+    - {name: watcher,   mountPath: /watcher}
+    - {name: debugfs,   mountPath: /sys/kernel/debug}   # tracefs: uprobes and tracepoints
+    - {name: bpffs,     mountPath: /sys/fs/bpf}
+    - {name: modules,   mountPath: /lib/modules, readOnly: true}
+  # ------------------------------------------------------------------ triggered snapshot layer
+  - name: snap
+    # The sglang image is already on the node and carries python3, curl and pip. Reused rather
+    # than pulling a second image onto a test node.
+    image: lmsysorg/sglang:v0.5.15.post1-cu129
+    command: ["/bin/sh", "/watcher/snapshot.sh"]
+    env:
+    # The server Service, so the trigger reads the same /metrics a human would.
+    - {name: HOST,       value: "glm52-cedana"}   # <-- glm52-cedana for the cedana run
+    - {name: PORT,       value: "30000"}
+    - {name: OUTDIR,     value: "/out"}
+    - {name: TRIGGER_S,  value: "8"}      # the reported tail starts around here; p50 is 2.3-4.5 s
+    - {name: COOLDOWN_S, value: "60"}
+    - {name: MAX_SNAPS,  value: "0"}      # rerun-nosnap: no snapshots at all (they perturbed the run)
+    - {name: ALLOW_GDB,  value: "0"}      # read snapshot.sh before ever setting this to 1
+    # Gets the driver into the container without claiming one of the 8 GPUs the server holds.
+    # If your nvidia container runtime is not the default runtime these do nothing, and nvidia-smi
+    # output will be missing from the snapshots -- fall back to
+    #   nsenter -t 1 -m -- nvidia-smi
+    - {name: NVIDIA_VISIBLE_DEVICES,     value: "all"}
+    - {name: NVIDIA_DRIVER_CAPABILITIES, value: "utility"}
+    securityContext:
+      privileged: true                  # /proc/<pid>/stack and smaps_rollup of host pids
+    volumeMounts:
+    - {name: out,     mountPath: /out}
+    - {name: watcher, mountPath: /watcher}
+  volumes:
+  - name: out
+    emptyDir: {}
+  - name: bpf
+    configMap: {name: ced2538-bpf}
+  - name: watcher
+    configMap: {name: ced2538-watcher, defaultMode: 0755}
+  - name: debugfs
+    hostPath: {path: /sys/kernel/debug}
+  - name: bpffs
+    hostPath: {path: /sys/fs/bpf}
+  - name: modules
+    hostPath: {path: /lib/modules}

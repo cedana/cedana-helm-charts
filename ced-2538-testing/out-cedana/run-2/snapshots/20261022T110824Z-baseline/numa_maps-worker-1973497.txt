@@ -1,0 +1,361 @@
+00400000 default file=/usr/local/bin/cedana-gpu-controller mapped=30 mapmax=19 active=0 N1=30 kernelpagesize_kB=4
+0041e000 default file=/usr/local/bin/cedana-gpu-controller mapped=1885 mapmax=19 active=0 N0=419 N1=1466 kernelpagesize_kB=4
+013fd000 default file=/usr/local/bin/cedana-gpu-controller mapped=499 mapmax=19 active=0 N0=143 N1=356 kernelpagesize_kB=4
+0189d000 default file=/usr/local/bin/cedana-gpu-controller anon=35 dirty=35 mapped=143 mapmax=19 active=0 N0=58 N1=85 kernelpagesize_kB=4
+01945000 default file=/usr/local/bin/cedana-gpu-controller anon=12 dirty=12 mapped=32 mapmax=19 active=0 N0=22 N1=10 kernelpagesize_kB=4
+01965000 default anon=71 dirty=71 active=0 N0=50 N1=21 kernelpagesize_kB=4
+1192f000 default heap anon=6239 dirty=6239 active=0 N0=5477 N1=762 kernelpagesize_kB=4
+200000000 default
+200600000 default file=/dev/nvidia0
+200800000 default file=/dev/nvidiactl dirty=194 mapped=28672 active=0 N0=28672 kernelpagesize_kB=4
+207800000 default
+208000000 default file=/dev/nvidiactl dirty=32 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+208200000 default file=/dev/nvidiactl dirty=4 mapped=28672 active=0 N0=28672 kernelpagesize_kB=4
+20f200000 default file=/dev/nvidiactl dirty=32 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+20f400000 default file=/dev/nvidia-uvm dirty=4 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+20f600000 default
+210200000 default file=/dev/nvidia7
+210400000 default file=/dev/nvidiactl dirty=1081 mapped=28672 active=0 N0=28672 kernelpagesize_kB=4
+217400000 default
+217c00000 default file=/dev/nvidiactl dirty=32 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+217e00000 default file=/dev/nvidiactl dirty=4 mapped=28672 active=0 N0=28672 kernelpagesize_kB=4
+21ee00000 default file=/dev/nvidiactl dirty=32 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+21f000000 default file=/dev/nvidia-uvm dirty=4 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+21f200000 default
+a02000000 default
+b2fc0000000 default
+c2fa6000000 default file=/dev/shm/cedana-gpu.container.misc/hostmem-216 dirty=584 active=0 N0=165 N1=419 kernelpagesize_kB=4
+c2fa6400000 default
+3508cfa0f000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=1 mapmax=23 active=0 N1=1 kernelpagesize_kB=4
+3508cfa10000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=43 mapmax=33 active=0 N1=43 kernelpagesize_kB=4
+3508cfa3b000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=10 mapmax=25 active=0 N0=8 N1=2 kernelpagesize_kB=4
+3508cfa45000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+3508cfa47000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+3508cfa49000 default anon=4 dirty=4 active=0 N0=2 N1=2 kernelpagesize_kB=4
+3508cfa5c000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 mapped=157 mapmax=20 active=0 N1=157 kernelpagesize_kB=4
+3508cfaf9000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 mapped=224 mapmax=20 active=0 N0=4 N1=220 kernelpagesize_kB=4
+3508cfc41000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 mapped=63 mapmax=20 active=0 N1=63 kernelpagesize_kB=4
+3508cfcc8000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 anon=11 dirty=11 active=0 N0=11 kernelpagesize_kB=4
+3508cfcd3000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 anon=3 dirty=3 active=0 N1=3 kernelpagesize_kB=4
+3508cfcd6000 default anon=3 dirty=3 active=0 N1=3 kernelpagesize_kB=4
+3508cfcda000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 mapped=16 mapmax=22 active=0 N1=16 kernelpagesize_kB=4
+3508cfcea000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 mapped=64 mapmax=21 active=0 N0=7 N1=57 kernelpagesize_kB=4
+3508cfd69000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6
+3508cfdc1000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508cfdc2000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508cfdc3000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 mapped=4 mapmax=20 active=0 N1=4 kernelpagesize_kB=4
+3508cfdc7000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 mapped=27 mapmax=20 active=0 N0=27 kernelpagesize_kB=4
+3508cfdeb000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 mapped=4 mapmax=20 active=0 N1=4 kernelpagesize_kB=4
+3508cfdef000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508cfdf0000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508cfdf1000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=40 mapmax=25 active=0 N0=25 N1=15 kernelpagesize_kB=4
+3508cfe19000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=391 mapmax=42 active=0 N0=232 N1=159 kernelpagesize_kB=4
+3508cffa1000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=47 mapmax=33 active=0 N0=12 N1=35 kernelpagesize_kB=4
+3508cfff0000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=4 dirty=4 active=0 N0=4 kernelpagesize_kB=4
+3508cfff4000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+3508cfff6000 default anon=125 dirty=125 active=0 N0=120 N1=5 kernelpagesize_kB=4
+3508d007a000 default file=anon_inode:[io_uring] dirty=1 mapped=3 active=0 N0=3 kernelpagesize_kB=4
+3508d007d000 default file=anon_inode:[io_uring] dirty=1 mapped=4 active=0 N0=4 kernelpagesize_kB=4
+3508d0081000 default
+3508d0082000 default anon=10 dirty=10 active=0 N0=7 N1=3 kernelpagesize_kB=4
+3508d0882000 default file=/dev/nvidia0
+3508d0892000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+3508d0893000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+3508d0894000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2 mapped=1 mapmax=18 active=0 N0=1 kernelpagesize_kB=4
+3508d0895000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2
+3508d0896000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508d0897000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508d0898000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+3508d0899000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+3508d089a000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0
+3508d089b000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508d089c000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508d089d000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+3508d089e000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+3508d089f000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1
+3508d08a0000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508d08a1000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+3508d08a2000 default file=/dev/nvidia0
+3508d08b2000 default file=/dev/nvidia1
+3508d08c2000 default file=/dev/nvidia1
+3508d08d2000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+3508d08d3000 default file=/dev/nvidia2
+3508d08e3000 default file=/dev/nvidia2
+3508d08f3000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+3508d08f4000 default file=/dev/nvidia3
+3508d0904000 default file=/dev/nvidia3
+3508d0914000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+3508d0915000 default file=/dev/nvidia4
+3508d0925000 default file=/dev/nvidia4
+3508d0935000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+3508d0936000 default file=/dev/nvidia5
+3508d0946000 default file=/dev/nvidia5
+3508d0956000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+3508d0957000 default file=/dev/nvidia6
+3508d0967000 default file=/dev/nvidia6
+3508d0977000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+3508d0978000 default file=/dev/nvidia7
+3508d0988000 default file=/dev/nvidia7
+3508d0998000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+3508d0a00000 default file=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.575.57.08 mapped=272 mapmax=24 active=0 N0=58 N1=214 kernelpagesize_kB=4
+3508d0bf7000 default file=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.575.57.08
+3508d0df6000 default file=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.575.57.08 anon=11 dirty=11 mapped=13 mapmax=19 active=0 N0=11 N1=2 kernelpagesize_kB=4
+3508d0e2d000 default file=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.575.57.08 anon=3 dirty=3 active=0 N0=3 kernelpagesize_kB=4
+3508d0e30000 default anon=3300 dirty=3300 active=0 N0=3300 kernelpagesize_kB=4
+3508d1b37000 default
+3508d1b38000 default anon=10 dirty=10 active=0 N0=9 N1=1 kernelpagesize_kB=4
+3508d2338000 default anon=12 dirty=12 active=0 N0=2 N1=10 kernelpagesize_kB=4
+3508d2633000 default
+3508d3c41000 default anon=79 dirty=79 active=0 N0=9 N1=70 kernelpagesize_kB=4
+3508d4000000 default anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+3508d4021000 default
+3508d8000000 default file=/dev/shm/cedana-gpu.container dirty=150 mapmax=27 active=0 N1=150 kernelpagesize_kB=4
+350ad8000000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 mapped=453 mapmax=20 active=0 N1=453 kernelpagesize_kB=4
+350ad81c5000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 mapped=1076 mapmax=23 active=0 N0=533 N1=543 kernelpagesize_kB=4
+350ad905c000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 mapped=1491 mapmax=19 active=0 N0=236 N1=1255 kernelpagesize_kB=4
+350add639000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08
+350add63a000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 anon=301 dirty=301 active=0 N0=301 kernelpagesize_kB=4
+350add767000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 anon=98 dirty=98 mapped=103 mapmax=19 active=0 N0=92 N1=11 kernelpagesize_kB=4
+350add80b000 default anon=24 dirty=24 active=0 N0=13 N1=11 kernelpagesize_kB=4
+350add87b000 default
+350adfcbd000 default anon=50 dirty=50 active=0 N0=50 kernelpagesize_kB=4
+350adfcf0000 default file=/dev/zero\040(deleted) dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350adfef0000 default anon=228 dirty=228 active=0 N0=228 kernelpagesize_kB=4
+350ae0000000 default anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+350ae0021000 default
+350cedaa5000 default
+350cedaa6000 default anon=13 dirty=13 active=0 N0=7 N1=6 kernelpagesize_kB=4
+350cee2a6000 default
+350cee2a7000 default anon=10 dirty=10 active=0 N0=7 N1=3 kernelpagesize_kB=4
+350ceeaa7000 default
+350ceeaa8000 default anon=10 dirty=10 active=0 N0=7 N1=3 kernelpagesize_kB=4
+350cef2a8000 default
+350cef2a9000 default anon=10 dirty=10 active=0 N1=10 kernelpagesize_kB=4
+350cefdb4000 default file=/dev/zero\040(deleted) dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350cf0000000 default anon=16360 dirty=16360 active=0 N0=115 N1=16245 kernelpagesize_kB=4
+350cf3fec000 default
+350cf4000000 default anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+350cf4021000 default
+350cf8000000 default anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+350cf8021000 default
+350cfc000000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc001000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc002000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc003000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc004000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc005000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc006000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc007000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc008000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc009000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc00a000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc00b000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc00c000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc00d000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc00e000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc00f000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc010000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc011000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc012000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc013000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc014000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc015000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc016000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc017000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc018000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc019000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc01a000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc01b000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc01c000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc01d000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc01e000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc01f000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc020000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc021000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc022000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc023000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc024000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc025000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc026000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc027000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc028000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc029000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc02a000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc02b000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc02c000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc02d000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc02e000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc02f000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350cfc030000 default
+350cfd221000 default
+350cfd222000 default anon=10 dirty=10 active=0 N1=10 kernelpagesize_kB=4
+350cfdcfe000 default anon=753 dirty=753 active=0 N1=753 kernelpagesize_kB=4
+350cfe000000 default
+350cfe200000 default file=/dev/nvidiactl dirty=402 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+350cfe400000 default file=/dev/zero\040(deleted) dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350cfe600000 default file=/dev/zero\040(deleted) dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350cfe800000 default
+350cfec00000 default file=/dev/nvidiactl dirty=10 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+350cfee00000 default
+350cff200000 default file=/dev/zero\040(deleted) dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350cff400000 default file=/dev/nvidiactl mapped=1683 active=0 N0=1683 kernelpagesize_kB=4
+350cffa93000 default
+350cffc00000 default file=/dev/zero\040(deleted) dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350cffe00000 default
+350d07a00000 default file=/dev/nvidiactl dirty=10 mapped=512 active=0 N0=512 kernelpagesize_kB=4
+350d07c00000 default
+350d25a00000 default file=/dev/nvidiactl dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350d25c00000 default file=/dev/zero\040(deleted) dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350d25e00000 default file=/dev/zero\040(deleted) dirty=512 active=0 N0=512 kernelpagesize_kB=4
+350d26000000 default anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+350d27402000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27403000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27404000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27405000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27406000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27407000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27408000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27409000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2740a000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2740b000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2740c000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2740d000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2740e000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2740f000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27410000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27411000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27412000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27413000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27414000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27415000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27416000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27417000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27418000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27419000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2741a000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2741b000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2741c000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2741d000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2741e000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2741f000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27420000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27421000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27422000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27423000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27424000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27425000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27426000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27427000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27428000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27429000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2742a000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2742b000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2742c000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2742d000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2742e000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d2742f000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27430000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27431000 default file=/dev/nvidiactl dirty=1 active=0 N0=1 kernelpagesize_kB=4
+350d27432000 default
+350d28623000 default anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+350d2a000000 default file=/dev/nvidiactl mapped=1683 active=0 N0=1683 kernelpagesize_kB=4
+350d2a693000 default
+350d3e200000 default file=/dev/zero\040(deleted) dirty=2369 active=0 N1=2369 kernelpagesize_kB=4
+350d3eb41000 default
+350d52000000 default
+350d52001000 default anon=10 dirty=10 active=0 N0=8 N1=2 kernelpagesize_kB=4
+350d52801000 default
+350d52802000 default anon=10 dirty=10 active=0 N0=7 N1=3 kernelpagesize_kB=4
+350d53002000 default
+350d53003000 default anon=10 dirty=10 active=0 N0=8 N1=2 kernelpagesize_kB=4
+350d53803000 default anon=9440 dirty=9440 active=0 N0=5002 N1=4438 kernelpagesize_kB=4
+350d55ce3000 default
+350d55ce4000 default anon=10 dirty=10 active=0 N1=10 kernelpagesize_kB=4
+350d56bcd000 default anon=2235 dirty=2235 active=0 N1=2235 kernelpagesize_kB=4
+350d57916000 default anon=6875 dirty=6875 active=0 N1=6875 kernelpagesize_kB=4
+350d593f1000 default
+350d593f2000 default anon=10 dirty=10 active=0 N1=10 kernelpagesize_kB=4
+350d5c000000 default anon=7768 dirty=7768 active=2 N0=2 N1=7766 kernelpagesize_kB=4
+350d5de58000 default
+350d84105000 default anon=14793 dirty=14793 active=0 N0=6280 N1=8513 kernelpagesize_kB=4
+350d88000000 default anon=14494 dirty=14494 active=0 N0=7470 N1=7024 kernelpagesize_kB=4
+350d8bb6b000 default
+350d8c000000 default anon=2766 dirty=2766 active=0 N0=2766 kernelpagesize_kB=4
+350d8dda8000 default anon=4547 dirty=4547 active=0 N0=3548 N1=999 kernelpagesize_kB=4
+350d90000000 default anon=14146 dirty=14146 active=0 N0=6442 N1=7704 kernelpagesize_kB=4
+350d93878000 default
+350d94000000 default anon=7618 dirty=7618 active=0 N0=7618 kernelpagesize_kB=4
+350d96b0e000 default anon=17766 dirty=17766 active=0 N0=7520 N1=10246 kernelpagesize_kB=4
+350d9c000000 default anon=15275 dirty=15275 active=0 N0=7608 N1=7667 kernelpagesize_kB=4
+350d9ffce000 default
+350da0000000 default anon=14964 dirty=14964 active=0 N0=13819 N1=1145 kernelpagesize_kB=4
+350da3c9f000 default
+350da4000000 default anon=14104 dirty=14104 active=0 N0=6916 N1=7188 kernelpagesize_kB=4
+350da8000000 default anon=13042 dirty=13042 active=0 N0=8239 N1=4803 kernelpagesize_kB=4
+350dab8d1000 default
+350dac000000 default anon=81484 dirty=81484 active=0 N0=19177 N1=62307 kernelpagesize_kB=4
+350dc0000000 default anon=14231 dirty=14231 active=0 N0=6815 N1=7416 kernelpagesize_kB=4
+350dc3aaf000 default
+350dc4000000 default anon=15320 dirty=15320 active=0 N0=7180 N1=8140 kernelpagesize_kB=4
+350dc7e26000 default
+350dc8000000 default anon=20159 dirty=20159 active=0 N0=9326 N1=10833 kernelpagesize_kB=4
+350dd0000000 default anon=11312 dirty=11312 active=0 N0=4913 N1=6399 kernelpagesize_kB=4
+350dd3051000 default
+350dd4000000 default anon=9588 dirty=9588 active=0 N0=4418 N1=5170 kernelpagesize_kB=4
+350dd6574000 default
+350dd8000000 default anon=1195 dirty=1195 active=0 N0=711 N1=484 kernelpagesize_kB=4
+350dd8569000 default
+350ddc000000 default anon=7724 dirty=7724 active=0 N0=4696 N1=3028 kernelpagesize_kB=4
+350dde0f1000 default
+350de0000000 default anon=7242 dirty=7242 active=0 N0=3999 N1=3243 kernelpagesize_kB=4
+350de1c8e000 default
+350de4000000 default anon=4017 dirty=4017 active=0 N0=1934 N1=2083 kernelpagesize_kB=4
+350de510b000 default
+350e12000000 default
+350e34c00000 default file=/dev/zero\040(deleted) dirty=512 active=0 N1=512 kernelpagesize_kB=4
+350e34e00000 default
+350e38000000 default anon=16374 dirty=16374 active=0 N0=4806 N1=11568 kernelpagesize_kB=4
+350e3bff6000 default
+350e3c000000 default anon=9084 dirty=9084 active=0 N0=3486 N1=5598 kernelpagesize_kB=4
+350e3f61e000 default
+350e40000000 default anon=38661 dirty=38661 active=0 N0=25462 N1=13199 kernelpagesize_kB=4
+350e4c000000 default anon=9934 dirty=9934 active=0 N1=9934 kernelpagesize_kB=4
+350e4fffe000 default
+350e50000000 default anon=10026 dirty=10026 active=0 N0=2 N1=10024 kernelpagesize_kB=4
+350e53fff000 default
+350e54000000 default anon=9699 dirty=9699 active=0 N0=9370 N1=329 kernelpagesize_kB=4
+350e57ffd000 default
+350e58000000 default anon=12187 dirty=12187 active=0 N0=12187 kernelpagesize_kB=4
+350e5bfff000 default
+350e5c000000 default anon=10123 dirty=10123 active=0 N0=10123 kernelpagesize_kB=4
+350e5fffc000 default
+350e60000000 default anon=6074 dirty=6074 active=0 N0=6074 kernelpagesize_kB=4
+350e63ffa000 default
+350e64000000 default anon=10963 dirty=10963 active=0 N0=10963 kernelpagesize_kB=4
+350e67a17000 default
+350e68000000 default anon=10641 dirty=10641 active=0 N0=10641 kernelpagesize_kB=4
+350e6bffc000 default
+350e6c000000 default anon=10547 dirty=10547 active=0 N0=10547 kernelpagesize_kB=4
+350e6fffc000 default
+350e70000000 default anon=71757 dirty=71757 active=0 N0=18878 N1=52879 kernelpagesize_kB=4
+350e83ffa000 default
+350e84000000 default anon=14697 dirty=14697 active=0 N1=14697 kernelpagesize_kB=4
+350e87ff7000 default
+350e88000000 default anon=14868 dirty=14868 active=0 N1=14868 kernelpagesize_kB=4
+350e8bfff000 default
+350e8c000000 default anon=29272 dirty=29272 active=0 N1=29272 kernelpagesize_kB=4
+350e93fcf000 default
+350e94000000 default anon=13894 dirty=13894 active=0 N0=11216 N1=2678 kernelpagesize_kB=4
+350e97ffb000 default
+350e98000000 default anon=28895 dirty=28895 active=0 N0=6065 N1=22830 kernelpagesize_kB=4
+357bcc000000 default anon=15064 dirty=15064 active=0 N0=10678 N1=4386 kernelpagesize_kB=4
+357bcfe58000 default
+357bd0000000 default anon=7578 dirty=7578 active=0 N0=4292 N1=3286 kernelpagesize_kB=4
+357bd2327000 default
+357bd4000000 default anon=14937 dirty=14937 active=0 N0=13 N1=14924 kernelpagesize_kB=4
+357bd7fd1000 default
+726bc617f000 default file=/memfd:cedana-hostreg-216-000001\040(deleted) dirty=7161673 active=0 N0=7142039 N1=19634 kernelpagesize_kB=4
+72729a8c8000 default file=/memfd:cedana-hostreg-216-000000\040(deleted) dirty=31250232 active=0 N0=29394955 N1=1855277 kernelpagesize_kB=4
+7ffec0677000 default stack anon=16 dirty=16 active=0 N0=12 N1=4 kernelpagesize_kB=4
+7ffec07f0000 default
+7ffec07f4000 default

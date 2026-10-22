@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ced2538-bench
+  namespace: cedana-systems
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: ced2538-bench
+    spec:
+      restartPolicy: Never
+      nodeName: gpu-dp-ckck8-4pcmf
+      containers:
+      - name: bench
+        image: lmsysorg/sglang:v0.5.15.post1-cu129
+        command:
+        - bash
+        - -c
+        args:
+        - 'python3 /bench/burst_bench.py
+
+          echo ''[ced-2538] bench finished; /out/bench.jsonl ready for kubectl cp''
+
+          sleep infinity
+
+          '
+        env:
+        - name: HOST
+          value: glm52-native
+        - name: PORT
+          value: '30000'
+        - name: OUT
+          value: /out/bench.jsonl
+        - name: LEN_A
+          value: '127000'
+        - name: LEN_B
+          value: '151000'
+        - name: BURST_K
+          value: '8'
+        - name: BURST_ROUNDS
+          value: '12'
+        - name: BURST_IDLE_S
+          value: '20'
+        - name: C_PREFIXES
+          value: '6'
+        - name: C_FLOOD
+          value: '8'
+        - name: SLOW_MS
+          value: '8000'
+        volumeMounts:
+        - name: bench
+          mountPath: /bench
+        - name: out
+          mountPath: /out
+        resources:
+          requests:
+            cpu: '4'
+            memory: 8Gi
+          limits:
+            cpu: '8'
+            memory: 16Gi
+      volumes:
+      - name: bench
+        configMap:
+          name: ced2538-bench
+      - name: out
+        emptyDir: {}

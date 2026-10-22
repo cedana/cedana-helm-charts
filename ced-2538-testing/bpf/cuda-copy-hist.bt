@@ -100,6 +100,70 @@ uretprobe:__LIB__:cuMemcpyHtoD_v2
 	delete(@cstart[tid]); delete(@csize[tid]); delete(@cfunc[tid]);
 }
 
+/* --------------------------------------------- GENERIC AND BATCH COPY ENTRY POINTS
+ * The typed probes above (cuMemcpyDtoH/HtoD and their Async forms) stayed FLAT between the direct
+ * and kernel backends -- 9,360 vs 9,228 calls -- while PCIe host->device showed an 8x lower
+ * ceiling on the kernel backend (1.76 GB/s peak vs 0.215, never exceeded). Identical counts across
+ * a backend change that plainly moved bytes differently means those probes are not on the transfer
+ * path at all; what they see is something else, most likely write-through.
+ *
+ * These are the doors the transfer can actually use. A framework moving pinned host memory reaches
+ * for the generic forms, and cedana's own host-registration docs call out cuMemcpyBatchAsync by
+ * name. Probing only the typed entry points was the gap.
+ *
+ * Byte counts where the signature gives one: cuMemcpy/cuMemcpyAsync take (dst, src, ByteCount),
+ * cuMemcpyPeerAsync takes (dst, dstCtx, src, srcCtx, ByteCount). The 2D/3D and batch forms take
+ * descriptor structs, so they are counted but not sized -- a non-zero count there is still the
+ * answer to "which call is it".
+ *
+ * COST: cuMemcpyAsync also carries device-to-device traffic, so this is busier than the typed
+ * probes. Histograms only, no per-event printf except slow calls. */
+uprobe:__LIB__:cuMemcpyAsync,
+uprobe:__LIB__:cuMemcpy
+{
+	@gstart[tid] = nsecs;
+	@gsize[tid] = arg2;
+	@gfunc[tid] = func;
+}
+
+uprobe:__LIB__:cuMemcpyPeerAsync
+{
+	@gstart[tid] = nsecs;
+	@gsize[tid] = arg4;
+	@gfunc[tid] = func;
+}
+
+uprobe:__LIB__:cuMemcpyBatchAsync*,
+uprobe:__LIB__:cuMemcpy2DAsync_v2,
+uprobe:__LIB__:cuMemcpy3DAsync_v2
+{
+	@gstart[tid] = nsecs;
+	@gsize[tid] = 0;          /* descriptor struct: counted, not sized */
+	@gfunc[tid] = func;
+}
+
+uretprobe:__LIB__:cuMemcpyAsync,
+uretprobe:__LIB__:cuMemcpy,
+uretprobe:__LIB__:cuMemcpyPeerAsync,
+uretprobe:__LIB__:cuMemcpyBatchAsync*,
+uretprobe:__LIB__:cuMemcpy2DAsync_v2,
+uretprobe:__LIB__:cuMemcpy3DAsync_v2
+/@gstart[tid]/
+{
+	$us = (nsecs - @gstart[tid]) / 1000;
+	@gcopy_n[comm, @gfunc[tid]] = count();
+	@gcopy_us[@gfunc[tid]] = hist($us);
+	if (@gsize[tid] > 0) {
+		@gcopy_bytes[@gfunc[tid]] = hist(@gsize[tid]);
+		@gcopy_total[comm, @gfunc[tid]] = sum(@gsize[tid]);
+	}
+	if ($us > @THRESH_MS * 1000) {
+		printf("mono=%llu wall=%s SLOW-GCOPY %s %d %d %s bytes=%llu us=%llu\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @gfunc[tid], @gsize[tid], $us);
+	}
+	delete(@gstart[tid]); delete(@gsize[tid]); delete(@gfunc[tid]);
+}
+
 /* -------------------------------------------------- interceptor: host memory registration */
 uprobe:__LIB__:cuMemHostRegister
 {
@@ -144,12 +208,27 @@ uprobe:__LIB__:cuMemHostUnregister
  *   cuMemHostAlloc and cuMemFreeHost are not.
  * Watch @pinalloc_bytes for the 128 GiB pool arriving, and @pinalloc_us for how long pinning it
  * blocks -- a multi-second pin inside a request's forward is a direct TTFT stall. */
-uprobe:__LIB__:cuMemHostAlloc,
+uprobe:__LIB__:cuMemHostAlloc
+{
+	@pastart[tid] = nsecs;
+	@pasize[tid] = arg1;            /* (void** pp, size_t bytesize, unsigned int flags) */
+	@pafunc[tid] = func;
+	/* THE FLAGS ARE THE POINT. CU_MEMHOSTALLOC_DEVICEMAP (0x02) maps the host allocation into the
+	 * device address space, which is how a device KERNEL reads host memory directly -- demand-driven
+	 * reads over PCIe rather than a DMA-engine burst. That is a plausible mechanism for the 8x lower
+	 * host->device ceiling the kernel backend showed (0.215 GB/s vs 1.76). WRITECOMBINED (0x04)
+	 * matters too: it is fast to write from the host and very slow to read.
+	 *   0x01 PORTABLE | 0x02 DEVICEMAP | 0x04 WRITECOMBINED  */
+	@paflags[tid] = arg2;
+	@pinalloc_flags[arg2] = count();
+}
+
 uprobe:__LIB__:cuMemAllocHost_v2
 {
 	@pastart[tid] = nsecs;
-	@pasize[tid] = arg1;            /* (void** pp, size_t bytesize [, unsigned flags]) */
+	@pasize[tid] = arg1;            /* (void** pp, size_t bytesize) -- no flags argument */
 	@pafunc[tid] = func;
+	@paflags[tid] = 0;
 }
 
 uretprobe:__LIB__:cuMemHostAlloc,
@@ -165,15 +244,39 @@ uretprobe:__LIB__:cuMemAllocHost_v2
 		@pinalloc_fail[retval] = count();
 	}
 	/* Always printed: these are few, large, and each one decides how a whole pool behaves. */
-	printf("mono=%llu wall=%s PINALLOC %s %d %d %s bytes=%llu ret=%d us=%llu\n",
+	printf("mono=%llu wall=%s PINALLOC %s %d %d %s bytes=%llu flags=0x%lx ret=%d us=%llu\n",
 	       nsecs, strftime("%s.%f", nsecs),
-	       comm, pid, tid, @pafunc[tid], @pasize[tid], retval, $us);
-	delete(@pastart[tid]); delete(@pasize[tid]); delete(@pafunc[tid]);
+	       comm, pid, tid, @pafunc[tid], @pasize[tid], @paflags[tid], retval, $us);
+	delete(@pastart[tid]); delete(@pasize[tid]); delete(@pafunc[tid]); delete(@paflags[tid]);
 }
 
 uprobe:__LIB__:cuMemFreeHost
 {
 	@pinfree_n[comm] = count();
+}
+
+/* ------------------------------------------- interceptor: host pointer -> device pointer
+ * With --hicache-io-backend kernel, load-back is a device KERNEL reading the pinned host pool
+ * directly -- it never calls cuMemcpy, so the copy probes above go quiet and that silence is not
+ * evidence of nothing happening. To read host memory a kernel needs a device address for it, and
+ * this is the call that hands one out. Under cedana the worker must have the pool mapped at the
+ * same address for that pointer to be valid, so a slow or failing call here is directly on the
+ * kernel-backend load-back path. Low frequency: safe to probe continuously. */
+uprobe:__LIB__:cuMemHostGetDevicePointer*
+{
+	@hgdstart[tid] = nsecs;
+}
+
+uretprobe:__LIB__:cuMemHostGetDevicePointer*
+/@hgdstart[tid]/
+{
+	$us = (nsecs - @hgdstart[tid]) / 1000;
+	@hostdevptr_us = hist($us);
+	@hostdevptr_n[comm] = count();
+	if (retval != 0) { @hostdevptr_fail[retval] = count(); }
+	printf("mono=%llu wall=%s HOSTDEVPTR %s %d %d ret=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, retval, $us);
+	delete(@hgdstart[tid]);
 }
 
 /* --------------------------------------------------------- interceptor: module / JIT loading */
@@ -256,14 +359,18 @@ interval:s:10
 	       nsecs, strftime("%s.%f", nsecs));
 	print(@copy_n); print(@copy_16m); print(@copy_total_bytes);
 	print(@copy_bytes); print(@copy_us);
+	print(@gcopy_n); print(@gcopy_total); print(@gcopy_bytes); print(@gcopy_us);
 	print(@hostreg_n); print(@hostreg_fail); print(@hostreg_us); print(@hostreg_bytes);
 	print(@pinalloc_n); print(@pinalloc_total); print(@pinalloc_us); print(@pinalloc_bytes);
+	print(@hostdevptr_n); print(@hostdevptr_us);
 	print(@modload_n); print(@modload_us);
 	print(@drv_copy_n); print(@drv_copy_us); print(@drv_copy_bytes); print(@drv_hostreg_us);
 	clear(@copy_n); clear(@copy_16m); clear(@copy_total_bytes);
 	clear(@copy_bytes); clear(@copy_us);
+	clear(@gcopy_n); clear(@gcopy_total); clear(@gcopy_bytes); clear(@gcopy_us);
 	clear(@hostreg_us); clear(@hostreg_bytes);
 	clear(@pinalloc_us); clear(@pinalloc_bytes);
+	clear(@hostdevptr_us);
 	clear(@modload_n); clear(@modload_us);
 	clear(@drv_copy_n); clear(@drv_copy_us); clear(@drv_copy_bytes); clear(@drv_hostreg_us);
 	/* @hostreg_n, @hostreg_fail and @hostunreg_n are deliberately NOT cleared: they are small,
@@ -275,10 +382,14 @@ END
 	printf("\n===== ced-2538 cumulative =====\n");
 	print(@hostreg_n); print(@hostreg_fail); print(@hostunreg_n);
 	print(@pinalloc_n); print(@pinalloc_total); print(@pinalloc_fail); print(@pinfree_n);
+	print(@pinalloc_flags);
+	print(@hostdevptr_n); print(@hostdevptr_fail);
 	clear(@cstart); clear(@csize); clear(@cfunc);
 	clear(@hrstart); clear(@hrsize); clear(@hrptr);
 	clear(@mstart); clear(@mfunc);
-	clear(@pastart); clear(@pasize); clear(@pafunc);
+	clear(@pastart); clear(@pasize); clear(@pafunc); clear(@paflags);
+	clear(@hgdstart);
+	clear(@gstart); clear(@gsize); clear(@gfunc);
 	clear(@dstart); clear(@dsize); clear(@dfunc); clear(@drv_hrstart);
 	clear(@THRESH_MS); clear(@CHUNK);
 }

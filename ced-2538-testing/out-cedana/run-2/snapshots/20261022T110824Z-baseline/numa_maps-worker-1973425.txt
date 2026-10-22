@@ -1,0 +1,106 @@
+00400000 default file=/usr/local/bin/cedana-gpu-controller mapped=30 mapmax=19 active=0 N1=30 kernelpagesize_kB=4
+0041e000 default file=/usr/local/bin/cedana-gpu-controller mapped=1837 mapmax=19 active=0 N0=419 N1=1418 kernelpagesize_kB=4
+013fd000 default file=/usr/local/bin/cedana-gpu-controller mapped=499 mapmax=19 active=0 N0=143 N1=356 kernelpagesize_kB=4
+0189d000 default file=/usr/local/bin/cedana-gpu-controller anon=35 dirty=35 mapped=143 mapmax=19 active=0 N0=58 N1=85 kernelpagesize_kB=4
+01945000 default file=/usr/local/bin/cedana-gpu-controller anon=12 dirty=12 mapped=32 mapmax=19 active=0 N0=25 N1=7 kernelpagesize_kB=4
+01965000 default anon=71 dirty=71 active=0 N0=68 N1=3 kernelpagesize_kB=4
+0ae6b000 default heap anon=275 dirty=275 active=0 N0=235 N1=40 kernelpagesize_kB=4
+200000000 default
+a02000000 default
+30d970a3b000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=1 mapmax=23 active=0 N1=1 kernelpagesize_kB=4
+30d970a3c000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=43 mapmax=33 active=0 N1=43 kernelpagesize_kB=4
+30d970a67000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=10 mapmax=25 active=0 N0=8 N1=2 kernelpagesize_kB=4
+30d970a71000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+30d970a73000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+30d970a75000 default anon=4 dirty=4 active=0 N0=4 kernelpagesize_kB=4
+30d970a88000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 mapped=157 mapmax=18 active=0 N1=157 kernelpagesize_kB=4
+30d970b25000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 mapped=235 mapmax=18 active=0 N0=4 N1=231 kernelpagesize_kB=4
+30d970c6d000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 mapped=51 mapmax=18 active=0 N1=51 kernelpagesize_kB=4
+30d970cf4000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 anon=11 dirty=11 active=0 N0=11 kernelpagesize_kB=4
+30d970cff000 default file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33 anon=3 dirty=3 active=0 N0=3 kernelpagesize_kB=4
+30d970d02000 default anon=3 dirty=3 active=0 N0=3 kernelpagesize_kB=4
+30d970d06000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 mapped=16 mapmax=20 active=0 N1=16 kernelpagesize_kB=4
+30d970d16000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 mapped=58 mapmax=19 active=0 N0=4 N1=54 kernelpagesize_kB=4
+30d970d95000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6
+30d970ded000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d970dee000 default file=/usr/lib/x86_64-linux-gnu/libm.so.6 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d970def000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 mapped=4 mapmax=18 active=0 N1=4 kernelpagesize_kB=4
+30d970df3000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 mapped=36 mapmax=18 active=0 N0=35 N1=1 kernelpagesize_kB=4
+30d970e17000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 mapped=4 mapmax=18 active=0 N1=4 kernelpagesize_kB=4
+30d970e1b000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d970e1c000 default file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d970e1d000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=40 mapmax=25 active=0 N0=25 N1=15 kernelpagesize_kB=4
+30d970e45000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=379 mapmax=44 active=0 N0=221 N1=158 kernelpagesize_kB=4
+30d970fcd000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=48 mapmax=35 active=0 N0=12 N1=36 kernelpagesize_kB=4
+30d97101c000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=4 dirty=4 active=0 N0=4 kernelpagesize_kB=4
+30d971020000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+30d971022000 default anon=125 dirty=125 active=0 N0=125 kernelpagesize_kB=4
+30d9710a6000 default file=anon_inode:[io_uring] dirty=1 mapped=3 active=0 N0=3 kernelpagesize_kB=4
+30d9710a9000 default file=anon_inode:[io_uring] dirty=1 mapped=4 active=0 N0=4 kernelpagesize_kB=4
+30d9710ad000 default
+30d9710ae000 default anon=10 dirty=10 active=0 N0=10 kernelpagesize_kB=4
+30d9718ae000 default file=/dev/nvidia0
+30d9718be000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+30d9718bf000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+30d9718c0000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2 mapped=1 mapmax=18 active=0 N0=1 kernelpagesize_kB=4
+30d9718c1000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2
+30d9718c2000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d9718c3000 default file=/usr/lib/x86_64-linux-gnu/libdl.so.2 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d9718c4000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+30d9718c5000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+30d9718c6000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0
+30d9718c7000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d9718c8000 default file=/usr/lib/x86_64-linux-gnu/libpthread.so.0 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d9718c9000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+30d9718ca000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1 mapped=1 mapmax=18 active=0 N1=1 kernelpagesize_kB=4
+30d9718cb000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1
+30d9718cc000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d9718cd000 default file=/usr/lib/x86_64-linux-gnu/librt.so.1 anon=1 dirty=1 active=0 N0=1 kernelpagesize_kB=4
+30d9718ce000 default file=/dev/nvidia0
+30d9718de000 default file=/dev/nvidia1
+30d9718ee000 default file=/dev/nvidia1
+30d9718fe000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+30d9718ff000 default file=/dev/nvidia2
+30d97190f000 default file=/dev/nvidia2
+30d97191f000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+30d971920000 default file=/dev/nvidia3
+30d971930000 default file=/dev/nvidia3
+30d971940000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+30d971941000 default file=/dev/nvidia4
+30d971951000 default file=/dev/nvidia4
+30d971961000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+30d971962000 default file=/dev/nvidia5
+30d971972000 default file=/dev/nvidia5
+30d971982000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+30d971983000 default file=/dev/nvidia6
+30d971993000 default file=/dev/nvidia6
+30d9719a3000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+30d9719a4000 default file=/dev/nvidia7
+30d9719b4000 default file=/dev/nvidia7
+30d9719c4000 default file=/dev/nvidiactl mapped=1 mapmax=19 active=0 N1=1 kernelpagesize_kB=4
+30d971a00000 default file=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.575.57.08 mapped=272 mapmax=24 active=0 N0=58 N1=214 kernelpagesize_kB=4
+30d971bf7000 default file=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.575.57.08
+30d971df6000 default file=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.575.57.08 anon=11 dirty=11 mapped=13 mapmax=19 active=0 N0=11 N1=2 kernelpagesize_kB=4
+30d971e2d000 default file=/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.575.57.08 anon=3 dirty=3 active=0 N0=3 kernelpagesize_kB=4
+30d971e30000 default anon=3300 dirty=3300 active=0 N0=3300 kernelpagesize_kB=4
+30d972b37000 default
+30d972b38000 default anon=10 dirty=10 active=0 N0=9 N1=1 kernelpagesize_kB=4
+30d973338000 default anon=12 dirty=12 active=0 N0=12 kernelpagesize_kB=4
+30d973633000 default
+30d973634000 default anon=10 dirty=10 active=0 N1=10 kernelpagesize_kB=4
+30d974000000 default anon=2 dirty=2 active=0 N0=2 kernelpagesize_kB=4
+30d974021000 default
+30d978000000 default file=/dev/shm/cedana-gpu.container dirty=19 mapmax=27 active=0 N1=19 kernelpagesize_kB=4
+30db78000000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 mapped=453 mapmax=20 active=0 N1=453 kernelpagesize_kB=4
+30db781c5000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 mapped=741 mapmax=23 active=0 N0=351 N1=390 kernelpagesize_kB=4
+30db7905c000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 mapped=112 mapmax=19 active=0 N0=19 N1=93 kernelpagesize_kB=4
+30db7d639000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08
+30db7d63a000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 anon=301 dirty=301 active=0 N0=301 kernelpagesize_kB=4
+30db7d767000 default file=/usr/lib/x86_64-linux-gnu/libcuda.so.575.57.08 anon=98 dirty=98 mapped=103 mapmax=19 active=0 N0=98 N1=5 kernelpagesize_kB=4
+30db7d80b000 default anon=24 dirty=24 active=0 N0=24 kernelpagesize_kB=4
+30db7d87b000 default
+30db80000000 default anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+30db80021000 default
+7fff93515000 default stack anon=11 dirty=11 active=0 N0=11 kernelpagesize_kB=4
+7fff935bd000 default
+7fff935c1000 default

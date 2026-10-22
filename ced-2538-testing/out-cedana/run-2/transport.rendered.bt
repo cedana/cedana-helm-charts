@@ -1,0 +1,137 @@
+#!/usr/bin/env bpftrace
+/*
+ * transport.bt -- CED-2538, question 2: is the TP8 collective actually running over NVLink P2P, or
+ * has it quietly fallen back to host shared memory?
+ *
+ * WHY THIS IS WORTH A SCRIPT. On one node with 8 B200s, NCCL should pick P2P/IPC over NVLink for
+ * every intra-node channel. SHM fallback moves collective traffic through host memory, which would
+ * show up as exactly the symptoms reported -- more host<->device PCIe traffic and a prefill-heavy
+ * tail -- while leaving decode mostly alone. cedana does not hook NCCL itself (there is no
+ * src/intercepter/hooks/nccl_api.cpp, only stubs/nccl_api.cpp wrapping the init calls), so NCCL
+ * makes its own transport decision -- but it makes that decision THROUGH driver calls that cedana
+ * does intercept. If cuIpcGetMemHandle or cuMemImportFromShareableHandle returns an error under
+ * interception, NCCL silently drops to SHM. That return value is the thing to watch.
+ *
+ * READ IT ALONGSIDE NCCL_DEBUG=INFO (set in both server manifests). NCCL states its choice outright
+ * at init -- "via P2P/IPC", "via SHM/direct/direct", "via NET/IB" -- so the log is the verdict and
+ * this script is the mechanism behind it. Get the log first, it is free:
+ *   kubectl -n cedana-systems logs glm52-cedana | grep -E 'via (P2P|SHM|NET)|NCCL INFO Channel'
+ * Then use this to see WHY, and to catch a mid-run change the init log cannot show.
+ *
+ * ROWS
+ *   @ipc_ret[func, ret]     cuIpc and shareable-handle calls by return code. A non-zero ret is the
+ *                           trigger for NCCL's SHM fallback. 0 = CUDA_SUCCESS.
+ *   @ipc_us[func]           their latency -- the export path stands up a unix socket and waits for
+ *                           an fd (hooks/driver_api.cpp:2932-2992), so it can be slow, not just
+ *                           failing.
+ *   @shm_open[path]         opens of /dev/shm/nccl-* . NCCL's SHM transport creates these; they
+ *                           are also what the host-registration doc calls the "shared file" case.
+ *                           Nonzero here with zero successful IPC = fallback, which is the finding.
+ *   @ib_open[path]          /dev/infiniband opens -- NET/IB being used for something intra-node.
+ *   @peer_ret[ret]          cuCtxEnablePeerAccess results; a failure here also forces SHM.
+ *
+ * Compare native against cedana. On native expect: IPC calls all ret=0, no /dev/shm/nccl- opens
+ * beyond bootstrap, no mid-run comm init. Any difference on the cedana side is the answer.
+ *
+ * /proc/1973300/root/usr/local/lib/libcuda.so.1 is substituted by watcher/attach.sh. The NCCL stub symbols live in the same
+ * libcedana-gpu.so; verify before trusting silence:
+ *   nm -D /usr/local/lib/libcedana-gpu.so | grep -E 'ncclCommInit|cuIpc|ShareableHandle'
+ */
+
+BEGIN
+{
+	printf("# ced-2538 transport.bt attached\n");
+}
+
+/* ------------------------------------------------- device-to-device sharing: the P2P/IPC path */
+uprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcGetMemHandle,
+uprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcOpenMemHandle,
+uprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcCloseMemHandle,
+uprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcGetEventHandle,
+uprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcOpenEventHandle,
+uprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuMemExportToShareableHandle,
+uprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuMemImportFromShareableHandle
+{
+	@ipcstart[tid] = nsecs;
+	@ipcfunc[tid] = func;
+}
+
+uretprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcGetMemHandle,
+uretprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcOpenMemHandle,
+uretprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcCloseMemHandle,
+uretprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcGetEventHandle,
+uretprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuIpcOpenEventHandle,
+uretprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuMemExportToShareableHandle,
+uretprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuMemImportFromShareableHandle
+/@ipcstart[tid]/
+{
+	$us = (nsecs - @ipcstart[tid]) / 1000;
+	@ipc_ret[@ipcfunc[tid], retval] = count();
+	@ipc_us[@ipcfunc[tid]] = hist($us);
+	if (retval != 0) {
+		/* The moment NCCL learns it cannot share device memory. Printed, not just counted. */
+		printf("mono=%llu wall=%s IPC-FAIL %s %d %d %s ret=%d us=%llu\n",
+		       nsecs, strftime("%s.%f", nsecs),
+		       comm, pid, tid, @ipcfunc[tid], retval, $us);
+	}
+	delete(@ipcstart[tid]); delete(@ipcfunc[tid]);
+}
+
+uprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuCtxEnablePeerAccess
+{
+	@peerstart[tid] = 1;
+}
+
+uretprobe:/proc/1973300/root/usr/local/lib/libcuda.so.1:cuCtxEnablePeerAccess
+/@peerstart[tid]/
+{
+	@peer_ret[retval] = count();
+	if (retval != 0) {
+		printf("mono=%llu wall=%s PEER-FAIL %s %d %d ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, retval);
+	}
+	delete(@peerstart[tid]);
+}
+
+
+/* ------------------------------------------------------- the SHM fallback's visible side effect
+ * NCCL's SHM transport backs each channel with a /dev/shm/nccl-* segment. These opens are the
+ * cheapest proof that host memory is on the collective path. Note both server manifests mount
+ * /dev/shm as a 64Gi memory emptyDir, so the path is identical on both sides. */
+tracepoint:syscalls:sys_enter_openat
+/strncmp(str(args->filename), "/dev/shm/nccl", 13) == 0/
+{
+	@shm_open[str(args->filename)] = count();
+	printf("mono=%llu wall=%s SHM-OPEN %s %d %d %s\n",
+	       nsecs, strftime("%s.%f", nsecs),
+	       comm, pid, tid, str(args->filename));
+}
+
+tracepoint:syscalls:sys_enter_openat
+/strncmp(str(args->filename), "/dev/infiniband", 15) == 0/
+{
+	@ib_open[str(args->filename)] = count();
+}
+
+/* The controller's fd-passing socket, used by both the host-registration handoff and the
+ * shareable-handle path (docs/cuMemHostRegister.md, "Handing a region to the worker"). Seeing
+ * these tells you the worker round trip is happening at all. */
+tracepoint:syscalls:sys_enter_openat
+/strncmp(str(args->filename), "/dev/shm/cedana", 15) == 0/
+{
+	@cedana_shm_open[str(args->filename)] = count();
+}
+
+interval:s:30
+{
+	printf("\n===== ced-2538 transport window mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@ipc_ret); print(@ipc_us); print(@peer_ret);
+	clear(@ipc_us);
+	/* counts stay cumulative: "did SHM ever get used" is the question, not "how much this minute" */
+}
+
+END
+{
+	clear(@ipcstart); clear(@ipcfunc); clear(@peerstart);
+}

@@ -115,6 +115,15 @@ collect() {
     # physical pages at the same address (docs/cuMemHostRegister.md), so a pool that is shared
     # shows Pss ~= Rss/2 on each side, i.e. double-counted rather than double-allocated.
     cat "/proc/$p/smaps_rollup" > "$d/smaps_rollup-$p.txt" 2>&1
+    # NUMA and hugepage backing of the pinned pool. With --hicache-io-backend kernel, load-back is
+    # a device kernel doing fine-grained reads of host memory over PCIe, which is acutely sensitive
+    # to where those pages actually live -- far more than the DMA engine the `direct` backend uses.
+    # A pool that CRIU brought back as NUMA-remote or 4K-fragmented where cold start had local
+    # hugepages would be invisible to every other probe here. Compare cold against post-restore.
+    cat "/proc/$p/numa_maps" > "$d/numa_maps-$p.txt" 2>&1
+    grep -E "AnonHugePages|KernelPageSize|Rss|Pss|Locked" "/proc/$p/smaps" \
+      | awk '{a[$1]+=$2} END {for (k in a) printf "%s %d kB\n", k, a[k]}' \
+      > "$d/smaps-hugepages-$p.txt" 2>&1
     command -v eu-stack >/dev/null 2>&1 && eu-stack -p "$p" > "$d/eustack-$p.txt" 2>&1
     if [ "$ALLOW_GDB" = "1" ]; then
       gdb -p "$p" --batch -ex 'thread apply all bt' > "$d/gdb-$p.txt" 2>&1
@@ -133,6 +142,18 @@ collect() {
   # --- the controller side, which lives outside the pod cgroup ---
   for p in $WK; do
     cat "/proc/$p/smaps_rollup" > "$d/smaps_rollup-worker-$p.txt" 2>&1
+    cat "/proc/$p/numa_maps"     > "$d/numa_maps-worker-$p.txt"     2>&1
+    # memfd mappings. Anonymous host memory the app registers is moved onto a memfd named
+    # cedana-hostreg-<pid>-<n>, which the worker maps at the SAME address and pins. That mapping is
+    # the pinned pool as the GPU actually sees it, so its size, count and page size are the ground
+    # truth the rank-side view cannot give. Across a restore these come back as new inodes, and a
+    # pool that was hugetlb-backed cold but 4K-backed after restore would show up here and nowhere
+    # else -- which is exactly the shape a kernel-backend load-back regression would take.
+    grep -E "memfd|cedana-hostreg" "/proc/$p/maps" > "$d/memfd-maps-worker-$p.txt" 2>&1
+    awk '/memfd|cedana-hostreg/ {n=$NF; getline sz; split(sz,a," ");
+         while ((getline l) > 0) { if (l ~ /^KernelPageSize:/) { split(l,k," ");
+           printf "%s size_kB=%s pagesize_kB=%s\n", n, a[2], k[2]; break } } }' \
+      "/proc/$p/smaps" > "$d/memfd-pagesize-worker-$p.txt" 2>&1
     cat "/proc/$p/status"       > "$d/status-worker-$p.txt"        2>&1
     cat "/proc/$p/stack"        > "$d/kstack-worker-$p.txt"        2>&1
     command -v eu-stack >/dev/null 2>&1 && eu-stack -p "$p" > "$d/eustack-worker-$p.txt" 2>&1
@@ -159,9 +180,14 @@ collect() {
 
 log "watching http://$HOST:$PORT/metrics; trigger at TTFT > ${TRIGGER_S}s, cooldown ${COOLDOWN_S}s"
 # One snapshot before any load, as the reference to diff every later one against.
-BASELINE_DONE=0
+# Taken BEFORE any load arrives, so it perturbs nothing -- and it is the only place the pool's
+# NUMA and hugepage layout is recorded. It therefore runs even at MAX_SNAPS=0, which otherwise
+# disables snapshots entirely because they distort a timed run.
 PREV=-1
 SNAPS=0
+while [ "$(slow_count)" -lt 0 ]; do sleep "$POLL_S"; done
+collect "baseline"
+
 while [ "$SNAPS" -lt "$MAX_SNAPS" ]; do
   if [ -f "$OUTDIR/trigger" ]; then
     rm -f "$OUTDIR/trigger"
@@ -172,9 +198,6 @@ while [ "$SNAPS" -lt "$MAX_SNAPS" ]; do
   case "$CUR" in
     ''|*[!0-9-]*) CUR=-1 ;;    # guard against a partial metrics scrape
   esac
-  if [ "$CUR" -ge 0 ] && [ "$BASELINE_DONE" -eq 0 ]; then
-    BASELINE_DONE=1; collect "baseline"
-  fi
   if [ "$CUR" -ge 0 ] && [ "$PREV" -ge 0 ] && [ "$CUR" -gt "$PREV" ]; then
     log "slow-request count $PREV -> $CUR"
     SNAPS=$((SNAPS + 1)); collect "tail"

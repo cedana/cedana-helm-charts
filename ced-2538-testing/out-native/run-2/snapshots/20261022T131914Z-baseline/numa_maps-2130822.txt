@@ -1,0 +1,30 @@
+62e25ac24000 default file=/usr/bin/bash mapped=48 mapmax=3 active=0 N0=48 kernelpagesize_kB=4
+62e25ac54000 default file=/usr/bin/bash mapped=191 mapmax=3 active=0 N0=191 kernelpagesize_kB=4
+62e25ad43000 default file=/usr/bin/bash mapped=29 mapmax=3 active=0 N0=29 kernelpagesize_kB=4
+62e25ad78000 default file=/usr/bin/bash anon=4 dirty=4 active=0 N1=4 kernelpagesize_kB=4
+62e25ad7c000 default file=/usr/bin/bash anon=9 dirty=9 active=0 N1=9 kernelpagesize_kB=4
+62e25ad85000 default anon=4 dirty=4 active=0 N1=4 kernelpagesize_kB=4
+62e28dadf000 default heap anon=35 dirty=35 active=0 N1=35 kernelpagesize_kB=4
+700a398d3000 default file=/usr/lib/locale/locale-archive mapped=107 mapmax=31 active=0 N1=107 kernelpagesize_kB=4
+700a39bbe000 default anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+700a39bc1000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=33 mapmax=32 active=0 N0=18 N1=15 kernelpagesize_kB=4
+700a39be9000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=315 mapmax=32 active=0 N0=180 N1=135 kernelpagesize_kB=4
+700a39d71000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 mapped=47 mapmax=32 active=0 N0=12 N1=35 kernelpagesize_kB=4
+700a39dc0000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=4 dirty=4 active=0 N1=4 kernelpagesize_kB=4
+700a39dc4000 default file=/usr/lib/x86_64-linux-gnu/libc.so.6 anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+700a39dc6000 default anon=6 dirty=6 active=0 N1=6 kernelpagesize_kB=4
+700a39dd3000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4 mapped=14 mapmax=13 active=0 N0=13 N1=1 kernelpagesize_kB=4
+700a39de1000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4 mapped=16 mapmax=13 active=0 N0=15 N1=1 kernelpagesize_kB=4
+700a39df4000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4
+700a39e02000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4 anon=4 dirty=4 active=0 N1=4 kernelpagesize_kB=4
+700a39e06000 default file=/usr/lib/x86_64-linux-gnu/libtinfo.so.6.4 anon=1 dirty=1 active=0 N1=1 kernelpagesize_kB=4
+700a39e11000 default file=/usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache
+700a39e18000 default anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+700a39e1a000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=1 mapmax=32 active=0 N1=1 kernelpagesize_kB=4
+700a39e1b000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=43 mapmax=32 active=0 N1=43 kernelpagesize_kB=4
+700a39e46000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 mapped=10 mapmax=32 active=0 N0=8 N1=2 kernelpagesize_kB=4
+700a39e50000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+700a39e52000 default file=/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 anon=2 dirty=2 active=0 N1=2 kernelpagesize_kB=4
+7ffe4697b000 default stack anon=6 dirty=6 active=0 N1=6 kernelpagesize_kB=4
+7ffe469eb000 default
+7ffe469ef000 default

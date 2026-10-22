@@ -11,8 +11,13 @@
 #   3. CEDANA_PERSISTENT_MOUNTS / CEDANA_CRIU_OPTS   -- values from variants/hicache-probe-128.yaml,
 #      which includes the JIT cache dirs: triton's launcher .so must survive C/R, and triton cache
 #      state also changes module-load behaviour, one of the things under investigation here
-#   4. CEDANA_GPU_PROFILING_ENABLED / CEDANA_GPU_LOG_DIR + one mkdir for the log dir
-#   5. pod/service name and labels
+#   4. pod/service name and labels
+#
+# The interceptor TSC profile (CEDANA_GPU_PROFILING_ENABLED / CEDANA_GPU_LOG_DIR) was REMOVED:
+# it only ever produced per-function averages dumped on SIGTERM, which cannot show a tail, and
+# bpf/cuda-copy-hist.bt covers the same calls with real distributions. It was also misbehaving --
+# writing to /tmp/cedana-gpu.container/ rather than the directory it was given -- so it was one
+# more moving part in a GPU worker that was dying with SIGPIPE at startup.
 #
 # Why 4 needs no chart change: the interceptor is LD_PRELOADed into the application's own process
 # and reads these with plain getenv (cuda_tsc_profiler.cpp:35, cuda_intercepter.cpp:165). So the
@@ -35,7 +40,7 @@ metadata:
     ced-2538/side: cedana
   annotations:
     ced-2538/hicache-gb: "128"
-    ced-2538/hicache-io-backend: "direct"
+    ced-2538/hicache-io-backend: "kernel"
 spec:
   restartPolicy: Never
   nodeName: gpu-dp-ckck8-4pcmf   # both sides pinned here: same hardware, or the A/B compares nodes
@@ -67,7 +72,6 @@ spec:
         echo "[ced-2538] run 01-model-fetch.yaml first, or set MODEL_PATH"
         sleep infinity
       fi
-      mkdir -p /logs/cedana
       echo "[ced-2538] serving $MODEL_PATH"
       python3 -m sglang.launch_server \
         --model-path "$MODEL_PATH" \
@@ -84,12 +88,15 @@ spec:
         --enable-hierarchical-cache \
         --hicache-size 128 \
         --hicache-write-policy write_through_selective \
-        --hicache-io-backend direct \
+        --hicache-io-backend kernel \
         --enable-metrics \
         --enable-cache-report \
         --enable-request-time-stats-logging \
-        2>&1 | tee /logs/server.log
-      echo '[ced-2538] server exited; logs ready in /logs'
+        2>&1
+      # No `| tee /logs/server.log`: cedana force-replaces the /logs mount
+      # (FORCE_PERSISTENT_MOUNTS), and if tee dies the engine takes a SIGPIPE on its next
+      # write. Output goes to stdout only; collect.sh saves it with `kubectl logs`.
+      echo '[ced-2538] server exited'
       sleep infinity
     env:
     - name: SGLANG_ENABLE_HEALTH_ENDPOINT_GENERATION   # no /health generation during forward
@@ -116,12 +123,6 @@ spec:
     # --- cedana-only, delta 3 ---
     - {name: CEDANA_PERSISTENT_MOUNTS, value: "/dev/shm,/root/.triton,/root/.cache,/root/.nv"}
     - {name: CEDANA_CRIU_OPTS,         value: '{"link_remap": true, "tcp_established": true}'}
-    # --- cedana-only, delta 4: interceptor TSC profile, dumped per thread on SIGTERM ---
-    # Count + total duration per driver function. Averages only, so it shows the call MIX (is
-    # cuMemcpyHtoDAsync_v2 called 50x more often than native?) but cannot show a tail -- a 60 s
-    # stall among millions of calls does not move a mean. bpf/cuda-copy-hist.bt sees the tail.
-    - {name: CEDANA_GPU_PROFILING_ENABLED, value: "1"}
-    - {name: CEDANA_GPU_LOG_DIR,           value: "/logs/cedana"}
     ports:
     - containerPort: 30000
     resources:

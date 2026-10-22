@@ -1,0 +1,2 @@
+71ba5617f000-71c12a8c8000 rw-s 00000000 00:01 39111                      /memfd:cedana-hostreg-202-000001 (deleted)
+71c12a8c8000-71def8000000 rw-s 00000000 00:01 39110                      /memfd:cedana-hostreg-202-000000 (deleted)

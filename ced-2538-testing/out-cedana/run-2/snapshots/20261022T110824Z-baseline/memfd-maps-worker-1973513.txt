@@ -1,0 +1,2 @@
+78f09217f000-78f7668c8000 rw-s 00000000 00:01 36147                      /memfd:cedana-hostreg-214-000001 (deleted)
+78f7668c8000-791534000000 rw-s 00000000 00:01 36146                      /memfd:cedana-hostreg-214-000000 (deleted)

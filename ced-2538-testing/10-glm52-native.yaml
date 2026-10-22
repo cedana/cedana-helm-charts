@@ -60,7 +60,7 @@ metadata:
     ced-2538/side: native
   annotations:
     ced-2538/hicache-gb: "128"
-    ced-2538/hicache-io-backend: "direct"
+    ced-2538/hicache-io-backend: "kernel"
 spec:
   restartPolicy: Never
   nodeName: gpu-dp-ckck8-4pcmf   # both sides pinned here: same hardware, or the A/B compares nodes
@@ -105,12 +105,15 @@ spec:
         --enable-hierarchical-cache \
         --hicache-size 128 \
         --hicache-write-policy write_through_selective \
-        --hicache-io-backend direct \
+        --hicache-io-backend kernel \
         --enable-metrics \
         --enable-cache-report \
         --enable-request-time-stats-logging \
-        2>&1 | tee /logs/server.log
-      echo '[ced-2538] server exited; logs ready in /logs'
+        2>&1
+      # No `| tee /logs/server.log`: cedana force-replaces the /logs mount
+      # (FORCE_PERSISTENT_MOUNTS), and if tee dies the engine takes a SIGPIPE on its next
+      # write. Output goes to stdout only; collect.sh saves it with `kubectl logs`.
+      echo '[ced-2538] server exited'
       sleep infinity
     env:
     - name: SGLANG_ENABLE_HEALTH_ENDPOINT_GENERATION   # no /health generation during forward

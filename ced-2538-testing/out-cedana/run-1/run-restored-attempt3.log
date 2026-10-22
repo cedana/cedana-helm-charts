@@ -1,0 +1,6 @@
+[restored] 02:52:06 clearing previous experiment pods
+[restored] 02:52:08 resuming at the restore from /scratch/a5758535-fcf2-4ed1-9d30-5de408810278
+[restored] 02:52:08 phase: restore
+pod/glm52-cedana created
+service/glm52-cedana unchanged
+[restored] 03:03:30 FAIL: glm52-cedana is 'Failed false'

@@ -1,0 +1,18 @@
+Process 2131826: sglang::detokenizer
+Python v3.12.3 (/usr/bin/python3.12)
+
+Thread 211 (active): "MainThread"
+    recv_pyobj (zmq/sugar/socket.py:989)
+    sock_recv (io_struct.py:2297)
+    event_loop (detokenizer_manager.py:165)
+    run_detokenizer_process (detokenizer_manager.py:497)
+    run (multiprocessing/process.py:108)
+    _bootstrap (multiprocessing/process.py:314)
+    _main (multiprocessing/spawn.py:135)
+    spawn_main (multiprocessing/spawn.py:122)
+    <module> (<string>:1)
+Thread 1346 (active): "Thread-1 (monitor)"
+    monitor (cpu_monitor.py:21)
+    run (threading.py:1010)
+    _bootstrap_inner (threading.py:1073)
+    _bootstrap (threading.py:1030)

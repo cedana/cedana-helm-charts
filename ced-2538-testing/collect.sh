@@ -11,7 +11,8 @@ set -u
 SIDE="${1:?usage: collect.sh <native|cedana>}"
 NS="${NS:-cedana-systems}"
 POD="glm52-$SIDE"
-OUT="out-$SIDE"
+# Honours OUT so run-restored.sh can collect into out-cedana/run-2 rather than clobbering run-1.
+OUT="${OUT:-out-$SIDE}"
 mkdir -p "$OUT"
 k() { kubectl -n "$NS" "$@"; }
 
