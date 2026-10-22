@@ -55,13 +55,13 @@ config:
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: release
-  pluginsCriuVersion: v4.2.1-cedana.07
+  pluginsBuilds: alpha
+  pluginsCriuVersion: criu-dev              # last release v4.3-cedana.00
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
-  pluginsContainerdRuntimeVersion: v0.8.6
-  pluginsGpuVersion: v0.8.5
-  pluginsStreamerVersion: v0.1.4
+  pluginsContainerdRuntimeVersion: cedana   # last release v0.8.7
+  pluginsGpuVersion: main                   # last release v0.8.6
+  pluginsStreamerVersion: main              # last release v0.1.5
 
   profiling: true
   metrics: true
@@ -107,7 +107,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: v0.9.404
+    tag: main   # last release v0.9.405
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -141,6 +141,12 @@ controllerManager:
   # off a node until Cedana is ready). Set false to manage node readiness yourself;
   # the controller then never adds or removes the taint.
   taintNodes: true
+  # Disaggregated prefill/decode worker restores and scaling: the controller sets up pods
+  # annotated cedana.ai/pd-disagg (Dynamo snapshot mode, Cedana's vLLM/SGLang patch, the Cedana
+  # env). When enabled, the controller creates the webhook's Service, self-signed cert and
+  # MutatingWebhookConfiguration itself; turning it off removes them on the controller's next start.
+  pdDisaggWebhook:
+    enabled: false
   autoscaling:
     enabled: false
     replicaCount: 1
@@ -165,7 +171,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: v0.7.2
+      tag: main   # last release v0.7.3
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -232,7 +238,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: v0.7.2
+    tag: main   # last release v0.7.3
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
@@ -252,7 +258,7 @@ dynamoWatcher:
 csx:
   image:
     repository: cedana/cedana-csx
-    tag: v0.2.3
+    tag: main   # last release v0.2.3
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:

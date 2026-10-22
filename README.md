@@ -122,6 +122,23 @@ When disabled, the controller is completely hands-off — it will neither add no
 remove the `cedana.ai/not-ready` taint — and you are responsible for keeping
 workloads off nodes until Cedana is ready. This is enabled (`true`) by default.
 
+#### Disaggregated Prefill/Decode Worker Restores
+
+To checkpoint and restore Dynamo/vLLM or SGLang prefill and decode workers, turn on the
+controller's P/D disagg webhook:
+
+```bash
+helm install cedana ./cedana-helm \
+  --set controllerManager.pdDisaggWebhook.enabled=true
+```
+
+The controller then creates the webhook's `cedana-pd-webhook` Service, its self-signed serving
+cert (Secret `cedana-pd-webhook-pd-webhook-tls`) and the `cedana-pd-disagg`
+MutatingWebhookConfiguration itself; there is nothing else to install. It sets up only pods
+annotated `cedana.ai/pd-disagg` (see the Cedana docs). Setting it back to `false` removes the
+webhook configuration and Service on the controller's next start. The RBAC it needs is part of
+the chart either way. This is disabled (`false`) by default.
+
 #### Dedicated Node for Controller
 
 To run the Cedana Controller exclusively on a specific node:
