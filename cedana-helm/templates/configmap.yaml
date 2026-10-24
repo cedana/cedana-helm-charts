@@ -19,6 +19,7 @@ data:
   checkpoint-stream-memory-limit: "{{ .Values.config.checkpointStreamMemoryLimit }}"
   checkpoint-compression: "{{ .Values.config.checkpointCompression }}"
   checkpoint-async: "{{ .Values.config.checkpointAsync }}"
+  checkpoint-checksum: "{{ .Values.config.checkpointChecksum }}"
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
   gpu-dedup-enabled: "{{ .Values.config.gpuDedupEnabled }}"
@@ -37,6 +38,7 @@ data:
   aws-access-key-id: "{{ .Values.config.awsAccessKeyId }}"
   aws-region: "{{ .Values.config.awsRegion }}"
   aws-endpoint: "{{ .Values.config.awsEndpoint }}"
+  gcs-emulator-host: "{{ .Values.config.gcsEmulatorHost }}"
 
   containerd-address: "{{ .Values.hostConfig.containerdAddress }}"
   disable-io-uring: "{{ .Values.hostConfig.disableIoUring }}"
