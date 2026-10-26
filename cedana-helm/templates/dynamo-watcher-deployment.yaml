@@ -58,6 +58,14 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        # The dump directory the controller asks the daemon to write to. It must be the
+        # daemon's own: unset, the controller falls back to /tmp, which is the root
+        # volume on a node whose fast disk is mounted elsewhere.
+        - name: CEDANA_CHECKPOINT_DIR
+          valueFrom:
+            configMapKeyRef:
+              name: {{ template "cedana-helm.configMapName" . }}
+              key: checkpoint-dir
         # Lifecycle events are the control plane's only view of what is running: a
         # dropped route.published leaves a capacity intent Pending forever and its
         # GPUs pinned. The emitter's last-resort disk spool needs somewhere writable,
