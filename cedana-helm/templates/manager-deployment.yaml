@@ -72,6 +72,13 @@ spec:
               fieldPath: metadata.namespace
         - name: CEDANA_TAINT_NODES
           value: {{ quote .Values.controllerManager.taintNodes }}
+        - name: CEDANA_PD_WEBHOOK
+          value: {{ quote .Values.controllerManager.pdDisaggWebhook.enabled }}
+        # The P/D disagg webhook's Service selects the controller's pods by this pod's labels
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         # Reported to the propagator for the UI's cluster page.
         - name: HELM_CHART
           value: {{ quote .Chart.Name }}
