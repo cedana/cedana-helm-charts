@@ -18,7 +18,7 @@
   "gpuShmSize"
   "gpuDedupEnabled"
   "gpuTemplatesEnabled"
-  "gpuDirectIOWrite"
+  "gpuDirectIO"
   "pluginsBuilds"
   "pluginsCriuVersion"
   "pluginsContainerdRuntimeVersion"

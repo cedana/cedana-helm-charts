@@ -23,7 +23,7 @@ data:
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
   gpu-dedup-enabled: "{{ .Values.config.gpuDedupEnabled }}"
   gpu-templates-enabled: "{{ .Values.config.gpuTemplatesEnabled }}"
-  gpu-direct-io-write: "{{ .Values.config.gpuDirectIOWrite }}"
+  gpu-direct-io: "{{ .Values.config.gpuDirectIO }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"

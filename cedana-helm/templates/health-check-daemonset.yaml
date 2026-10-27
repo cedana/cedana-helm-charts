@@ -156,11 +156,11 @@ spec:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-templates-enabled
                   optional: true
-            - name: CEDANA_GPU_DIRECT_IO_WRITE
+            - name: CEDANA_GPU_DIRECT_IO
               valueFrom:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
-                  key: gpu-direct-io-write
+                  key: gpu-direct-io
                   optional: true
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
