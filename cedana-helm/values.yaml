@@ -51,7 +51,7 @@ config:
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
   gpuDedupEnabled: false # Enable deduplication for GPU checkpoints to reduce checkpoint size.
   gpuTemplatesEnabled: false # Enable templates for GPU checkpoint/restore.
-  gpuDirectIO: true # Read and write GPU checkpoints with O_DIRECT (on ext4/xfs/btrfs). Bypasses page cache for faster checkpoint/restore.
+  gpuDirectIO: true # Read and write GPU checkpoints with O_DIRECT. Bypasses page cache for faster checkpoint/restore.
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
