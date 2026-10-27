@@ -82,7 +82,7 @@ config:
   # ambient (the SDK's default chain, e.g. GKE Workload Identity) or serviceAccount
   gcsCredentialsMode: ambient
   gcsServiceAccountKey: # GCS service account key JSON, for gcsCredentialsMode serviceAccount (stored in the Secret)
-  gcsEmulatorHost: # host:port of a GCS emulator such as fake-gcs-server, for testing only
+  gcsEmulatorHost: # host:port of a GCS emulator such as fake-gcs-server, for testing only (sets the SDK's STORAGE_EMULATOR_HOST)
 
   criuLogLevel: 2
   # Omit all-zero shared memory and ghost file pages from dumps (restored as zero-fill). Needs a CRIU with --zero-elide.

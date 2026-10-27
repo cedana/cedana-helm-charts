@@ -46,7 +46,8 @@ Expand the name of the chart.
       key: gcs-service-account-key
       optional: true
 {{- end }}
-- name: CEDANA_GCS_EMULATOR_HOST
+{{- /* The GCS SDK's own variable: the helper passes it to the daemon's service */}}
+- name: STORAGE_EMULATOR_HOST
   valueFrom:
     configMapKeyRef:
       name: {{ template "cedana-helm.configMapName" . }}

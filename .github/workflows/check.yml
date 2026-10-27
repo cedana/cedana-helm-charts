@@ -53,7 +53,7 @@ jobs:
             for ds in helper-daemonset health-check-daemonset; do
               section=$(echo "$rendered" | awk "/^# Source: .*$ds.yaml/,/^---\$/")
               echo "$section" | grep -A1 "name: CEDANA_GCS_CREDENTIALS_MODE" | grep -q "value: \"$mode\"" || { echo "CEDANA_GCS_CREDENTIALS_MODE=$mode missing from $ds"; exit 1; }
-              echo "$section" | grep -q "name: CEDANA_GCS_EMULATOR_HOST" || { echo "CEDANA_GCS_EMULATOR_HOST missing from $ds"; exit 1; }
+              echo "$section" | grep -q "name: STORAGE_EMULATOR_HOST" || { echo "STORAGE_EMULATOR_HOST missing from $ds"; exit 1; }
               if [ "$mode" = serviceAccount ]; then
                 echo "$section" | grep -q "name: CEDANA_GCS_SERVICE_ACCOUNT_KEY" || { echo "CEDANA_GCS_SERVICE_ACCOUNT_KEY missing from $ds"; exit 1; }
               elif echo "$section" | grep -q "name: CEDANA_GCS_SERVICE_ACCOUNT_KEY"; then
