@@ -51,13 +51,8 @@ config:
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
   gpuDedupEnabled: false # Enable deduplication for GPU checkpoints to reduce checkpoint size.
   gpuTemplatesEnabled: false # Enable templates for GPU checkpoint/restore.
-  gpuRestoreNic: "auto" # How restored UCX contexts pick their RDMA NIC. Options: "auto", "mapping", "off".
   gpuDeltaEnabled: false # Only save GPU memory changed since the previous checkpoint.
-  gpuVerify: "off" # Verify GPU memory after restore. Options: "off", "warn", "strict".
-  gpuHostregRestoreWaitS: 120 # Seconds a restore waits for registered host memory files.
-  gpuWorkerLayout: "auto" # mmap layout of GPU workers. Options: "auto", "native".
-  gpuProfilingEnabled: false # Enable CUDA call profiling.
-  gpuComputeSanitizer: false # Run restored GPU workers under compute-sanitizer (debug).
+  gpuVerify: "off" # Check restored GPU state against the checkpoint. Options: "off", "warn" (log mismatches), "strict" (fail the restore).
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
