@@ -25,6 +25,8 @@ data:
   gpu-templates-enabled: "{{ .Values.config.gpuTemplatesEnabled }}"
   gpu-delta-enabled: "{{ .Values.config.gpuDeltaEnabled }}"
   gpu-verify: "{{ .Values.config.gpuVerify }}"
+  gpu-profiling-enabled: "{{ .Values.config.gpuProfilingEnabled }}"
+  gpu-compute-sanitizer: "{{ .Values.config.gpuComputeSanitizer }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"

@@ -20,6 +20,8 @@
   "gpuTemplatesEnabled"
   "gpuDeltaEnabled"
   "gpuVerify"
+  "gpuProfilingEnabled"
+  "gpuComputeSanitizer"
   "pluginsBuilds"
   "pluginsCriuVersion"
   "pluginsContainerdRuntimeVersion"
