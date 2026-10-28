@@ -49,6 +49,7 @@ config:
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
+  gpuRestoreNic: "auto" # How restored UCX contexts pick their RDMA NIC. Options: "auto" (closest to the GPU), "mapping" (VLLM_GPU_NIC_PCIE_MAPPING), "off" (as checkpointed).
   gpuDedupEnabled: false # Enable deduplication for GPU checkpoints to reduce checkpoint size.
   gpuTemplatesEnabled: false # Enable templates for GPU checkpoint/restore.
 
