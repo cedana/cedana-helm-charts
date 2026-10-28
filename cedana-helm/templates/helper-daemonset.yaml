@@ -190,6 +190,48 @@ spec:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-templates-enabled
                   optional: true
+            - name: CEDANA_GPU_RESTORE_NIC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-restore-nic
+                  optional: true
+            - name: CEDANA_GPU_DELTA_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-delta-enabled
+                  optional: true
+            - name: CEDANA_GPU_VERIFY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-verify
+                  optional: true
+            - name: CEDANA_GPU_HOSTREG_RESTORE_WAIT_S
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-hostreg-restore-wait-s
+                  optional: true
+            - name: CEDANA_GPU_WORKER_LAYOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-worker-layout
+                  optional: true
+            - name: CEDANA_GPU_PROFILING_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-profiling-enabled
+                  optional: true
+            - name: CEDANA_GPU_COMPUTE_SANITIZER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-compute-sanitizer
+                  optional: true
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
