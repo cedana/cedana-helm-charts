@@ -25,6 +25,7 @@ data:
   gpu-dedup-enabled: "{{ .Values.config.gpuDedupEnabled }}"
   gpu-templates-enabled: "{{ .Values.config.gpuTemplatesEnabled }}"
   gpu-direct-io: "{{ .Values.config.gpuDirectIO }}"
+  gpu-mem-ring-buf-size: "{{ .Values.config.gpuMemRingBufSize }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"

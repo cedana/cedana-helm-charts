@@ -20,6 +20,7 @@
   "gpuDedupEnabled"
   "gpuTemplatesEnabled"
   "gpuDirectIO"
+  "gpuMemRingBufSize"
   "pluginsBuilds"
   "pluginsCriuVersion"
   "pluginsContainerdRuntimeVersion"

@@ -202,6 +202,12 @@ spec:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-direct-io
                   optional: true
+            - name: CEDANA_GPU_MEM_RING_BUF_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-mem-ring-buf-size
+                  optional: true
             - name: CEDANA_PLUGINS_BUILDS
               valueFrom:
                 configMapKeyRef:
