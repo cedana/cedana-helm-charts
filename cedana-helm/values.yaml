@@ -52,6 +52,10 @@ config:
   gpuRestoreNic: "auto" # How restored UCX contexts pick their RDMA NIC. Options: "auto" (closest to the GPU), "mapping" (VLLM_GPU_NIC_PCIE_MAPPING), "off" (as checkpointed).
   gpuDedupEnabled: false # Enable deduplication for GPU checkpoints to reduce checkpoint size.
   gpuTemplatesEnabled: false # Enable templates for GPU checkpoint/restore.
+  gpuDeltaEnabled: false # Only save GPU memory changed since the previous checkpoint.
+  gpuVerify: "off" # Check restored GPU state against the checkpoint. Options: "off", "warn" (log mismatches), "strict" (fail the restore).
+  gpuProfilingEnabled: false # Enable CUDA call profiling.
+  gpuComputeSanitizer: false # Run restored GPU workers under compute-sanitizer (debug).
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
