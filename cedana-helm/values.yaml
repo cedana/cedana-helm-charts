@@ -49,6 +49,7 @@ config:
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.
+  gpuRestoreNic: "auto" # How restored UCX contexts pick their RDMA NIC. Options: "auto" (closest to the GPU), "mapping" (VLLM_GPU_NIC_PCIE_MAPPING), "off" (as checkpointed).
   gpuDedupEnabled: false # Enable deduplication for GPU checkpoints to reduce checkpoint size.
   gpuTemplatesEnabled: false # Enable templates for GPU checkpoint/restore.
   gpuDirectIO: true # Read and write GPU checkpoints with O_DIRECT. Bypasses page cache for faster checkpoint/restore.
@@ -60,7 +61,7 @@ config:
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
   pluginsContainerdRuntimeVersion: cedana   # last release v0.8.7
-  pluginsGpuVersion: main                   # last release v0.8.6
+  pluginsGpuVersion: main                   # last release v0.8.8
   pluginsStreamerVersion: main              # last release v0.1.5
 
   profiling: true
@@ -107,7 +108,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper
-    tag: main   # last release v0.9.405
+    tag: main   # last release v0.9.407
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -171,7 +172,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller
-      tag: main   # last release v0.7.3
+      tag: main   # last release v0.7.5
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -238,7 +239,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: main   # last release v0.7.3
+    tag: main   # last release v0.7.5
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:

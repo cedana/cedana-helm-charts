@@ -176,6 +176,12 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-shm-size
+            - name: CEDANA_GPU_RESTORE_NIC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-restore-nic
+                  optional: true
             - name: CEDANA_GPU_DEDUP_ENABLED
               valueFrom:
                 configMapKeyRef:
