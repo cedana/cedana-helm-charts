@@ -16,6 +16,7 @@
   "checkpointAsync"
   "gpuPoolSize"
   "gpuShmSize"
+  "gpuRestoreNic"
   "gpuDedupEnabled"
   "gpuTemplatesEnabled"
   "pluginsBuilds"
