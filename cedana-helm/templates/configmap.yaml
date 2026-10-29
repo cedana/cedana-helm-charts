@@ -21,6 +21,7 @@ data:
   checkpoint-async: "{{ .Values.config.checkpointAsync }}"
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
+  gpu-restore-nic: "{{ .Values.config.gpuRestoreNic }}"
   gpu-dedup-enabled: "{{ .Values.config.gpuDedupEnabled }}"
   gpu-templates-enabled: "{{ .Values.config.gpuTemplatesEnabled }}"
   gpu-delta-enabled: "{{ .Values.config.gpuDeltaEnabled }}"
