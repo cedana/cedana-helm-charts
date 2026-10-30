@@ -87,7 +87,7 @@ config:
   # Fall back to a normal (cold) start of the container if a Cedana restore fails, instead of failing the pod.
   fallbackColdStart: true
 
-  # Install the host packages Cedana needs (CRIU's libraries, iptables, pidof, ...) and yq when they are
+  # Install the host packages Cedana needs (CRIU's libraries, iptables, pidof, ...) when they are
   # missing. Off by default: the helper's setup makes no package changes on the node, and only logs what is
   # missing with the commands that install it. `cedana k8s deps-script` prints the full script, e.g. to run
   # in the node image.
