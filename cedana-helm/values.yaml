@@ -88,10 +88,10 @@ config:
   fallbackColdStart: true
 
   # Install the host packages Cedana needs (CRIU's libraries, iptables, pidof, ...) when they are
-  # missing. Off by default: the helper's setup makes no package changes on the node, and only logs what is
-  # missing with the commands that install it. `cedana k8s deps-script` prints the full script, e.g. to run
-  # in the node image.
-  installDeps: false
+  # missing (installed packages are never upgraded). Set to false for no package changes on the node: the
+  # helper's setup then only logs what is missing with the commands that install it, and
+  # `cedana k8s deps-script` prints the full script, e.g. to run in the node image.
+  installDeps: true
 
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
