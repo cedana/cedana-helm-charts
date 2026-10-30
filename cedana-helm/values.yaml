@@ -55,8 +55,10 @@ config:
   # restores and reports a mismatch, "strict" fails the restore before the process runs and
   # marks a checkpoint whose stored bytes are bad as corrupt. A failed restore falls back to a
   # cold start when fallbackColdStart is on. Start with warn, then set strict once restores
-  # report no mismatches.
-  checkpointChecksumVerify: warn
+  # report no mismatches. Also the mode of the GPU state verification and of the per-file
+  # check of the mem-verify CRIU plugin: one mode for the three checks. "off" for the first
+  # release; a later release moves the default to "warn".
+  checkpointChecksumVerify: "off"
 
   gpuPoolSize: 0 # Number of GPU controllers to keep warm. Improves GPU workload startup/restore time but uses more memory.
   gpuShmSize: "8589934592" # 8 GiB. Enough for most workloads. Reduce if memory constrained or running small workloads only.

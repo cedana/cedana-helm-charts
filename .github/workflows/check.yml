@@ -60,7 +60,7 @@ jobs:
             echo "the helper's checksum/config annotation does not change with the verification mode"; exit 1
           fi
           helm template cedana cedana-helm --set config.clusterId=check --set config.authToken=check --set config.url=http://check \
-            | grep -q 'checkpoint-checksum-verify: "warn"' || { echo "the default verification mode must be warn"; exit 1; }
+            | grep -q 'checkpoint-checksum-verify: "off"' || { echo "the default verification mode must be off for the first release"; exit 1; }
           # GCS: the credentials mode and the emulator host reach the helper and the health check;
           # a service account key reaches them from the Secret only in that mode
           echo '{"type":"service_account"}' > /tmp/gcs-key.json
