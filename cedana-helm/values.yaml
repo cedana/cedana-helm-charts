@@ -87,6 +87,12 @@ config:
   # Fall back to a normal (cold) start of the container if a Cedana restore fails, instead of failing the pod.
   fallbackColdStart: true
 
+  # Install the host packages Cedana needs (CRIU's libraries, iptables, pidof, ...) and yq when they are
+  # missing. Off by default: the helper's setup makes no package changes on the node, and only logs what is
+  # missing with the commands that install it. `cedana k8s deps-script` prints the full script, e.g. to run
+  # in the node image.
+  installDeps: false
+
   # Uncomment, to use custom pre-existing secret
   # preExistingSecret: cedana-secret-user
 
@@ -128,6 +134,9 @@ daemonHelper:
   #   nodeSelector: { cedana.ai/enabled: "true" }
   # Empty = all nodes (default).
   nodeSelector: {}
+  # Setup (host checks, plugin downloads, containerd and kubelet restarts) runs before the daemon
+  # answers the startup probe: on a fresh node it can take minutes
+  startupTimeoutSeconds: 600
 
 serviceAccount:
   # Specifies whether a service account should be created
