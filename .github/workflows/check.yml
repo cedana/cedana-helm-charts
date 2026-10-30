@@ -43,24 +43,6 @@ jobs:
           if [ "$(sort -u /tmp/helper-config-checksums | wc -l)" != 2 ]; then
             echo "the helper's checksum/config annotation does not change with the checkpoint checksum setting"; exit 1
           fi
-          # The checksum of a directory checkpoint is off unless asked for; the value reaches the
-          # daemon and the helper as CEDANA_CHECKPOINT_CHECKSUM_DIRECTORIES, and a change rolls the helper
-          rendered=$(helm template cedana cedana-helm \
-            --set config.clusterId=check --set config.authToken=check --set config.url=http://check)
-          echo "$rendered" | grep -q 'checkpoint-checksum-directories: "false"' || { echo "checkpoint-checksum-directories is not false by default"; exit 1; }
-          for directories in true false; do
-            rendered=$(helm template cedana cedana-helm \
-              --set config.clusterId=check --set config.authToken=check --set config.url=http://check \
-              --set config.checkpointChecksumDirectories=$directories)
-            echo "$rendered" | grep -q "checkpoint-checksum-directories: \"$directories\"" || { echo "checkpoint-checksum-directories: \"$directories\" missing from the ConfigMap"; exit 1; }
-            for ds in helper-daemonset health-check-daemonset; do
-              echo "$rendered" | awk "/^# Source: .*$ds.yaml/,/^---\$/" | grep -q "name: CEDANA_CHECKPOINT_CHECKSUM_DIRECTORIES" || { echo "CEDANA_CHECKPOINT_CHECKSUM_DIRECTORIES missing from $ds"; exit 1; }
-            done
-            echo "$rendered" | awk '/^# Source: .*helper-daemonset.yaml/,/^---$/' | grep "checksum/config:" >> /tmp/helper-config-checksums-directories
-          done
-          if [ "$(sort -u /tmp/helper-config-checksums-directories | wc -l)" != 2 ]; then
-            echo "the helper's checksum/config annotation does not change with the directory checksum setting"; exit 1
-          fi
           # GCS: the credentials mode and the emulator host reach the helper and the health check;
           # a service account key reaches them from the Secret only in that mode
           echo '{"type":"service_account"}' > /tmp/gcs-key.json

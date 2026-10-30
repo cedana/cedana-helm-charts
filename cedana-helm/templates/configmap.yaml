@@ -20,7 +20,6 @@ data:
   checkpoint-compression: "{{ .Values.config.checkpointCompression }}"
   checkpoint-async: "{{ .Values.config.checkpointAsync }}"
   checkpoint-checksum: "{{ .Values.config.checkpointChecksum }}"
-  checkpoint-checksum-directories: "{{ .Values.config.checkpointChecksumDirectories }}"
   gpu-pool-size: "{{ .Values.config.gpuPoolSize }}"
   gpu-shm-size: "{{ .Values.config.gpuShmSize }}"
   gpu-dedup-enabled: "{{ .Values.config.gpuDedupEnabled }}"
