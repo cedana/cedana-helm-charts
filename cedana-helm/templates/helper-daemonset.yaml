@@ -69,7 +69,7 @@ spec:
               command: ["cedana", "daemon", "check", "--ping"]
             initialDelaySeconds: 0
             periodSeconds: 5
-            failureThreshold: 12
+            failureThreshold: {{ div (.Values.daemonHelper.startupTimeoutSeconds | default 600) 5 }}
             successThreshold: 1
             timeoutSeconds: 5
           readinessProbe:
@@ -149,6 +149,12 @@ spec:
                 configMapKeyRef:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: fallback-cold-start
+                  optional: true
+            - name: CEDANA_K8S_INSTALL_DEPS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: install-deps
                   optional: true
             - name: CEDANA_CSX_SOCK_ADDR
               valueFrom:

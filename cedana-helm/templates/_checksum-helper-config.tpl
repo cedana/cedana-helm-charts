@@ -43,6 +43,7 @@
   "criuZeroElide"
   "criuShmemDumpThreads"
   "fallbackColdStart"
+  "installDeps"
 -}}
 {{- range $key := $configKeysFromValuesConfig -}}
   {{- if hasKey $.Values.config $key -}}

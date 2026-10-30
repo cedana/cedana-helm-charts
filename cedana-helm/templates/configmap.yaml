@@ -54,6 +54,7 @@ data:
   criu-shmem-dump-threads: "{{ .Values.config.criuShmemDumpThreads }}"
 
   fallback-cold-start: "{{ .Values.config.fallbackColdStart }}"
+  install-deps: "{{ ne (toString .Values.config.installDeps) "false" }}"
 
   csx-sock-addr: "{{ .Values.csx.sockAddr }}"
 {{- end }}
