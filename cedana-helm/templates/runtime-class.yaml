@@ -3,3 +3,8 @@ kind: RuntimeClass
 metadata:
   name: cedana
 handler: cedana
+{{- if .Values.controllerManager.taintNodes }}
+scheduling:
+  nodeSelector:
+    cedana.ai/ready: "true"
+{{- end }}
