@@ -3,13 +3,15 @@
 # The two runs must line up file for file, so everything they share is here and the entry points
 # hold only what differs: the cedana side can checkpoint and restore, native cannot.
 #
-# Env: CONTEXT NS NODE IMAGE TOPO_FILE READY_TIMEOUT KEEP
+# Env: CONTEXT NS NODE IMAGE TOPO_FILE READY_TIMEOUT INIT_TIMEOUT NRANKS KEEP
 CONTEXT="${CONTEXT:-}"
 NS="${NS:-cedana-systems}"
-NODE="${NODE:-gpu-dp-ckck8-zl9zz}"
+NODE="${NODE:-}"                        # required: the 8xB200 node, e.g. NODE=gpu-dp-ckck8-zl9zz
 IMAGE="${IMAGE:-}"                      # replaces the image in every manifest
 TOPO_FILE="${TOPO_FILE:-}"              # a native run's nccl-topo.xml, fed back as NCCL_TOPO_FILE
-READY_TIMEOUT="${READY_TIMEOUT:-10800}"
+READY_TIMEOUT="${READY_TIMEOUT:-10800}"  # CR: apply -> Ready
+INIT_TIMEOUT="${INIT_TIMEOUT:-3600}"     # COLD-START: apply -> Init COMPLETE on every rank
+NRANKS="${NRANKS:-8}"                    # the TP size: NCCL init is done when this many ranks say so
 KEEP="${KEEP:-0}"                       # 1 = leave the pods up after collecting
 WATCHER=ced2575-watcher
 HOST_OUT=/var/tmp/ced2575
@@ -37,6 +39,7 @@ write_run_manifest() {
 
 preflight() {
   log "preflight"
+  [ -n "$NODE" ] || die "NODE is not set; e.g. NODE=gpu-dp-ckck8-zl9zz $0 ..."
   k get node "$NODE" >/dev/null 2>&1 || die "node $NODE not found; set NODE"
   k create configmap ced2575-bpf     --from-file=bpf/     --dry-run=client -o yaml | k apply -f - >/dev/null
   k create configmap ced2575-watcher --from-file=watcher/ --dry-run=client -o yaml | k apply -f - >/dev/null
@@ -58,10 +61,48 @@ wait_ready() { # pod timeout_s
     case "$_s" in
       "Running true") return 0 ;;
       Running*|Pending*) ;;
-      *) k logs "$1" --tail=40 > "$OUT/$1-failed.log" 2>&1 || true; die "$1 is '$_s'" ;;
+      *) die "$1 is '$_s'" ;;
     esac
     [ $(( $(date +%s) - _t0 )) -gt "$2" ] && die "$1 not Ready after $2 s"
     sleep 15
+  done
+}
+
+# Follows the pod's log into $OUT/server-<tag>.log from before its container starts, so a pod
+# killed before collection (run-1 was, 2.5 h in) still leaves its log behind. Every reconnect
+# re-sends the whole log, so the live copy is .part and it replaces the file only when non-empty.
+stream_log() { # pod tag
+  STREAM_TAG=$2; _f="$OUT/server-$2.log"
+  ( while k get pod "$1" >/dev/null 2>&1; do
+      k logs -f "$1" > "$_f.part" 2>/dev/null || true
+      [ -s "$_f.part" ] && mv -f "$_f.part" "$_f"
+      sleep 5
+    done ) &
+  STREAM_PID=$!
+}
+stop_stream() {
+  [ -n "${STREAM_PID:-}" ] || return 0
+  _kids=$(pgrep -P "$STREAM_PID" 2>/dev/null || true)
+  kill "$STREAM_PID" 2>/dev/null || true
+  [ -z "$_kids" ] || kill $_kids 2>/dev/null || true
+  wait "$STREAM_PID" 2>/dev/null || true
+  STREAM_PID=
+}
+server_log_now() { # tag -> the freshest copy of the streamed log
+  [ -s "$OUT/server-$1.log.part" ] && echo "$OUT/server-$1.log.part" || echo "$OUT/server-$1.log"
+}
+
+# COLD-START's gate. NCCL's topology is decided when every rank logs Init COMPLETE, minutes into
+# the start; Ready is hours later and the pod need not get there. Needs stream_log running.
+wait_nccl_init() { # pod tag timeout_s
+  _t0=$(date +%s)
+  while :; do
+    _s=$(k get pod "$1" -o jsonpath='{.status.phase}' 2>&1 || true)
+    case "$_s" in Running|Pending) ;; *) die "$1 is '$_s'" ;; esac
+    _n=$(grep -c "nranks $NRANKS .*Init COMPLETE" "$(server_log_now "$2")" 2>/dev/null || true)
+    [ "${_n:-0}" -ge "$NRANKS" ] && { sleep 10; return 0; }  # let the rest of the INFO lines land
+    [ $(( $(date +%s) - _t0 )) -gt "$3" ] && die "$1: ${_n:-0}/$NRANKS ranks at Init COMPLETE after $3 s"
+    sleep 10
   done
 }
 
@@ -76,6 +117,7 @@ clear_pods() {
 start_watcher() {
   render 30-watcher.yaml "$OUT/30-watcher.as-run.yaml" --side "$SIDE"
   k apply -f "$OUT/30-watcher.as-run.yaml" >/dev/null
+  DEPLOYED=1
   _t0=$(date +%s)
   while :; do
     k logs "$WATCHER" -c bpf 2>/dev/null | grep -q 'watcher ready' && break
@@ -95,7 +137,11 @@ snap_links() { # tag -- nvidia-smi link/topo state, only once NCCL has decided
 
 # Server-side evidence: the log, and on a cold start NCCL's own dumps.
 collect_server() { # pod tag
-  k logs "$1" > "$OUT/server-$2.log" 2>&1
+  stop_stream
+  _f="$OUT/server-$2.log"
+  [ -s "$_f.part" ] && mv -f "$_f.part" "$_f"; rm -f "$_f.part"
+  { k logs "$1" > "$_f.tmp" 2>/dev/null && [ -s "$_f.tmp" ] && mv -f "$_f.tmp" "$_f"; } || true
+  rm -f "$_f.tmp"
   if [ "$2" = cold ]; then
     for f in nccl-topo.xml nccl-graph.xml; do
       k cp "$1:/tmp/ced-2575/$f" "$OUT/$f" >/dev/null 2>&1 || log "  no /tmp/ced-2575/$f in $1"
@@ -124,7 +170,23 @@ collect_watcher() {
 
 teardown() {
   rm -f "$OUT/.phase"
+  stop_stream
   if [ "$KEEP" = 1 ]; then log "KEEP=1: leaving $POD and $WATCHER up"; return 0; fi
   k delete pod "$POD" "$WATCHER" --ignore-not-found --wait=false >/dev/null 2>&1 || true
   log "deleted $POD and $WATCHER"
 }
+
+# Any failure once the pods are up (die, set -e, Ctrl-C) keeps what exists -- the streamed log,
+# why the pod died, the watcher's output -- and tears down. run-1 lost all of it.
+salvage() {
+  trap - EXIT
+  [ "${DEPLOYED:-0}" = 1 ] || return 0
+  log "salvaging $OUT after a failure in phase '$(cat "$OUT/.phase" 2>/dev/null)'"
+  if [ -n "${POD:-}" ] && k get pod "$POD" >/dev/null 2>&1; then
+    k describe pod "$POD" > "$OUT/$POD-describe.txt" 2>&1 || true
+    [ -z "${STREAM_TAG:-}" ] || collect_server "$POD" "$STREAM_TAG"
+  fi
+  collect_watcher
+  teardown
+}
+trap '_rc=$?; [ "$_rc" -eq 0 ] || salvage' EXIT

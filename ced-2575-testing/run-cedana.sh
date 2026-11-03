@@ -1,11 +1,12 @@
 #!/bin/sh
 # run-cedana.sh -- CED-2575: GLM-5.2 under cedana, with the watcher in place before the cold start.
 #
-#   OUT=out-cedana/run-1 ./run-cedana.sh COLD-START
-#       cold start -> Ready -> collect -> tear down. The reported case, nothing else.
-#   OUT=out-cedana/run-1 ./run-cedana.sh
-#       the same, then checkpoint -> restore -> collect, as Together serves it.
-#   TOPO_FILE=out-native/run-1/nccl-topo.xml OUT=out-cedana/run-2 ./run-cedana.sh COLD-START
+#   NODE=gpu-dp-ckck8-zl9zz OUT=out-cedana/run-1 ./run-cedana.sh COLD-START
+#       cold start -> NCCL Init COMPLETE on every rank -> collect -> tear down. The reported case,
+#       nothing else: the topology is decided there, so the pod never has to reach Ready.
+#   NODE=... OUT=out-cedana/run-1 ./run-cedana.sh
+#       cold start -> Ready, then checkpoint -> restore -> collect, as Together serves it.
+#   NODE=... TOPO_FILE=out-native/run-1/nccl-topo.xml OUT=out-cedana/run-2 ./run-cedana.sh COLD-START
 #       the workaround as a controlled run: a native dump fed back as NCCL_TOPO_FILE.
 #
 # The checkpoint/restore follows cedana-bench's restore-time runner, RESTORE_MODE=path: Ready ->
@@ -13,6 +14,8 @@
 # chart has fallbackColdStart=true, so the restored pod's log is checked for load markers.
 # RESUME=1 starts at the checkpoint from a cold pod that is already Ready (no watcher then);
 # RESUME=restore starts at the restore from $OUT/checkpoint-action.json.
+#
+# The server log is streamed from the apply onward and any failure salvages what exists (lib.sh).
 #
 # Env: see lib.sh, plus OUT RESUME
 set -eu
@@ -54,9 +57,15 @@ if [ "$RESUME" = 0 ]; then
   phase cold-start
   render 11-glm52-cedana.yaml "$OUT/11-glm52-cedana.as-run.yaml" ${TOPO_FILE:+--topo-file}
   k apply -f "$OUT/11-glm52-cedana.as-run.yaml" >/dev/null
+  stream_log "$POD" cold
   t0=$(date +%s)
-  wait_ready "$POD" "$READY_TIMEOUT"
-  log "cold $POD Ready in $(( $(date +%s) - t0 )) s"
+  if [ "$MODE" = COLD-START ]; then
+    wait_nccl_init "$POD" cold "$INIT_TIMEOUT"
+    log "cold $POD: all $NRANKS ranks at NCCL Init COMPLETE in $(( $(date +%s) - t0 )) s"
+  else
+    wait_ready "$POD" "$READY_TIMEOUT"
+    log "cold $POD Ready in $(( $(date +%s) - t0 )) s"
+  fi
   snap_links cold
   collect_server "$POD" cold
 elif [ "$RESUME" = 1 ]; then
@@ -115,6 +124,7 @@ k delete pod "$POD" --ignore-not-found --wait=true >/dev/null
 render 11-glm52-cedana.yaml "$OUT/11-glm52-cedana-restore.yaml" --restore "$RESTORE_PATH" ${TOPO_FILE:+--topo-file}
 t0=$(date +%s)
 k apply -f "$OUT/11-glm52-cedana-restore.yaml" >/dev/null
+stream_log "$POD" init
 wait_ready "$POD" "$READY_TIMEOUT"
 log "restored $POD Ready in $(( $(date +%s) - t0 )) s"
 collect_server "$POD" init

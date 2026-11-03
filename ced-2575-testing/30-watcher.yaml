@@ -24,7 +24,7 @@ metadata:
 spec:
   restartPolicy: Never
   hostPID: true          # the cedana GPU worker runs on the host, outside any pod
-  nodeName: gpu-dp-ckck8-zl9zz
+  # nodeName: set from NODE= by the runner (render.py)
   initContainers:
   - name: clean
     image: lmsysorg/sglang:v0.5.15.post1-cu129

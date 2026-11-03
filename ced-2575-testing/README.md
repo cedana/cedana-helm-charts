@@ -57,7 +57,7 @@ bpf/nvlink.bt            every NVML NVLink answer NCCL gets, with timestamps; /d
 bpf/worker.bt            when the cedana worker first initialised each GPU (host libcuda)
 bpf/transport.bt         what the ranks' driver library was asked: bus ids, P2P, IPC, comm init
 watcher/attach.sh        attaches to host libraries before the server exists, the rest when ranks appear
-watcher/nvlink-watch.sh  kmsg from boot onward; nvidia-smi nvlink/topo on request (never before Ready)
+watcher/nvlink-watch.sh  kmsg from boot onward; nvidia-smi nvlink/topo on request (never before NCCL init)
 lib.sh                   shared by both runners
 render.py                per-run manifest rewrite: node, image, SIDE, restore path, NCCL_TOPO_FILE
 nccl-verdict.py          HEALTHY/DEGRADED from a server log, the dumped XML, or the watcher output
@@ -67,7 +67,7 @@ run-native.sh            the control, and the source of nccl-topo.xml
 
 ## Runbook
 
-Everything is in `cedana-systems`, pinned to `gpu-dp-ckck8-zl9zz` (`NODE=` to move). One 8-GPU
+Everything is in `cedana-systems`, pinned to the node given as `NODE=` (required; no default in the manifests). One 8-GPU
 pod at a time. The runners create the ConfigMaps from `bpf/` and `watcher/` on every start, so an
 edit there is just a re-run.
 
@@ -83,19 +83,24 @@ The image is `lmsysorg/sglang:v0.5.15.post1-cu129`, as in CED-2538 (`IMAGE=` to 
 ### 1. The case: cedana cold start, no checkpoint
 
 ```bash
-OUT=out-cedana/run-1 ./run-cedana.sh COLD-START
+NODE=gpu-dp-ckck8-zl9zz OUT=out-cedana/run-1 ./run-cedana.sh COLD-START
 ```
 
 In order: watcher up and `watcher ready` (stage 1 probes on the host's `libnvidia-ml` and
-`libcuda`), server applied, ranks appear (stage 2 probes on their driver library), Ready,
-`nvidia-smi` snapshot, server log + NCCL dumps copied, verdict printed, watcher stopped with
-SIGTERM and copied, both pods deleted. `KEEP=1` leaves them up.
+`libcuda`), server applied and its log streamed into `server-cold.log` from that moment, ranks
+appear (stage 2 probes on their driver library), every rank logs `Init COMPLETE` (`NRANKS=8`,
+`INIT_TIMEOUT=3600`), `nvidia-smi` snapshot, NCCL dumps copied, verdict printed, watcher stopped
+with SIGTERM and copied, both pods deleted. `KEEP=1` leaves them up. The pod never has to reach
+Ready: the topology is fixed at init. Only the CR run waits for Ready (`READY_TIMEOUT`), since
+the checkpoint needs a serving pod. Any failure after the pods are up (a kill from outside, a
+timeout, Ctrl-C) salvages the streamed log, `glm52-*-describe.txt`, and the watcher output
+before tearing down.
 
 ### 2. The control, and the workaround's input
 
 ```bash
-OUT=out-native/run-1 ./run-native.sh
-TOPO_FILE=out-native/run-1/nccl-topo.xml OUT=out-cedana/run-2 ./run-cedana.sh COLD-START
+NODE=gpu-dp-ckck8-zl9zz OUT=out-native/run-1 ./run-native.sh
+NODE=gpu-dp-ckck8-zl9zz TOPO_FILE=out-native/run-1/nccl-topo.xml OUT=out-cedana/run-2 ./run-cedana.sh COLD-START
 ```
 
 The second line is the workaround as a controlled run: the native XML mounted from a ConfigMap and
@@ -126,7 +131,7 @@ watcher/nvlink.*.log    NVL-CAP / NVL-STATE / NVL-REMOTE per link, OPEN lines, @
 watcher/worker.*.log    WORKER-INIT / WORKER-CTX / WORKER-BUSID with timestamps
 watcher/transport.*.log BUSID / CANP2P / PEER-FAIL / IPC-FAIL / NCCL-INIT
 watcher/kmsg.log        the kernel log; grep -iE 'nvrm|nvlink|xid'
-watcher/nvlink/         nvidia-smi nvlink -s, topo -m, -q, taken after Ready
+watcher/nvlink/         nvidia-smi nvlink -s, topo -m, -q, taken after NCCL init
 watcher-summary.txt     nccl-verdict.py --watcher: per-GPU link answers, first time asked
 attach.log              which library each script attached to, symbol checks, side detection
 ```
@@ -151,6 +156,6 @@ clock the NCCL log lines are stamped with), which is what joins them.
 
 - The watcher is a privileged `hostPID` pod with uprobes on a live process, pinned to one node.
   Keep it a Pod.
-- `PRE_SNAP=0`: nothing queries `nvidia-smi` before the server is Ready. With persistence mode
+- `PRE_SNAP=0`: nothing queries `nvidia-smi` before NCCL has initialised. With persistence mode
   off, `nvidia-smi` attaches every GPU, which could train the very link under investigation.
 - `--hicache-size 128` pins 128 GiB of host memory outside the pod cgroup.

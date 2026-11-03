@@ -21,7 +21,7 @@ metadata:
     ced-2575/side: cedana
 spec:
   restartPolicy: Never
-  nodeName: gpu-dp-ckck8-zl9zz
+  # nodeName: set from NODE= by the runner (render.py)
   runtimeClassName: cedana
   serviceAccountName: cedana-tester
   automountServiceAccountToken: false
@@ -46,16 +46,17 @@ spec:
       ln -sfn "${MODEL_PATH%/}" /data/model
       mkdir -p /tmp/ced-2575
       echo "[ced-2575] serving $MODEL_PATH as $SERVED_MODEL_NAME"
-      smg serve \
-        --backend sglang \
-        --connection-mode grpc \
-        --router-disable-health-check \
+      # Together's command is for their SMG build (`smg serve`). This image carries the public
+      # sglang-router: `smg server`, sglang flags bare, router flags prefixed --router-. Same
+      # settings, spelled for it: grpc workers, worker ports from 9001, router on 8990.
+      smg server \
         --host 0.0.0.0 \
-        --worker-host 0.0.0.0 \
         --port 8990 \
-        --worker-base-port 9001 \
+        --grpc-mode \
+        --router-dp-worker-base-port 9001 \
         --router-prometheus-port 9900 \
-        --worker-startup-timeout 3600 \
+        --router-disable-health-check \
+        --router-worker-startup-timeout-secs 3600 \
         --model-path /data/model \
         --router-model-path /data/model \
         --served-model-name "$SERVED_MODEL_NAME" \
