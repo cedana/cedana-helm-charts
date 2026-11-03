@@ -53,7 +53,7 @@ config:
   gpuDedupEnabled: false # Enable deduplication for GPU checkpoints to reduce checkpoint size.
   gpuTemplatesEnabled: false # Enable templates for GPU checkpoint/restore.
   gpuDeltaEnabled: false # Only save GPU memory changed since the previous checkpoint.
-  gpuVerify: "off" # Check restored GPU state against the checkpoint. Options: "off", "warn" (log mismatches), "strict" (fail the restore).
+  gpuVerify: "warn" # Check restored GPU state against the checkpoint, and record its checksum. Options: "off", "warn" (log mismatches), "strict" (fail the restore).
   gpuProfilingEnabled: false # Enable CUDA call profiling.
   gpuComputeSanitizer: false # Run restored GPU workers under compute-sanitizer (debug).
 
