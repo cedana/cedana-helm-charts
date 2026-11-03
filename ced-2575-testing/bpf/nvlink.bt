@@ -1,0 +1,198 @@
+#!/usr/bin/env bpftrace
+/*
+ * nvlink.bt -- CED-2575. What NCCL's topology detection was told about each NVLink, and when.
+ *
+ * NCCL builds the topology per GPU from NVML (graph/xml.cc, ncclTopoGetXmlFromGpu). For each of
+ * the 18 links it asks nvmlDeviceGetNvLinkCapability(P2P_SUPPORTED), then nvmlDeviceGetNvLinkState,
+ * then nvmlDeviceGetNvLinkRemotePciInfo_v2, and `continue`s silently on any error or an inactive
+ * link. A GPU whose 18 answers all fail or read inactive gets no <nvlink> children, reaches the
+ * switch only over PCIe, and the search then yields few channels, SHM hops and no NVLS -- the
+ * reported shape. NCCL_TOPO_FILE skips the loop whenever the XML already carries <nvlink>
+ * children, which is why the dumped-XML workaround works. This records every answer with a
+ * timestamp, so the degraded GPU and the moment it was asked are both on file.
+ *
+ * Attached to the HOST's libnvidia-ml.so -- the file the toolkit bind-mounts into the pod -- before
+ * the server exists, so the first init is covered. Handle -> bus id comes from the enumeration
+ * NCCL does first (nvmlDeviceGetHandleByIndex_v2 + nvmlDeviceGetPciInfo_v3, or ByPciBusId_v2).
+ *
+ * Also here because they need no library: every open of /dev/nvidia* and of the sysfs PCI paths
+ * NCCL reads for the same GPUs, with their return codes, and NCCL's SHM segments.
+ *
+ *   NVML-INIT                 who initialised NVML (rank pids vs anything else on the node)
+ *   NVL-CAP / NVL-STATE /     one line per call: pid, device handle, its bus id once known, link,
+ *   NVL-REMOTE                return code and the value NCCL read back
+ *   OPEN                      /dev/nvidia*, /sys/class/pci_bus, /sys/bus/pci, /dev/shm/nccl*
+ *   @nvl_ret[func, ret]       cumulative; a non-zero row is a finding
+ *   @nvl_state[bus, link, v]  cumulative link state per GPU: v=1 active, 0 inactive
+ *   @bus[pid, handle]         the handle table, printed at END
+ */
+
+BEGIN
+{
+	printf("# ced-2575 nvlink.bt attached\n");
+	printf("# mono=<boot ns> wall=<epoch s> EVENT comm pid tid detail\n");
+}
+
+uprobe:__LIBNVML__:nvmlInit_v2,
+uprobe:__LIBNVML__:nvmlInitWithFlags
+{
+	printf("mono=%llu wall=%s NVML-INIT %s %d %d %s\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, func);
+}
+
+/* ------------------------------------------------------------------ handle -> bus id */
+uprobe:__LIBNVML__:nvmlDeviceGetHandleByIndex_v2
+{
+	@hi_idx[tid] = arg0; @hi_ptr[tid] = arg1;
+}
+uretprobe:__LIBNVML__:nvmlDeviceGetHandleByIndex_v2
+/@hi_ptr[tid]/
+{
+	if (retval == 0) {
+		$p = (uint64*)@hi_ptr[tid];
+		@idx[pid, *$p] = @hi_idx[tid];
+	}
+	delete(@hi_idx[tid]); delete(@hi_ptr[tid]);
+}
+
+uprobe:__LIBNVML__:nvmlDeviceGetHandleByPciBusId_v2
+{
+	@hb_bus[tid] = str(arg0); @hb_ptr[tid] = arg1;
+}
+uretprobe:__LIBNVML__:nvmlDeviceGetHandleByPciBusId_v2
+/@hb_ptr[tid]/
+{
+	if (retval == 0) {
+		$p = (uint64*)@hb_ptr[tid];
+		@bus[pid, *$p] = @hb_bus[tid];
+	}
+	delete(@hb_bus[tid]); delete(@hb_ptr[tid]);
+}
+
+uprobe:__LIBNVML__:nvmlDeviceGetPciInfo_v3
+{
+	@pi_dev[tid] = arg0; @pi_ptr[tid] = arg1;
+}
+uretprobe:__LIBNVML__:nvmlDeviceGetPciInfo_v3
+/@pi_ptr[tid]/
+{
+	/* nvmlPciInfo_t begins with busIdLegacy[16] */
+	if (retval == 0) {
+		@bus[pid, @pi_dev[tid]] = str(@pi_ptr[tid]);
+	}
+	delete(@pi_dev[tid]); delete(@pi_ptr[tid]);
+}
+
+/* ------------------------------------------------------------------ the three questions */
+uprobe:__LIBNVML__:nvmlDeviceGetNvLinkCapability
+{
+	@c_dev[tid] = arg0; @c_link[tid] = arg1; @c_cap[tid] = arg2; @c_ptr[tid] = arg3;
+	@c_t0[tid] = nsecs;
+}
+uretprobe:__LIBNVML__:nvmlDeviceGetNvLinkCapability
+/@c_ptr[tid]/
+{
+	$v = (uint32)0;
+	if (retval == 0) { $p = (uint32*)@c_ptr[tid]; $v = *$p; }
+	@nvl_ret[func, retval] = count();
+	printf("mono=%llu wall=%s NVL-CAP %s %d %d dev=0x%lx bus=%s link=%d cap=%d ret=%d val=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid,
+	       @c_dev[tid], @bus[pid, @c_dev[tid]], @c_link[tid], @c_cap[tid], retval, $v,
+	       (nsecs - @c_t0[tid]) / 1000);
+	delete(@c_dev[tid]); delete(@c_link[tid]); delete(@c_cap[tid]); delete(@c_ptr[tid]);
+	delete(@c_t0[tid]);
+}
+
+uprobe:__LIBNVML__:nvmlDeviceGetNvLinkState
+{
+	@s_dev[tid] = arg0; @s_link[tid] = arg1; @s_ptr[tid] = arg2; @s_t0[tid] = nsecs;
+}
+uretprobe:__LIBNVML__:nvmlDeviceGetNvLinkState
+/@s_ptr[tid]/
+{
+	$v = (uint32)0;
+	if (retval == 0) { $p = (uint32*)@s_ptr[tid]; $v = *$p; }
+	@nvl_ret[func, retval] = count();
+	@nvl_state[@bus[pid, @s_dev[tid]], @s_link[tid], $v] = count();
+	printf("mono=%llu wall=%s NVL-STATE %s %d %d dev=0x%lx bus=%s link=%d ret=%d active=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid,
+	       @s_dev[tid], @bus[pid, @s_dev[tid]], @s_link[tid], retval, $v,
+	       (nsecs - @s_t0[tid]) / 1000);
+	delete(@s_dev[tid]); delete(@s_link[tid]); delete(@s_ptr[tid]); delete(@s_t0[tid]);
+}
+
+uprobe:__LIBNVML__:nvmlDeviceGetNvLinkRemotePciInfo_v2
+{
+	@r_dev[tid] = arg0; @r_link[tid] = arg1; @r_ptr[tid] = arg2; @r_t0[tid] = nsecs;
+}
+uretprobe:__LIBNVML__:nvmlDeviceGetNvLinkRemotePciInfo_v2
+/@r_ptr[tid]/
+{
+	@nvl_ret[func, retval] = count();
+	printf("mono=%llu wall=%s NVL-REMOTE %s %d %d dev=0x%lx bus=%s link=%d ret=%d remote=%s us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid,
+	       @r_dev[tid], @bus[pid, @r_dev[tid]], @r_link[tid], retval, str(@r_ptr[tid]),
+	       (nsecs - @r_t0[tid]) / 1000);
+	delete(@r_dev[tid]); delete(@r_link[tid]); delete(@r_ptr[tid]); delete(@r_t0[tid]);
+}
+
+/* >>>IF __LIBNVML__:nvmlDeviceGetNvLinkRemoteDeviceType */
+uprobe:__LIBNVML__:nvmlDeviceGetNvLinkRemoteDeviceType
+{
+	@t_dev[tid] = arg0; @t_link[tid] = arg1; @t_ptr[tid] = arg2;
+}
+uretprobe:__LIBNVML__:nvmlDeviceGetNvLinkRemoteDeviceType
+/@t_ptr[tid]/
+{
+	$v = (uint32)0;
+	if (retval == 0) { $p = (uint32*)@t_ptr[tid]; $v = *$p; }
+	@nvl_ret[func, retval] = count();
+	printf("mono=%llu wall=%s NVL-RTYPE %s %d %d dev=0x%lx bus=%s link=%d ret=%d type=%d\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid,
+	       @t_dev[tid], @bus[pid, @t_dev[tid]], @t_link[tid], retval, $v);
+	delete(@t_dev[tid]); delete(@t_link[tid]); delete(@t_ptr[tid]);
+}
+/* <<<IF */
+
+/* Anything else NVML is asked about links, counted so a call this script does not name still
+ * shows up. */
+uretprobe:__LIBNVML__:nvmlDeviceGetNvLink*,
+uretprobe:__LIBNVML__:nvmlDeviceGetFieldValues
+{
+	@nvml_other[func, retval] = count();
+}
+
+/* ------------------------------------------------------------------ opens, with their result */
+tracepoint:syscalls:sys_enter_openat
+/strncmp(str(args->filename), "/dev/nvidia", 11) == 0 ||
+ strncmp(str(args->filename), "/sys/class/pci_bus", 18) == 0 ||
+ strncmp(str(args->filename), "/sys/bus/pci", 12) == 0 ||
+ strncmp(str(args->filename), "/dev/shm/nccl", 13) == 0 ||
+ strncmp(str(args->filename), "/proc/driver/nvidia", 19) == 0/
+{
+	@fn[tid] = str(args->filename);
+}
+tracepoint:syscalls:sys_exit_openat
+/@fn[tid] != ""/
+{
+	printf("mono=%llu wall=%s OPEN %s %d %d %s ret=%d\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @fn[tid], args->ret);
+	if (args->ret < 0) { @open_fail[comm, @fn[tid]] = count(); }
+	delete(@fn[tid]);
+}
+
+interval:s:30
+{
+	printf("\n===== ced-2575 nvlink window mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@nvl_ret); print(@nvl_state); print(@nvml_other); print(@open_fail);
+}
+
+END
+{
+	clear(@hi_idx); clear(@hi_ptr); clear(@hb_bus); clear(@hb_ptr); clear(@pi_dev); clear(@pi_ptr);
+	clear(@c_dev); clear(@c_link); clear(@c_cap); clear(@c_ptr); clear(@c_t0);
+	clear(@s_dev); clear(@s_link); clear(@s_ptr); clear(@s_t0);
+	clear(@r_dev); clear(@r_link); clear(@r_ptr); clear(@r_t0);
+	clear(@fn);
+}

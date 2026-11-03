@@ -1,0 +1,85 @@
+#!/usr/bin/env bpftrace
+/*
+ * worker.bt -- CED-2575. When the cedana GPU worker first brought up each GPU.
+ *
+ * Under cedana the ranks never touch the driver: cedana-gpu-controller does, on the host, with
+ * the real libcuda. The order and time at which it initialised each device, set against the
+ * NVL-STATE lines nvlink.bt records from the ranks, answers whether a GPU was asked about its
+ * links before anything had initialised it. Attached to the host's libcuda before the server
+ * exists; on the native side nothing of interest maps it and the file stays quiet.
+ *
+ *   WORKER-INIT     cuInit
+ *   WORKER-CTX      cuDevicePrimaryCtxRetain / cuCtxCreate* with the device ordinal
+ *   WORKER-BUSID    cuDeviceGetPCIBusId: ordinal -> bus id as the worker sees it, which is what
+ *                   the interceptor answers to the ranks
+ */
+
+BEGIN
+{
+	printf("# ced-2575 worker.bt attached\n");
+}
+
+uprobe:__LIBCUDA__:cuInit
+{
+	@i_t0[tid] = nsecs;
+}
+uretprobe:__LIBCUDA__:cuInit
+/@i_t0[tid]/
+{
+	printf("mono=%llu wall=%s WORKER-INIT %s %d %d ret=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, retval, (nsecs - @i_t0[tid]) / 1000);
+	delete(@i_t0[tid]);
+}
+
+uprobe:__LIBCUDA__:cuDevicePrimaryCtxRetain
+{
+	@x_dev[tid] = arg1; @x_t0[tid] = nsecs; @x_f[tid] = func;
+}
+uprobe:__LIBCUDA__:cuCtxCreate_v2
+{
+	@x_dev[tid] = arg2; @x_t0[tid] = nsecs; @x_f[tid] = func;
+}
+uprobe:__LIBCUDA__:cuCtxCreate_v3
+{
+	@x_dev[tid] = arg4; @x_t0[tid] = nsecs; @x_f[tid] = func;
+}
+uprobe:__LIBCUDA__:cuCtxCreate_v4
+{
+	@x_dev[tid] = arg3; @x_t0[tid] = nsecs; @x_f[tid] = func;
+}
+uretprobe:__LIBCUDA__:cuDevicePrimaryCtxRetain,
+uretprobe:__LIBCUDA__:cuCtxCreate_v2,
+uretprobe:__LIBCUDA__:cuCtxCreate_v3,
+uretprobe:__LIBCUDA__:cuCtxCreate_v4
+/@x_t0[tid]/
+{
+	@ctx_n[comm, @x_f[tid], @x_dev[tid]] = count();
+	printf("mono=%llu wall=%s WORKER-CTX %s %d %d %s dev=%d ret=%d us=%llu\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @x_f[tid], @x_dev[tid], retval,
+	       (nsecs - @x_t0[tid]) / 1000);
+	delete(@x_dev[tid]); delete(@x_t0[tid]); delete(@x_f[tid]);
+}
+
+uprobe:__LIBCUDA__:cuDeviceGetPCIBusId
+{
+	@b_ptr[tid] = arg0; @b_dev[tid] = arg2;
+}
+uretprobe:__LIBCUDA__:cuDeviceGetPCIBusId
+/@b_ptr[tid]/
+{
+	printf("mono=%llu wall=%s WORKER-BUSID %s %d %d dev=%d bus=%s ret=%d\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @b_dev[tid], str(@b_ptr[tid]), retval);
+	delete(@b_ptr[tid]); delete(@b_dev[tid]);
+}
+
+interval:s:30
+{
+	printf("\n===== ced-2575 worker window mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@ctx_n);
+}
+
+END
+{
+	clear(@i_t0); clear(@x_dev); clear(@x_t0); clear(@x_f); clear(@b_ptr); clear(@b_dev);
+}

@@ -1,0 +1,108 @@
+#!/usr/bin/env bpftrace
+/*
+ * transport.bt -- CED-2575. The driver-side half of NCCL's topology decision, as the ranks see it.
+ *
+ * nvlink.bt records what NVML said. This records what the ranks' driver library was asked in the
+ * same window -- cedana's interceptor on the cedana side, the image's libcuda native. Attached by
+ * attach.sh the moment the engine processes map it (stage 2), which is before the first NCCL init.
+ *
+ *   BUSID       cuDeviceGetPCIBusId: the bus id each rank believes its ordinal has. NCCL keys the
+ *               whole topology on it, and the interceptor answers it on the worker's behalf. A
+ *               rank told a different bus id than NVML holds for the same GPU is a graph built
+ *               around the wrong device.
+ *   CANP2P      cuDeviceCanAccessPeer and cuCtxEnablePeerAccess results: P2P vs SHM per pair,
+ *               decided after the graph.
+ *   IPC-FAIL    cuIpc* / shareable-handle errors, NCCL's other road to SHM.
+ *   NCCL-INIT   ncclCommInit* entry (interceptor only): when the topology was decided.
+ *   @ipc_ret, @peer_ret, @canp2p   cumulative tables
+ */
+
+BEGIN
+{
+	printf("# ced-2575 transport.bt attached\n");
+}
+
+uprobe:__LIB__:cuDeviceGetPCIBusId
+{
+	@b_ptr[tid] = arg0; @b_dev[tid] = arg2;
+}
+uretprobe:__LIB__:cuDeviceGetPCIBusId
+/@b_ptr[tid]/
+{
+	printf("mono=%llu wall=%s BUSID %s %d %d dev=%d bus=%s ret=%d\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @b_dev[tid], str(@b_ptr[tid]), retval);
+	delete(@b_ptr[tid]); delete(@b_dev[tid]);
+}
+
+uprobe:__LIB__:cuDeviceCanAccessPeer
+{
+	@p_ptr[tid] = arg0; @p_dev[tid] = arg1; @p_peer[tid] = arg2;
+}
+uretprobe:__LIB__:cuDeviceCanAccessPeer
+/@p_ptr[tid]/
+{
+	$v = (int32)-1;
+	if (retval == 0) { $p = (int32*)@p_ptr[tid]; $v = *$p; }
+	@canp2p[@p_dev[tid], @p_peer[tid], $v] = count();
+	printf("mono=%llu wall=%s CANP2P %s %d %d dev=%d peer=%d ret=%d can=%d\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @p_dev[tid], @p_peer[tid], retval, $v);
+	delete(@p_ptr[tid]); delete(@p_dev[tid]); delete(@p_peer[tid]);
+}
+
+uretprobe:__LIB__:cuCtxEnablePeerAccess
+{
+	@peer_ret[retval] = count();
+	if (retval != 0) {
+		printf("mono=%llu wall=%s PEER-FAIL %s %d %d ret=%d\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, retval);
+	}
+}
+
+uprobe:__LIB__:cuIpcGetMemHandle,
+uprobe:__LIB__:cuIpcOpenMemHandle,
+uprobe:__LIB__:cuIpcGetEventHandle,
+uprobe:__LIB__:cuIpcOpenEventHandle,
+uprobe:__LIB__:cuMemExportToShareableHandle,
+uprobe:__LIB__:cuMemImportFromShareableHandle
+{
+	@ipcstart[tid] = nsecs; @ipcfunc[tid] = func;
+}
+uretprobe:__LIB__:cuIpcGetMemHandle,
+uretprobe:__LIB__:cuIpcOpenMemHandle,
+uretprobe:__LIB__:cuIpcGetEventHandle,
+uretprobe:__LIB__:cuIpcOpenEventHandle,
+uretprobe:__LIB__:cuMemExportToShareableHandle,
+uretprobe:__LIB__:cuMemImportFromShareableHandle
+/@ipcstart[tid]/
+{
+	@ipc_ret[@ipcfunc[tid], retval] = count();
+	if (retval != 0) {
+		printf("mono=%llu wall=%s IPC-FAIL %s %d %d %s ret=%d us=%llu\n",
+		       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, @ipcfunc[tid], retval,
+		       (nsecs - @ipcstart[tid]) / 1000);
+	}
+	delete(@ipcstart[tid]); delete(@ipcfunc[tid]);
+}
+
+/* >>>IF __LIB__:ncclCommInitRank */
+uprobe:__LIB__:ncclCommInitRank,
+uprobe:__LIB__:ncclCommInitRankConfig,
+uprobe:__LIB__:ncclCommInitAll
+{
+	printf("mono=%llu wall=%s NCCL-INIT %s %d %d %s\n",
+	       nsecs, strftime("%s.%f", nsecs), comm, pid, tid, func);
+}
+/* <<<IF */
+
+interval:s:30
+{
+	printf("\n===== ced-2575 transport window mono=%llu wall=%s =====\n",
+	       nsecs, strftime("%s.%f", nsecs));
+	print(@canp2p); print(@peer_ret); print(@ipc_ret);
+}
+
+END
+{
+	clear(@b_ptr); clear(@b_dev); clear(@p_ptr); clear(@p_dev); clear(@p_peer);
+	clear(@ipcstart); clear(@ipcfunc);
+}

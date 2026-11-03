@@ -1,0 +1,90 @@
+# CED-2575: the watcher. Deployed BEFORE the server, so the cold start is observed from its first
+# /dev/nvidia open. Two containers:
+#   bpf   -- bpftrace through watcher/attach.sh. nvlink.bt and worker.bt attach to the host's
+#            libnvidia-ml / libcuda at once (stage 1); transport.bt attaches to the ranks' own
+#            driver library the moment the engine processes appear (stage 2).
+#   snap  -- watcher/nvlink-watch.sh: the kernel log for the whole window, and nvidia-smi link /
+#            topology state when the runner asks for it (after Ready, so nothing touches the GPUs
+#            before NCCL has decided).
+# Both write to the hostPath /var/tmp/ced2575, wiped by the init container at each start: if the
+# image has no bpftrace the host's runs through nsenter, and that one cannot see an emptyDir.
+#
+# A POD, NOT A DAEMONSET: a DaemonSet would land a privileged hostPID pod on every node.
+# The runner renders nodeName and SIDE; apply by hand only through $OUT/30-watcher.as-run.yaml.
+#
+# Stop it cleanly -- bpftrace prints its END tables only on SIGTERM:
+#   kubectl -n cedana-systems exec ced2575-watcher -c bpf -- pkill -TERM -f attach.sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ced2575-watcher
+  namespace: cedana-systems
+  labels:
+    app: ced2575-watcher
+spec:
+  restartPolicy: Never
+  hostPID: true          # the cedana GPU worker runs on the host, outside any pod
+  nodeName: gpu-dp-ckck8-zl9zz
+  initContainers:
+  - name: clean
+    image: lmsysorg/sglang:v0.5.15.post1-cu129
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "rm -rf /var/tmp/ced2575/* /var/tmp/ced2575/.[!.]* 2>/dev/null; mkdir -p /var/tmp/ced2575"]
+    volumeMounts:
+    - {name: out, mountPath: /var/tmp/ced2575}
+  containers:
+  - name: bpf
+    # The server's own image. bpftrace comes from apt at startup; the host's through nsenter is
+    # the fallback.
+    image: lmsysorg/sglang:v0.5.15.post1-cu129
+    imagePullPolicy: IfNotPresent
+    command: ["bash", "-c"]
+    args:
+    - |
+      if ! command -v bpftrace >/dev/null; then
+        echo "[ced-2575] no bpftrace in image; trying apt, then the host's via nsenter"
+        apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq bpftrace >/dev/null 2>&1 || true
+      fi
+      exec sh /watcher/attach.sh /bpf/nvlink.bt /bpf/worker.bt /bpf/transport.bt
+    env:
+    - {name: OUTDIR, value: "/var/tmp/ced2575"}
+    - {name: SIDE,   value: "auto"}      # rendered by the runner; attach.sh checks it at stage 2
+    securityContext:
+      privileged: true                  # CAP_BPF + CAP_PERFMON + CAP_SYS_ADMIN for uprobes
+    volumeMounts:
+    - {name: out,     mountPath: /var/tmp/ced2575}
+    - {name: bpf,     mountPath: /bpf}
+    - {name: watcher, mountPath: /watcher}
+    - {name: debugfs, mountPath: /sys/kernel/debug}
+    - {name: bpffs,   mountPath: /sys/fs/bpf}
+    - {name: modules, mountPath: /lib/modules, readOnly: true}
+  - name: snap
+    image: lmsysorg/sglang:v0.5.15.post1-cu129
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh", "/watcher/nvlink-watch.sh"]
+    env:
+    - {name: OUTDIR,   value: "/var/tmp/ced2575"}
+    - {name: PRE_SNAP, value: "0"}       # 1 = also query nvidia-smi BEFORE the server starts.
+                                         # That touches every GPU; off unless you mean it.
+    # The driver's nvidia-smi without claiming a GPU. If the nvidia runtime is not the default
+    # these do nothing and nvlink-watch.sh falls back to the host's through nsenter.
+    - {name: NVIDIA_VISIBLE_DEVICES,     value: "all"}
+    - {name: NVIDIA_DRIVER_CAPABILITIES, value: "utility"}
+    securityContext:
+      privileged: true                  # /dev/kmsg, nsenter into pid 1
+    volumeMounts:
+    - {name: out,     mountPath: /var/tmp/ced2575}
+    - {name: watcher, mountPath: /watcher}
+  volumes:
+  - name: out
+    hostPath: {path: /var/tmp/ced2575, type: DirectoryOrCreate}
+  - name: bpf
+    configMap: {name: ced2575-bpf}
+  - name: watcher
+    configMap: {name: ced2575-watcher, defaultMode: 0755}
+  - name: debugfs
+    hostPath: {path: /sys/kernel/debug}
+  - name: bpffs
+    hostPath: {path: /sys/fs/bpf}
+  - name: modules
+    hostPath: {path: /lib/modules}

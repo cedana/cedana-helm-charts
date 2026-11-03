@@ -1,1 +1,0 @@
-/watcher/snapshot.sh: 171: nvidia-smi: not found

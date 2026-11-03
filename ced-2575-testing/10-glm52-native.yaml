@@ -1,0 +1,120 @@
+# CED-2575: GLM-5.2 on SMG/SGLang TP8, NATIVE. The control, and the source of the fix's input:
+# NCCL_TOPO_DUMP_FILE here is the XML that, fed back as NCCL_TOPO_FILE, made three cedana cold
+# starts initialise with a healthy topology. 11-glm52-cedana.yaml is this file plus
+# runtimeClassName and the cedana env; the runners pin the node and can swap the image.
+#
+# Engine command and env are Together's GLM-5.2 deployment as given in the ticket. The image is
+# the one CED-2538 ran; pass IMAGE= to the runner to use another.
+# modelopt_fp4 needs an NVFP4 export on the volume -- MODEL_GLOB picks the Hub snapshot.
+#
+#   ./run-native.sh
+apiVersion: v1
+kind: Pod
+metadata:
+  name: glm52-native
+  namespace: cedana-systems
+  labels:
+    app: glm52-native
+    ced-2575/side: native
+spec:
+  restartPolicy: Never
+  nodeName: gpu-dp-ckck8-zl9zz
+  terminationGracePeriodSeconds: 120
+  containers:
+  - name: server
+    image: lmsysorg/sglang:v0.5.15.post1-cu129
+    imagePullPolicy: IfNotPresent
+    command: ["bash", "-c"]
+    args:
+    - |
+      set -o pipefail
+      # Together serves from /data/model; the Hub snapshot on the volume is linked there.
+      if [ -z "${MODEL_PATH:-}" ]; then
+        MODEL_PATH=$(ls -d /data/modelpreload/huggingface/models--${MODEL_GLOB}/snapshots/*/ 2>/dev/null | head -1)
+      fi
+      if [ -z "$MODEL_PATH" ]; then
+        echo "[ced-2575] no snapshot matching models--$MODEL_GLOB under /data/modelpreload/huggingface; available:"
+        ls -d /data/modelpreload/huggingface/models--* 2>/dev/null | sed 's/^/  /'
+        sleep infinity
+      fi
+      ln -sfn "${MODEL_PATH%/}" /data/model
+      mkdir -p /tmp/ced-2575
+      echo "[ced-2575] serving $MODEL_PATH as $SERVED_MODEL_NAME"
+      smg serve \
+        --backend sglang \
+        --connection-mode grpc \
+        --router-disable-health-check \
+        --host 0.0.0.0 \
+        --worker-host 0.0.0.0 \
+        --port 8990 \
+        --worker-base-port 9001 \
+        --router-prometheus-port 9900 \
+        --worker-startup-timeout 3600 \
+        --model-path /data/model \
+        --router-model-path /data/model \
+        --served-model-name "$SERVED_MODEL_NAME" \
+        --tensor-parallel-size 8 \
+        --quantization modelopt_fp4 \
+        --kv-cache-dtype fp8_e4m3 \
+        --context-length 1048575 \
+        --trust-remote-code \
+        --router-tool-call-parser glm47_moe \
+        --router-reasoning-parser glm45 \
+        --mem-fraction-static 0.85 \
+        --chunked-prefill-size 8192 \
+        --enable-hierarchical-cache \
+        --hicache-size 128 \
+        --hicache-write-policy write_through_selective \
+        --max-running-requests 64 \
+        --speculative-algorithm EAGLE \
+        --speculative-num-steps 5 \
+        --speculative-eagle-topk 1 \
+        --speculative-num-draft-tokens 6 \
+        --enable-metrics \
+        --enable-cache-report \
+        --enable-request-time-stats-logging \
+        --log-requests \
+        --log-requests-level 0 \
+        2>&1
+      # stdout only: a tee that dies takes the engine with it on SIGPIPE. The runner saves
+      # `kubectl logs`.
+      echo '[ced-2575] server exited'
+      sleep infinity
+    env:
+    - {name: SERVED_MODEL_NAME, value: "zai-org/GLM-5.2"}
+    - {name: MODEL_GLOB,        value: "*GLM-5.2*"}
+    - {name: HF_HOME,               value: /data/modelpreload/huggingface}
+    - {name: HF_HUB_CACHE,          value: /data/modelpreload/huggingface}
+    - {name: HUGGINGFACE_HUB_CACHE, value: /data/modelpreload/huggingface}
+    - {name: HF_HUB_OFFLINE,        value: "1"}
+    - {name: NCCL_RUNTIME_CONNECT,          value: "0"}
+    - {name: TORCHINDUCTOR_COMPILE_THREADS, value: "1"}
+    # NCCL has no DEBUG level; INFO on every subsystem but the per-collective one is the
+    # most it says. Timestamps on each line join it to the watcher's wall= stamps.
+    - {name: NCCL_DEBUG,                  value: "INFO"}
+    - {name: NCCL_DEBUG_SUBSYS,           value: "^COLL"}
+    - {name: NCCL_DEBUG_TIMESTAMP_LEVELS, value: "WARN,INFO"}
+    # The topology NCCL detected (rank 0), and the channel graphs it searched on it. The XML is
+    # the thing to diff between sides, and the native one is what NCCL_TOPO_FILE feeds back.
+    - {name: NCCL_TOPO_DUMP_FILE,  value: /tmp/ced-2575/nccl-topo.xml}
+    - {name: NCCL_GRAPH_DUMP_FILE, value: /tmp/ced-2575/nccl-graph.xml}
+    ports:
+    - {name: http,    containerPort: 8990}
+    - {name: metrics, containerPort: 9900}
+    resources:
+      limits:
+        nvidia.com/gpu: 8
+    volumeMounts:
+    - {name: models, mountPath: /data/modelpreload/huggingface}
+    - {name: dshm,   mountPath: /dev/shm}
+    readinessProbe:               # what Together's SMG manifests probe; Ready = engine serving
+      httpGet: {path: /health_generate, port: 8990}
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      timeoutSeconds: 30
+      failureThreshold: 480       # ~4 h; the cold start from Weka is slow
+  volumes:
+  - name: models
+    persistentVolumeClaim: {claimName: hf-models-rwx, readOnly: true}
+  - name: dshm
+    emptyDir: {medium: Memory, sizeLimit: 64Gi}
