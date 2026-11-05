@@ -97,11 +97,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-local-disk-cache-limit
-            - name: CEDANA_CSX_NFS_POLL_INTERVAL
+            - name: CEDANA_CSX_POLL_INTERVAL
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
-                  key: csx-nfs-poll-interval
+                  key: csx-poll-interval
             - name: CEDANA_CSX_TMP_DIR
               valueFrom:
                 configMapKeyRef:

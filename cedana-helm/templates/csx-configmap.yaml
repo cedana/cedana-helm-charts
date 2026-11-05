@@ -14,7 +14,7 @@ data:
   csx-local-disk-cache-limit: "{{ .Values.csx.localDiskCacheLimit }}"
   csx-local-disk-cache-path: "{{ .Values.csx.localDiskCachePath }}"
   csx-nfs-path: "{{ required "Please provide --set csx.nfsPath=<nfs-path> when config.checkpointDir=csx://" .Values.csx.nfsPath }}"
-  csx-nfs-poll-interval: "{{ .Values.csx.nfsPollInterval }}"
+  csx-poll-interval: "{{ .Values.csx.pollInterval }}"
   csx-tmp-dir: "{{ .Values.csx.tmpDir }}"
   csx-tmp-dir-object-limit: "{{ .Values.csx.tmpDirObjectLimit }}"
   csx-enable-metrics: "{{ .Values.csx.enableMetrics }}"

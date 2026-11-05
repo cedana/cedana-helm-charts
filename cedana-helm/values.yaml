@@ -289,7 +289,7 @@ csx:
   # Path of the Unix socket used by the CSX gRPC server.
   sockAddr: /run/csx.sock
   # Interval, in seconds, at which CSX checks NFS for checkpoints from other nodes.
-  nfsPollInterval: 1
+  pollInterval: 1
   # Path where CSX temporarily stores objects while they are being written or
   # have not yet been copied to NFS. CSX creates a tmpfs at this path.
   tmpDir: /cedana/tmpdir
