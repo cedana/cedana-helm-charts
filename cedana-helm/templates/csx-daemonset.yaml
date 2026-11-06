@@ -72,31 +72,64 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-sock-addr
-            - name: CEDANA_CSX_NFS_PATH
+            - name: CEDANA_CSX_MODE
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
-                  key: csx-nfs-path
-            - name: CEDANA_CSX_MEMORY_CACHE_PATH
+                  key: csx-mode
+            - name: CEDANA_CSX_NFS_STORE_PATH
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
-                  key: csx-memory-cache-path
-            - name: CEDANA_CSX_MEMORY_CACHE_PERCENT
+                  key: csx-nfs-store-path
+            - name: CEDANA_CSX_NFS_STORE_MEMORY_CACHE_PATH
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
-                  key: csx-memory-cache-percent
-            - name: CEDANA_CSX_LOCAL_DISK_CACHE_PATH
+                  key: csx-nfs-store-memory-cache-path
+            - name: CEDANA_CSX_NFS_STORE_MEMORY_CACHE_PERCENT
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
-                  key: csx-local-disk-cache-path
-            - name: CEDANA_CSX_LOCAL_DISK_CACHE_LIMIT
+                  key: csx-nfs-store-memory-cache-percent
+            - name: CEDANA_CSX_NFS_STORE_LOCAL_DISK_CACHE_PATH
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
-                  key: csx-local-disk-cache-limit
+                  key: csx-nfs-store-local-disk-cache-path
+            - name: CEDANA_CSX_NFS_STORE_LOCAL_DISK_CACHE_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-nfs-store-local-disk-cache-limit
+            - name: CEDANA_CSX_P2P_STORE_DISK_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-p2p-store-disk-path
+            - name: CEDANA_CSX_P2P_STORE_TMP_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-p2p-store-tmp-path
+            - name: CEDANA_CSX_P2P_STORE_LISTEN_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-p2p-store-listen-addr
+            - name: CEDANA_CSX_P2P_STORE_STREAMS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-p2p-store-streams
+            # The address peers pull checkpoints from. The pod runs on the host
+            # network, so the node IP plus the p2p port reaches CSX's listener.
+            - name: CSX_HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: CEDANA_CSX_P2P_STORE_PEER_ADDR
+              value: "$(CSX_HOST_IP):{{ .Values.csx.p2p.port }}"
             - name: CEDANA_CSX_POLL_INTERVAL
               valueFrom:
                 configMapKeyRef:

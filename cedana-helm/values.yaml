@@ -26,14 +26,16 @@ config:
   # - `cedana://<path>` for Cedana-managed global storage
   # - `s3://<bucket>/<path>` for your S3 storage
   # - `<path>` for node-local storage (not recommended, as it won't be accessible across nodes)
-  # - `csx://` for using Cedana's custom NFS backed storage solution (recommended)
-  #   CSX uses a combination of tmpfs, local disk and NFS to store and cache checkpoints.
-  #   All checkpoints are persisted to NFS but are written first to RAM in order to reduce freeze time.
-  #   Checkpoints are automatically cached to tmpfs and local disk allowing for faster restores.
+  # - `csx://` for using Cedana's custom storage solution (recommended)
+  #   CSX runs on every node and has two modes, selected by `csx.mode`:
+  #   - `nfs`: all checkpoints are persisted to NFS but are written first to RAM in order to
+  #     reduce freeze time, and are automatically cached to tmpfs and local disk for faster restores.
+  #   - `p2p`: each node keeps its checkpoints on its own disk and pulls the ones it needs
+  #     from peer nodes over TCP, coordinated through the propagator. No NFS is needed.
   #   CSX is not compatible with checkpoint streaming, so checkpointStreams MUST BE 0 for CSX to work
   #   correctly.
-  #   See the `csx` key to configure NFS path, tmpfs limits, local disk limits and other config options.
-  checkpointDir: "/tmp"
+  #   See the `csx` key to configure the mode, NFS path, tmpfs limits, local disk limits and other options.
+  checkpointDir: csx://
   # Specify the number of parallel streams to use for streaming checkpoint/restore operations.
   # 0 means no streaming. n > 0 means n parallel streams (or number of pipes) to use.
   # Streaming ensures a low footprint by using memory efficiently with no intermediate
@@ -259,7 +261,7 @@ dynamoWatcher:
 csx:
   image:
     repository: cedana/cedana-csx-test
-    tag: main   # last release v0.2.3
+    tag: f661c6b82b292893e3e661a97a3c79582e2b8c46   # last release v0.2.3
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -273,22 +275,39 @@ csx:
   # Empty = all nodes (default).
   nodeSelector: {}
   logLevel: info
-  # Path to Dir inside a NFS where CSX can store persistent checkpoints on the cluster.
-  nfsPath:
-  # Percentage of system RAM CSX can use to cache checkpoints (1-100).
-  # CSX creates a tmpfs of this size at memoryCachePath.
-  memoryCachePercent: 25
-  # Path where CSX mounts the tmpfs used to cache checkpoints in RAM.
-  # CSX creates the path if it does not exist.
-  memoryCachePath: /cedana/memstore/
-  # Amount of local disk space, in GiB, CSX can use to cache checkpoints.
-  localDiskCacheLimit: 1000
-  # Path on the local disk where CSX caches checkpoints.
-  # CSX creates the path if it does not exist.
-  localDiskCachePath: /cedana/diskstore/
+  # Storage backend: "nfs" or "p2p" (see config.checkpointDir above).
+  mode: p2p
+  # Read when mode is "nfs".
+  nfs:
+    # Path to Dir inside a NFS where CSX can store persistent checkpoints on the cluster.
+    path:
+    # Percentage of system RAM CSX can use to cache checkpoints (1-100).
+    # CSX creates a tmpfs of this size at memoryCachePath.
+    memoryCachePercent: 25
+    # Path where CSX mounts the tmpfs used to cache checkpoints in RAM.
+    # CSX creates the path if it does not exist.
+    memoryCachePath: /cedana/memstore/
+    # Amount of local disk space, in GiB, CSX can use to cache checkpoints.
+    localDiskCacheLimit: 1000
+    # Path on the local disk where CSX caches checkpoints.
+    # CSX creates the path if it does not exist.
+    localDiskCachePath: /cedana/diskstore/
+  # Read when mode is "p2p".
+  p2p:
+    # Path on the local disk where this node keeps its checkpoints. Pulled
+    # checkpoints are staged here too, so it must have room for them.
+    diskPath: /cedana/store
+    # Path where checkpoints are written before being moved into diskPath.
+    tmpPath: /cedana/tmp
+    # TCP port on which this node serves checkpoints to peers. CSX runs on the
+    # host network, so the port must be free on every node and reachable
+    # between nodes.
+    port: 7980
+    # Number of TCP connections a checkpoint pull from a peer is spread over.
+    streams: 4
   # Path of the Unix socket used by the CSX gRPC server.
   sockAddr: /run/csx.sock
-  # Interval, in seconds, at which CSX checks NFS for checkpoints from other nodes.
+  # Interval, in seconds, at which CSX checks NFS for checkpoints from other nodes (nfs mode).
   pollInterval: 1
   # Path where CSX temporarily stores objects while they are being written or
   # have not yet been copied to NFS. CSX creates a tmpfs at this path.

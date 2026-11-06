@@ -8,12 +8,21 @@ metadata:
     {{- include "cedana-helm.labels" . | nindent 4 }}
 data:
   csx-log-level: "{{ .Values.csx.logLevel }}"
+  csx-mode: "{{ .Values.csx.mode }}"
   csx-sock-addr: "{{ .Values.csx.sockAddr }}"
-  csx-memory-cache-percent: "{{ .Values.csx.memoryCachePercent }}"
-  csx-memory-cache-path: "{{ .Values.csx.memoryCachePath }}"
-  csx-local-disk-cache-limit: "{{ .Values.csx.localDiskCacheLimit }}"
-  csx-local-disk-cache-path: "{{ .Values.csx.localDiskCachePath }}"
-  csx-nfs-path: "{{ required "Please provide --set csx.nfsPath=<nfs-path> when config.checkpointDir=csx://" .Values.csx.nfsPath }}"
+  {{- if eq .Values.csx.mode "nfs" }}
+  csx-nfs-store-path: "{{ required "Please provide --set csx.nfs.path=<nfs-path> when csx.mode=nfs" .Values.csx.nfs.path }}"
+  {{- else }}
+  csx-nfs-store-path: "{{ .Values.csx.nfs.path }}"
+  {{- end }}
+  csx-nfs-store-memory-cache-percent: "{{ .Values.csx.nfs.memoryCachePercent }}"
+  csx-nfs-store-memory-cache-path: "{{ .Values.csx.nfs.memoryCachePath }}"
+  csx-nfs-store-local-disk-cache-limit: "{{ .Values.csx.nfs.localDiskCacheLimit }}"
+  csx-nfs-store-local-disk-cache-path: "{{ .Values.csx.nfs.localDiskCachePath }}"
+  csx-p2p-store-disk-path: "{{ .Values.csx.p2p.diskPath }}"
+  csx-p2p-store-tmp-path: "{{ .Values.csx.p2p.tmpPath }}"
+  csx-p2p-store-listen-addr: "0.0.0.0:{{ .Values.csx.p2p.port }}"
+  csx-p2p-store-streams: "{{ .Values.csx.p2p.streams }}"
   csx-poll-interval: "{{ .Values.csx.pollInterval }}"
   csx-tmp-dir: "{{ .Values.csx.tmpDir }}"
   csx-tmp-dir-object-limit: "{{ .Values.csx.tmpDirObjectLimit }}"
