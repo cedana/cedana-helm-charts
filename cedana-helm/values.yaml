@@ -64,7 +64,7 @@ config:
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
   pluginsContainerdRuntimeVersion: cedana   # last release v0.8.8
-  pluginsGpuVersion: main                   # last release v0.8.10
+  pluginsGpuVersion: main                   # last release v0.8.11
   pluginsStreamerVersion: main              # last release v0.1.5
 
   profiling: true
@@ -117,7 +117,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper-test
-    tag: main   # last release v0.9.409
+    tag: main   # last release v0.9.411
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -180,7 +180,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller-test
-      tag: main   # last release v0.7.6
+      tag: main   # last release v0.7.7
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -243,7 +243,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher-test
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: main   # last release v0.7.6
+    tag: main   # last release v0.7.7
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
