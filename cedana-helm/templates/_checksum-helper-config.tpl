@@ -23,6 +23,8 @@
   "gpuVerify"
   "gpuProfilingEnabled"
   "gpuComputeSanitizer"
+  "gpuDirectIO"
+  "gpuMemRingBufSize"
   "pluginsBuilds"
   "pluginsCriuVersion"
   "pluginsContainerdRuntimeVersion"

@@ -56,6 +56,8 @@ config:
   gpuVerify: "off" # Check restored GPU state against the checkpoint. Options: "off", "warn" (log mismatches), "strict" (fail the restore).
   gpuProfilingEnabled: false # Enable CUDA call profiling.
   gpuComputeSanitizer: false # Run restored GPU workers under compute-sanitizer (debug).
+  gpuDirectIO: true # Read and write GPU checkpoints with O_DIRECT. Bypasses page cache for faster checkpoint/restore.
+  gpuMemRingBufSize: 8 # Number of staging buffers for GPU memory restore with O_DIRECT. Minimum 2.
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
