@@ -232,6 +232,12 @@ spec:
                   name: {{ template "cedana-helm.configMapName" . }}
                   key: gpu-direct-io
                   optional: true
+            - name: CEDANA_GPU_DIRECT_IO_BTRFS_NOCOW
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "cedana-helm.configMapName" . }}
+                  key: gpu-direct-io-btrfs-nocow
+                  optional: true
             - name: CEDANA_GPU_MEM_RING_BUF_SIZE
               valueFrom:
                 configMapKeyRef:

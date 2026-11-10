@@ -24,6 +24,7 @@
   "gpuProfilingEnabled"
   "gpuComputeSanitizer"
   "gpuDirectIO"
+  "gpuDirectIOBtrfsNocow"
   "gpuMemRingBufSize"
   "pluginsBuilds"
   "pluginsCriuVersion"
