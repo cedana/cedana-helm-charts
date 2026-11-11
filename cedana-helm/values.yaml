@@ -378,21 +378,11 @@ metricsService:
       targetPort: https
   type: ClusterIP
 
-# Cluster monitoring. Prometheus scrapes cAdvisor, kube-state-metrics, the DCGM exporter and the
-# inference pods, and remote-writes the series Cedana keeps to Vector, which adds node host metrics
-# and ships everything to Cedana (config.url, authenticated with config.authToken) or to s3.bucket.
+# Inference monitoring (on in values-inference-box.yaml). Prometheus scrapes cAdvisor,
+# kube-state-metrics, the DCGM exporter (GPU nodes only) and the inference pods, and remote-writes
+# the series Cedana keeps to Vector, which adds node host metrics and ships them to config.url.
 clusterMetrics:
   enabled: false
-  # Installs the DCGM exporter on GPU nodes (GPU utilization and memory, per pod).
-  gpu:
-    enabled: false
-  # Ship to this S3 bucket instead of to Cedana. Region and keys fall back to config.awsRegion,
-  # config.awsAccessKeyId and config.awsSecretAccessKey.
-  s3:
-    bucket: ""
-    region: ""
-    awsAccessKeyId: ""
-    awsSecretAccessKey: ""
 
 # Subchart: Prometheus, a short-retention relay; Cedana stores the series.
 prometheus:
@@ -560,16 +550,6 @@ vector:
         secretKeyRef:
           name: vector-credentials
           key: cedanaAuthToken
-    - name: AWS_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: vector-credentials
-          key: awsAccessKeyId
-    - name: AWS_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: vector-credentials
-          key: awsSecretAccessKey
   existingConfigMaps:
     - vector-config
   dataDir: "/vector-data"

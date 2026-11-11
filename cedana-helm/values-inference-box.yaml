@@ -39,11 +39,9 @@ switchyard:
     tag: feat-CED-2636
     imagePullPolicy: Always
 
-# Metrics ship to the control plane over HTTPS with the org token; no bucket needed.
+# Model, GPU and gateway metrics for the Inference pages; ships to config.url with the org token.
 clusterMetrics:
   enabled: true
-  gpu:
-    enabled: true
 
 daemonHelper:
   image:

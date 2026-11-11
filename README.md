@@ -57,6 +57,10 @@ helm install cedana ./cedana-helm -n cedana-system --create-namespace \
 On k3s the gateway listens on `http://<node IP>:30400`. Set `dynamo.global.grove.install=true`
 to run DGDs through Grove.
 
+Monitoring is part of the box (`clusterMetrics.enabled`): Prometheus scrapes cAdvisor,
+kube-state-metrics, the DCGM exporter (GPU nodes) and the inference pods, and Vector ships the
+series Cedana keeps, plus node host metrics, to `config.url` with `config.authToken`.
+
 ### Configuration Options
 
 #### CRIU Device Plugins
@@ -199,21 +203,6 @@ helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedan
 --set hostConfig.shmConfig.enabled=true \
 --set hostConfig.shmConfig.size="20G"
 ```
-
-#### Monitoring Configuration
-
-`clusterMetrics.enabled=true` installs Prometheus and Vector. Prometheus scrapes cAdvisor, kube-state-metrics, the DCGM exporter and the inference workers (pods labeled `inference.cedana.ai/profile-id`), and remote-writes the series Cedana keeps to Vector, which adds node host metrics and ships them to Cedana at `config.url` with `config.authToken`. No other credentials are needed.
-
-```bash
-helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-system \
-  --set config.url=$CEDANA_URL \
-  --set config.authToken=$CEDANA_AUTH_TOKEN \
-  --set config.clusterId=$CLUSTER_ID \
-  --set clusterMetrics.enabled=true \
-  --set clusterMetrics.gpu.enabled=true
-```
-
-`clusterMetrics.gpu.enabled=true` adds the DCGM exporter (GPU utilization and memory per pod) on nodes labeled `nvidia.com/gpu.present=true` or `nvidia.com/gpu.product`. To ship to your own S3 bucket instead, set `clusterMetrics.s3.bucket`; region and keys fall back to `config.awsRegion`, `config.awsAccessKeyId` and `config.awsSecretAccessKey`.
 
 ### Usage
 

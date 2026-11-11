@@ -19,7 +19,7 @@ dependencies:
   - name: dcgm-exporter
     version: "4.8.4"
     repository: "https://nvidia.github.io/dcgm-exporter/helm-charts"
-    condition: clusterMetrics.gpu.enabled
+    condition: clusterMetrics.enabled
   - name: dynamo-platform
     alias: dynamo
     version: "1.6.2"
