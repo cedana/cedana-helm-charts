@@ -42,20 +42,26 @@ helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-names
 `cedana-helm/values-inference-box.yaml` adds the NVIDIA Dynamo platform (subchart, 1.6.2), the
 dynamo-watcher with the inference controller, and the Switchyard gateway in `cedana-inference`.
 
+Checkpoints go through CSX, so every GPU node needs the same shared directory (e.g. an NFS
+mount) at `$SHARED_DIR`; on a single node any local directory works.
+
 ```bash
 # managed cluster with GPU nodes and a device plugin
 helm install cedana ./cedana-helm -n cedana-system --create-namespace \
   -f cedana-helm/values-inference-box.yaml \
-  --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID
+  --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID \
+  --set csx.nfsPath=$SHARED_DIR
 
-# single-node k3s, after `sudo bash scripts/k3s-host-prep.sh`
+# k3s (installs the device plugin and GPU feature discovery)
 helm install cedana ./cedana-helm -n cedana-system --create-namespace \
   -f cedana-helm/values-inference-box.yaml -f cedana-helm/values-k3s.yaml \
-  --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID
+  --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID \
+  --set csx.nfsPath=$SHARED_DIR
 ```
 
-On k3s the gateway listens on `http://<node IP>:30400`. Set `dynamo.global.grove.install=true`
-to run DGDs through Grove.
+k3s needs the NVIDIA container toolkit installed before it starts, and `--default-runtime nvidia`.
+There the gateway listens on `http://<node IP>:30400`. Set `dynamo.global.grove.install=true` to
+run DGDs through Grove.
 
 Monitoring is part of the box (`clusterMetrics.enabled`): Prometheus scrapes cAdvisor,
 kube-state-metrics, the DCGM exporter (GPU nodes) and the inference pods, and Vector ships the

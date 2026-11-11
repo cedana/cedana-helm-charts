@@ -57,10 +57,12 @@ spec:
       labels:
         app: switchyard
         app.kubernetes.io/component: switchyard
-      {{- with .Values.switchyard.podAnnotations }}
       annotations:
+        # Rolls the pods when the token rotates: Secret-backed env does not refresh.
+        checksum/token: {{ .Values.config.authToken | sha256sum | quote }}
+        {{- with .Values.switchyard.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
     spec:
       {{- if gt (int (.Values.switchyard.replicaCount | default 1)) 1 }}
       # Replicas on different nodes, so losing one node never takes the gateway down.

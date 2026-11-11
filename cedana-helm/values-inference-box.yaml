@@ -1,7 +1,8 @@
 # Inference in a Box: Cedana + the Dynamo platform + the Switchyard gateway.
 #   helm install cedana ./cedana-helm -n cedana-system --create-namespace \
 #     -f cedana-helm/values-inference-box.yaml \
-#     --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID
+#     --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID \
+#     --set csx.nfsPath=$SHARED_DIR
 # One released set: the helper's cedana binary and the plugins it downloads must come from the
 # same build. Bump these together when moving to a newer release.
 config:

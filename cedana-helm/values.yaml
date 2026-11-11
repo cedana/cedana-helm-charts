@@ -313,11 +313,12 @@ enginePrepull:
       effect: NoSchedule
 
 # Subchart: NVIDIA device plugin, for clusters without one (e.g. plain k3s).
+# GFD (with its NFD) labels GPU nodes, which the plugin, DCGM exporter and engine prepull select on.
 nvidiaDevicePlugin:
   enabled: false
   runtimeClassName: nvidia
   gfd:
-    enabled: false
+    enabled: true
 
 csx:
   image:
