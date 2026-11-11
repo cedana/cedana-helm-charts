@@ -1,0 +1,157 @@
+{{- if .Values.switchyard.enabled }}
+{{- $ns := .Values.switchyard.namespace }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns }}
+  labels:
+    app.kubernetes.io/component: switchyard
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: switchyard-config
+  namespace: {{ $ns }}
+  labels:
+    app.kubernetes.io/component: switchyard
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+data:
+  config.toml: |
+    schema_version = 1
+
+    [cedana]
+    propagator_url = {{ .Values.config.url | quote }}
+{{- with .Values.switchyard.extraConfig }}
+{{ . | indent 4 }}
+{{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: switchyard-token
+  namespace: {{ $ns }}
+  labels:
+    app.kubernetes.io/component: switchyard
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+type: Opaque
+data:
+  token: {{ required "Please provide --set config.authToken=<cedana-auth-token>" .Values.config.authToken | b64enc | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: switchyard
+  namespace: {{ $ns }}
+  labels:
+    app: switchyard
+    app.kubernetes.io/component: switchyard
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.switchyard.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: switchyard
+  template:
+    metadata:
+      labels:
+        app: switchyard
+        app.kubernetes.io/component: switchyard
+      {{- with .Values.switchyard.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if gt (int (.Values.switchyard.replicaCount | default 1)) 1 }}
+      # Replicas on different nodes, so losing one node never takes the gateway down.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: switchyard
+      {{- end }}
+      containers:
+        - name: switchyard
+          {{- if .Values.switchyard.image.digest }}
+          image: {{ .Values.switchyard.image.repository }}@{{ .Values.switchyard.image.digest }}
+          {{- else }}
+          image: {{ .Values.switchyard.image.repository }}:{{ .Values.switchyard.image.tag }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.switchyard.image.imagePullPolicy }}
+          args: ["--config", "/etc/switchyard/config.toml"]
+          ports:
+            - name: http
+              containerPort: 4000
+          env:
+            - name: CEDANA_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: switchyard-token
+                  key: token
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources: {{- toYaml .Values.switchyard.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/switchyard
+      volumes:
+        - name: config
+          configMap:
+            name: switchyard-config
+      {{- with .Values.switchyard.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.switchyard.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- if gt (int (.Values.switchyard.replicaCount | default 1)) 1 }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: switchyard
+  namespace: {{ $ns }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: switchyard
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: switchyard
+  namespace: {{ $ns }}
+  labels:
+    app: switchyard
+    app.kubernetes.io/component: switchyard
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.switchyard.service.type }}
+  selector:
+    app: switchyard
+  ports:
+    - name: http
+      port: {{ .Values.switchyard.service.port }}
+      targetPort: http
+      {{- if and (eq .Values.switchyard.service.type "NodePort") .Values.switchyard.service.nodePort }}
+      nodePort: {{ .Values.switchyard.service.nodePort }}
+      {{- end }}
+{{- end }}

@@ -1,0 +1,14 @@
+# Single-node k3s on top of values-inference-box.yaml (run scripts/k3s-host-prep.sh first):
+#   helm install cedana ./cedana-helm -n cedana-system --create-namespace \
+#     -f cedana-helm/values-inference-box.yaml -f cedana-helm/values-k3s.yaml \
+#     --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID
+hostConfig:
+  containerdAddress: /run/k3s/containerd/containerd.sock
+
+nvidiaDevicePlugin:
+  enabled: true
+
+switchyard:
+  service:
+    type: NodePort
+    nodePort: 30400

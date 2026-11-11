@@ -35,9 +35,13 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.daemonHelper.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+      # The manager taints a node not-ready until its helper is up; the helper must still land there.
+      - key: cedana.ai/not-ready
+        operator: Exists
+        effect: NoSchedule
+      {{- with .Values.daemonHelper.tolerations }}
+        {{- toYaml . | nindent 6 }}
       {{- end }}
       {{- with .Values.daemonHelper.nodeSelector }}
       nodeSelector:
@@ -89,6 +93,10 @@ spec:
             successThreshold: 1
             timeoutSeconds: 5
           env:
+            {{- with .Values.daemonHelper.setupEnv }}
+            - name: ENV
+              value: {{ . | quote }}
+            {{- end }}
             - name: CEDANA_CLUSTER_ID
               valueFrom:
                 configMapKeyRef:
