@@ -18,6 +18,9 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: dynamo-watcher
+        # Env comes from the shared ConfigMap and Secret, which do not restart pods on change;
+        # a new control plane URL, cluster id or token must.
+        checksum/config: {{ printf "%s|%s|%s" .Values.config.url .Values.config.clusterId .Values.config.authToken | sha256sum | quote }}
       {{- with .Values.dynamoWatcher.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

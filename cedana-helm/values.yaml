@@ -289,6 +289,14 @@ switchyard:
       memory: 512Mi
   nodeSelector: {}
   tolerations: []
+  # Sells this cluster's venue profiles through Cedana's central dispatch (Liquid). Off unless
+  # url is set. token: the cluster's enrollment token; apiKey: an inference key from this
+  # cluster's propagator, scoped to the venue profiles.
+  dispatchTunnel:
+    url: ""   # e.g. wss://inference.cedana.ai/v1/liquid/tunnel
+    token: ""
+    apiKey: ""
+    connections: 2
 
 # Subchart: NVIDIA Dynamo platform (operator; it applies the nvidia.com CRDs itself at start).
 # 1.6.x discovers workers through the Kubernetes API and uses TCP/ZMQ planes, so neither NATS

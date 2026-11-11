@@ -38,6 +38,24 @@ type: Opaque
 data:
   token: {{ required "Please provide --set config.authToken=<cedana-auth-token>" .Values.config.authToken | b64enc | quote }}
 ---
+{{- with .Values.switchyard.dispatchTunnel }}
+{{- if .url }}
+# Dispatch tunnel to Cedana's central dispatch: outbound only, no inbound port.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: switchyard-tunnel
+  namespace: {{ $ns }}
+  labels:
+    app.kubernetes.io/component: switchyard
+    {{- include "cedana-helm.labels" $ | nindent 4 }}
+type: Opaque
+data:
+  token: {{ required "switchyard.dispatchTunnel.token is required with a tunnel url" .token | b64enc | quote }}
+  apiKey: {{ required "switchyard.dispatchTunnel.apiKey is required with a tunnel url" .apiKey | b64enc | quote }}
+---
+{{- end }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -94,6 +112,24 @@ spec:
                 secretKeyRef:
                   name: switchyard-token
                   key: token
+            {{- with .Values.switchyard.dispatchTunnel }}
+            {{- if .url }}
+            - name: CEDANA_TUNNEL_URL
+              value: {{ .url | quote }}
+            - name: CEDANA_TUNNEL_CONNECTIONS
+              value: {{ .connections | default 2 | quote }}
+            - name: CEDANA_TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: switchyard-tunnel
+                  key: token
+            - name: CEDANA_TUNNEL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: switchyard-tunnel
+                  key: apiKey
+            {{- end }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /health
