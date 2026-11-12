@@ -1,0 +1,30 @@
+# Inference in a Box: Cedana + the Dynamo platform + the Switchyard gateway.
+# Feature toggles only; versions come from values.yaml.
+#   helm install cedana ./cedana-helm -n cedana-system --create-namespace \
+#     -f cedana-helm/values-inference-box.yaml \
+#     --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID \
+#     --set csx.nfsPath=$SHARED_DIR
+config:
+  gpuDedupEnabled: true
+  # Checkpoints go through CSX so any node can restore them; needs --set csx.nfsPath=<shared dir>.
+  checkpointDir: "csx://"
+
+csx:
+  # The 1000 GiB default outgrows GPU nodes' boot disks; past it kubelet evicts Cedana itself.
+  localDiskCacheLimit: 100
+
+dynamo:
+  enabled: true
+
+dynamoWatcher:
+  enabled: true
+  loops: ""
+
+switchyard:
+  enabled: true
+  # One replica made killing the gateway pod an 18 s outage.
+  replicaCount: 2
+
+# Model, GPU and gateway metrics for the Inference pages; ships to config.url with the org token.
+clusterMetrics:
+  enabled: true

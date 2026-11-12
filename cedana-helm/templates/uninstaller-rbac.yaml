@@ -35,7 +35,7 @@ rules:
     verbs: ["get", "list", "patch", "update"]
   - apiGroups: [""]
     resources: ["namespaces"]
-    verbs: ["delete"]
+    verbs: ["delete", "list"]
   - apiGroups: ["admissionregistration.k8s.io"]
     resources: ["mutatingwebhookconfigurations"]
     resourceNames: ["cedana-pd-disagg"]

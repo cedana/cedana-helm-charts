@@ -37,6 +37,36 @@ helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-names
 
 `config.url`, `config.authToken`, and `config.clusterId` are required values.
 
+### Inference in a Box
+
+`cedana-helm/values-inference-box.yaml` adds the NVIDIA Dynamo platform (subchart, 1.6.2), the
+dynamo-watcher with the inference controller, and the Switchyard gateway in `cedana-inference`.
+
+Checkpoints go through CSX, so every GPU node needs the same shared directory (e.g. an NFS
+mount) at `$SHARED_DIR`; on a single node any local directory works.
+
+```bash
+# managed cluster with GPU nodes and a device plugin
+helm install cedana ./cedana-helm -n cedana-system --create-namespace \
+  -f cedana-helm/values-inference-box.yaml \
+  --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID \
+  --set csx.nfsPath=$SHARED_DIR
+
+# k3s (installs the device plugin and GPU feature discovery)
+helm install cedana ./cedana-helm -n cedana-system --create-namespace \
+  -f cedana-helm/values-inference-box.yaml -f cedana-helm/values-k3s.yaml \
+  --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID \
+  --set csx.nfsPath=$SHARED_DIR
+```
+
+k3s needs the NVIDIA container toolkit installed before it starts, and `--default-runtime nvidia`.
+There the gateway listens on `http://<node IP>:30400`. Set `dynamo.global.grove.install=true` to
+run DGDs through Grove.
+
+Monitoring is part of the box (`clusterMetrics.enabled`): Prometheus scrapes cAdvisor,
+kube-state-metrics, the DCGM exporter (GPU nodes) and the inference pods, and Vector ships the
+series Cedana keeps, plus node host metrics, to `config.url` with `config.authToken`.
+
 ### Configuration Options
 
 #### CRIU Device Plugins
@@ -178,40 +208,6 @@ helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedan
 --set config.clusterId=$CLUSTER_ID \
 --set hostConfig.shmConfig.enabled=true \
 --set hostConfig.shmConfig.size="20G"
-```
-
-#### Monitoring Configuration
-
-When cluster metrics are enabled, you must populate the metrics S3 bucket name explicitly. The S3 region and credentials will automatically fall back to the main `config` settings if omitted.
-
-The monitoring stack includes **Prometheus** (for metrics collection) and **Vector** (for shipping logs/metrics to S3). Individual subcharts can be enabled via `clusterMetrics.prometheus.enabled` and `clusterMetrics.vector.enabled` respectively.
-
-Note that `clusterMetrics.enabled` must be set to `true` to use these subcharts. If `clusterMetrics.enabled` is `false` while any sub-component is enabled, the installation will fail validation.
-
-1. Fetch the subchart dependencies:
-```bash
-helm dependency update ./cedana-helm-charts/cedana-helm
-```
-
-2. Install with metrics enabled (e.g. enabling both Prometheus and Vector):
-```bash
-helm install cedana ./cedana-helm-charts/cedana-helm --create-namespace -n cedana-system \
-  --set config.url=$CEDANA_URL \
-  --set config.authToken=$CEDANA_AUTH_TOKEN \
-  --set config.clusterId=$CLUSTER_ID \
-  --set config.awsRegion=$AWS_REGION \
-  --set config.awsAccessKeyId=$AWS_ACCESS_KEY_ID \
-  --set config.awsSecretAccessKey=$AWS_SECRET_ACCESS_KEY \
-  --set clusterMetrics.enabled=true \
-  --set clusterMetrics.prometheus.enabled=true \
-  --set clusterMetrics.vector.enabled=true \
-  --set clusterMetrics.s3.bucket=$METRICS_S3_BUCKET
-```
-
-If your cluster has NVIDIA GPUs and you want to monitor GPU metrics (utilization, memory, temperature, etc.), set `clusterMetrics.gpu.enabled=true` as well. Note that by default, the GPU exporter DaemonSet will only schedule pods on GPU-enabled nodes labeled with `nvidia.com/gpu.present=true`:
-
-```bash
-  --set clusterMetrics.gpu.enabled=true
 ```
 
 ### Usage

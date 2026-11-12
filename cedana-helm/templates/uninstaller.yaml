@@ -99,6 +99,9 @@ spec:
                 kubectl label nodes --all cedana.ai/ready-;
                 echo "Removing the P/D disagg webhook";
                 kubectl delete mutatingwebhookconfiguration cedana-pd-disagg --ignore-not-found;
+                # By label: kept namespaces survive Switchyard being disabled or renamed.
+                echo "Deleting the inference namespaces...";
+                kubectl delete namespace -l app.kubernetes.io/component=switchyard,app.kubernetes.io/instance={{ .Release.Name }} --wait=false;
                 echo "Deleting the namespace ($POD_NAMESPACE)...";
                 kubectl delete namespace $POD_NAMESPACE --wait=true;
               else

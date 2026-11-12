@@ -51,6 +51,16 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - "nvidia.com"
+  resources:
+  - dynamocomponentdeployments
+  verbs:
+  - get
+  - list
+  - watch
+  # The informers loop deletes superseded components.
+  - delete
 # Pods: worker-metadata reconciler deletes stuck pods; RabbitMQ consumer creates pods.
 - apiGroups:
   - ""
@@ -75,7 +85,8 @@ rules:
   - update
   - patch
   - delete
-# PersistentVolumeClaims: RabbitMQ consumer provisions PVCs for restored workloads.
+# PersistentVolumeClaims: the dynamo create-workload consumer creates, then server-side
+# applies, rendered PVCs (needs patch).
 - apiGroups:
   - ""
   resources:
@@ -85,6 +96,7 @@ rules:
   - list
   - watch
   - create
+  - patch
 {{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
