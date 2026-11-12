@@ -5,7 +5,7 @@ kind: Namespace
 metadata:
   name: {{ $ns }}
   # Models live here too: disabling Switchyard or renaming the namespace must not delete them.
-  # The uninstaller removes it on helm uninstall.
+  # The uninstaller removes it on helm uninstall, by its labels.
   annotations:
     helm.sh/resource-policy: keep
   labels:
