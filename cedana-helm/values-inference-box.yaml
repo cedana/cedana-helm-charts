@@ -1,26 +1,15 @@
 # Inference in a Box: Cedana + the Dynamo platform + the Switchyard gateway.
+# Feature toggles only; versions come from values.yaml.
 #   helm install cedana ./cedana-helm -n cedana-system --create-namespace \
 #     -f cedana-helm/values-inference-box.yaml \
 #     --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID \
 #     --set csx.nfsPath=$SHARED_DIR
-# One released set: the helper's cedana binary and the plugins it downloads must come from the
-# same build. Bump these together when moving to a newer release.
 config:
-  pluginsBuilds: release
-  pluginsCriuVersion: v4.3-cedana.00
-  pluginsContainerdRuntimeVersion: v0.8.8
-  pluginsGpuVersion: main
-  pluginsStreamerVersion: v0.1.5
   gpuDedupEnabled: true
-  # Off: a delta records its parent as a node-local path, which CSX moves to shared storage.
-  gpuDeltaEnabled: false
   # Checkpoints go through CSX so any node can restore them; needs --set csx.nfsPath=<shared dir>.
   checkpointDir: "csx://"
 
 csx:
-  image:
-    repository: cedana/cedana-csx
-    tag: v0.2.3
   # The 1000 GiB default outgrows GPU nodes' boot disks; past it kubelet evicts Cedana itself.
   localDiskCacheLimit: 100
 
@@ -35,16 +24,7 @@ switchyard:
   enabled: true
   # One replica made killing the gateway pod an 18 s outage.
   replicaCount: 2
-  # Warm path skips the control plane and survives its outages (cedana-switchyard#13).
-  image:
-    tag: feat-CED-2636
-    imagePullPolicy: Always
 
 # Model, GPU and gateway metrics for the Inference pages; ships to config.url with the org token.
 clusterMetrics:
   enabled: true
-
-daemonHelper:
-  image:
-    repository: cedana/cedana-helper
-    tag: v0.9.411

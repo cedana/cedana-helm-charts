@@ -93,10 +93,8 @@ spec:
             successThreshold: 1
             timeoutSeconds: 5
           env:
-            {{- with .Values.daemonHelper.setupEnv }}
             - name: ENV
-              value: {{ . | quote }}
-            {{- end }}
+              value: {{ .Values.daemonHelper.setupEnv | default "production" | quote }}
             - name: CEDANA_CLUSTER_ID
               valueFrom:
                 configMapKeyRef:

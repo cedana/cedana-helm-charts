@@ -135,9 +135,8 @@ daemonHelper:
   # Setup (host checks, plugin downloads, containerd and kubelet restarts) runs before the daemon
   # answers the startup probe: on a fresh node it can take minutes
   startupTimeoutSeconds: 600
-  # Sets ENV on the helper. Any value other than "production" skips its containerd and kubelet
-  # setup; leave empty unless the node's runtime is configured by other means.
-  setupEnv: ""
+  # ENV on the helper. Any value other than "production" skips its containerd and kubelet setup.
+  setupEnv: production
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -187,7 +186,7 @@ controllerManager:
       repository: cedana/cedana-controller-test
       tag: main   # last release v0.7.7
       digest: # ignores tag if set
-      imagePullPolicy: Always  # floating tag: IfNotPresent keeps a stale build
+      imagePullPolicy: IfNotPresent
     resources:
       # empty to ensure minimal resource
       # usage on demo/test deployments
@@ -251,7 +250,7 @@ dynamoWatcher:
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
     tag: main   # last release v0.7.7
     digest: # ignores tag if set
-    imagePullPolicy: Always  # floating tag: IfNotPresent keeps a stale build
+    imagePullPolicy: IfNotPresent
   containerSecurityContext:
     allowPrivilegeEscalation: false
     capabilities:
