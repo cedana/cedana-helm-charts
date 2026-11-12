@@ -4,6 +4,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ $ns }}
+  # Models live here too: disabling Switchyard or renaming the namespace must not delete them.
+  # The uninstaller removes it on helm uninstall.
+  annotations:
+    helm.sh/resource-policy: keep
   labels:
     app.kubernetes.io/component: switchyard
     {{- include "cedana-helm.labels" . | nindent 4 }}

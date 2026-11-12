@@ -99,6 +99,10 @@ spec:
                 kubectl label nodes --all cedana.ai/ready-;
                 echo "Removing the P/D disagg webhook";
                 kubectl delete mutatingwebhookconfiguration cedana-pd-disagg --ignore-not-found;
+                {{- if .Values.switchyard.enabled }}
+                echo "Deleting the inference namespace ({{ .Values.switchyard.namespace }})...";
+                kubectl delete namespace {{ .Values.switchyard.namespace }} --ignore-not-found --wait=false;
+                {{- end }}
                 echo "Deleting the namespace ($POD_NAMESPACE)...";
                 kubectl delete namespace $POD_NAMESPACE --wait=true;
               else
