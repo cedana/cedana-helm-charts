@@ -1,0 +1,26 @@
+{{- if .Values.clusterMetrics.enabled }}
+# Vector stamps cluster_id and the Cedana token on what it receives: only Prometheus may write.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vector
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cedana-helm.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vector
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+              app.kubernetes.io/component: server
+              app.kubernetes.io/instance: {{ .Release.Name }}
+      ports:
+        - port: 9090
+          protocol: TCP
+{{- end }}

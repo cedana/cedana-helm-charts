@@ -2,6 +2,7 @@
 {{- $v := deepCopy .Values -}}
 {{- $_ := unset $v.config "authToken" -}}
 {{- $_ := unset $v.config "awsSecretAccessKey" -}}
+{{- /* Legacy key: older values files may still carry it. */ -}}
 {{- with $v.clusterMetrics }}{{ with .s3 }}{{ $_ := unset . "awsSecretAccessKey" }}{{ end }}{{ end -}}
 apiVersion: v1
 kind: ConfigMap

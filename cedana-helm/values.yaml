@@ -135,6 +135,8 @@ daemonHelper:
   # Setup (host checks, plugin downloads, containerd and kubelet restarts) runs before the daemon
   # answers the startup probe: on a fresh node it can take minutes
   startupTimeoutSeconds: 600
+  # ENV on the helper. Any value other than "production" skips its containerd and kubelet setup.
+  setupEnv: production
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -236,9 +238,10 @@ dynamoWatcher:
   # Create a LoadBalancer Service for dynamo frontends (sets CEDANA_DYNAMO_CREATE_LB).
   createLoadBalancer: false
   # Watcher loops to run (sets CEDANA_DYNAMO_LOOPS), as a comma-separated list of
-  # informers, worker-metadata, inference, experiments, create-workload and
-  # delete-workload. Empty runs them all. "worker-metadata" alone only re-registers
-  # restored workers with Dynamo discovery, and gets a matching minimal ClusterRole.
+  # informers, worker-metadata, create-workload and delete-workload. Empty runs them
+  # all; inference needs create-workload, which applies the models the control plane
+  # sends. "worker-metadata" alone only re-registers restored workers with Dynamo
+  # discovery, and gets a matching minimal ClusterRole.
   loops: "worker-metadata"
   replicaCount: 1
   podAnnotations: {}
@@ -257,6 +260,64 @@ dynamoWatcher:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+# Switchyard: the OpenAI-compatible inference gateway in front of the models the control
+# plane deploys. Uses config.authToken and config.url.
+switchyard:
+  enabled: false
+  # Also the namespace the models are deployed into.
+  namespace: cedana-inference
+  replicaCount: 1
+  podAnnotations: {}
+  image:
+    repository: cedana/cedana-switchyard-test
+    tag: main   # last release v0.3.0
+    digest: # ignores tag if set
+    imagePullPolicy: IfNotPresent
+  # Appended verbatim to config.toml after the [cedana] table.
+  extraConfig: ""
+  service:
+    type: ClusterIP
+    port: 4000
+    nodePort: # only used when type is NodePort
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+  nodeSelector: {}
+  tolerations: []
+
+# Subchart: NVIDIA Dynamo platform (operator; it applies the nvidia.com CRDs itself at start).
+# 1.6.x discovers workers through the Kubernetes API and uses TCP/ZMQ planes, so neither NATS
+# nor etcd is installed.
+dynamo:
+  enabled: false
+  global:
+    grove:
+      # Runs every DGD as a Grove PodCliqueSet unless annotated nvidia.com/enable-grove=false.
+      install: false
+
+# With dynamo enabled, pulls these onto GPU nodes at install so a first deploy skips the pull.
+# Nodes are those with nvidia.com/gpu.product (GPU feature discovery) unless nodeSelector is set.
+enginePrepull:
+  images:
+    - nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.6.2
+  nodeSelector: {}
+  # Only the standard GPU taint: tolerating everything parks pods Pending on dead or tainted nodes.
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+
+# Subchart: NVIDIA device plugin, for clusters without one (e.g. plain k3s).
+# GFD (with its NFD) labels GPU nodes, which the plugin, DCGM exporter and engine prepull select on.
+nvidiaDevicePlugin:
+  enabled: false
+  runtimeClassName: nvidia
+  gfd:
+    enabled: true
 
 csx:
   image:
@@ -317,116 +378,192 @@ metricsService:
       targetPort: https
   type: ClusterIP
 
-# Enable cluster metrics (Prometheus and Vector collection to S3)
+# Inference monitoring (on in values-inference-box.yaml). Prometheus scrapes cAdvisor,
+# kube-state-metrics, the DCGM exporter (GPU nodes only) and the inference pods, and remote-writes
+# the series Cedana keeps to Vector, which adds node host metrics and ships them to config.url.
 clusterMetrics:
-  # Enable the Cedana Monitoring Stack (installs Prometheus and Vector)
   enabled: false
-  # Enable Prometheus subchart installation.
-  prometheus:
-    enabled: false
-  # Enable Vector subchart installation.
-  vector:
-    enabled: false
-  # Enable GPU metrics collection (installs DCGM Exporter). Requires NVIDIA GPUs on nodes.
-  gpu:
-    enabled: false
-  # Custom endpoints to use existing monitoring setup components when local ones are disabled
-  endpoints:
-    kubeStateMetrics: "" # Existing kube-state-metrics scrape endpoint (e.g. 'http://kube-metrics.monitoring.svc:8080/metrics')
-    nodeExporter: "" # Existing node-exporter scrape endpoint (e.g. 'http://node-exporter.monitoring.svc:9100/metrics')
-    prometheusServer: "" # Existing prometheus-server endpoint
-    dcgmExporter: "" # Existing dcgm-exporter scrape endpoint
-    cadvisor: "" # Existing cadvisor/kubelet metrics endpoint
-  # S3 configuration for metrics storage
-  s3:
-    bucket: "" # AWS S3 bucket name (required when metrics are enabled)
-    region: "" # AWS S3 region (falls back to config.awsRegion)
-    awsAccessKeyId: "" # AWS Access Key ID (falls back to config.awsAccessKeyId)
-    awsSecretAccessKey: "" # AWS Secret Access Key (falls back to config.awsSecretAccessKey)
 
-# Subchart: Prometheus configuration overrides when clusterMetrics are enabled
+# Subchart: Prometheus, a short-retention relay; Cedana stores the series.
 prometheus:
   fullnameOverride: prometheus
   alertmanager:
     enabled: false
   prometheus-pushgateway:
     enabled: false
+  # Vector's host_metrics covers node CPU, memory and filesystems.
+  prometheus-node-exporter:
+    enabled: false
+  kube-state-metrics:
+    collectors: [pods]
   server:
+    retention: 2h
     persistentVolume:
       enabled: false
-    extraScrapeConfigs: |
-      - job_name: 'kubernetes-cadvisor'
-        scheme: https
-        tls_config:
-          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          insecure_skip_verify: true
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        kubernetes_sd_configs:
-          - role: node
-        relabel_configs:
-          - action: labelmap
-            regex: __meta_kubernetes_node_label_(.+)
-          - target_label: __address__
-            replacement: kubernetes.default.svc:443
-          - source_labels: [__meta_kubernetes_node_name]
-            regex: (.+)
-            target_label: __metrics_path__
-            replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
-  extraManifests:
-    - |
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: prometheus-server-cadvisor
-      rules:
-        - apiGroups: [""]
-          resources: ["nodes/proxy"]
-          verbs: ["get"]
-    - |
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: prometheus-server-cadvisor
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: prometheus-server-cadvisor
-      subjects:
-        - kind: ServiceAccount
-          name: prometheus-server
-          namespace: {{ .Release.Namespace }}
+    global:
+      scrape_interval: 30s
+      evaluation_interval: 30s
+    remoteWrite:
+      # Vector's prometheus_remote_write source, in this namespace.
+      - url: http://vector:9090
+        write_relabel_configs:
+          - source_labels: [__name__]
+            regex: kube_pod_info|container_(cpu_usage_seconds_total|cpu_user_seconds_total|cpu_system_seconds_total|memory_usage_bytes|memory_working_set_bytes|memory_rss|memory_cache)|DCGM_FI_DEV_(GPU_UTIL|MEM_COPY_UTIL|FB_FREE|FB_USED|GPU_TEMP|POWER_USAGE)|cedana:.+
+            action: keep
+          - source_labels: [__name__]
+            regex: cedana:.+
+            target_label: collector
+            replacement: inference
+  serverFiles:
+    # Per-model inference series, one per profile_id (inference.cedana.ai/profile-id); fleet totals carry none.
+    recording_rules.yml:
+      groups:
+        - name: cedana-inference
+          rules:
+            # Serving series come from the Dynamo frontend: SGLang's own metrics need
+            # --enable-metrics, which crashes a restored worker (its CPU clock restarts).
+            - record: cedana:inference_generation_tokens_per_second
+              expr: sum by (profile_id) (rate(dynamo_frontend_output_tokens_total[2m]))
+            - record: cedana:inference_prompt_tokens_per_second
+              expr: sum by (profile_id) (rate(dynamo_frontend_input_sequence_tokens_sum[2m]))
+            - record: cedana:inference_requests_per_second
+              expr: sum by (profile_id) (rate(dynamo_frontend_requests_total[2m]))
+            # Worker pods answering on their system port.
+            - record: cedana:inference_replicas
+              expr: count by (profile_id) (up{job="inference"} == 1)
+            - record: cedana:inference_running_requests
+              expr: sum by (profile_id) (dynamo_frontend_inflight_requests)
+            - record: cedana:inference_queued_requests
+              expr: sum by (profile_id) (dynamo_frontend_queued_requests)
+            # ">= 0" drops the NaN of a window with no requests.
+            - record: cedana:inference_ttft_p95_seconds
+              expr: histogram_quantile(0.95, sum by (profile_id, le) (rate(dynamo_frontend_time_to_first_token_seconds_bucket[2m]))) >= 0
+            - record: cedana:inference_gpu_utilization
+              expr: avg by (profile_id) (DCGM_FI_DEV_GPU_UTIL{profile_id!=""})
+            - record: cedana:inference_gpu_memory_used_mib
+              expr: sum by (profile_id) (DCGM_FI_DEV_FB_USED{profile_id!=""})
+            - record: cedana:inference_gpus
+              expr: count by (profile_id) (DCGM_FI_DEV_GPU_UTIL{profile_id!=""})
+            - record: cedana:gpus_total
+              expr: count(DCGM_FI_DEV_GPU_UTIL)
+    prometheus.yml:
+      rule_files:
+        - /etc/config/recording_rules.yml
+      # Replaces the chart's scrape-everything defaults. `collector` is the tag Cedana routes on.
+      scrape_configs:
+        - job_name: cadvisor
+          scheme: https
+          tls_config:
+            ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            insecure_skip_verify: true
+          bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+          kubernetes_sd_configs:
+            - role: node
+          relabel_configs:
+            - target_label: __address__
+              replacement: kubernetes.default.svc:443
+            - source_labels: [__meta_kubernetes_node_name]
+              target_label: __metrics_path__
+              replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+            - source_labels: [__meta_kubernetes_node_name]
+              target_label: host
+            - target_label: collector
+              replacement: cadvisor
+          metric_relabel_configs:
+            - source_labels: [__name__]
+              regex: container_(cpu|memory)_.+
+              action: keep
+        - job_name: kube-state-metrics
+          kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                own_namespace: true
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name, __meta_kubernetes_pod_container_port_name]
+              regex: kube-state-metrics;http
+              action: keep
+            - target_label: collector
+              replacement: kube-state-metrics
+        - job_name: dcgm
+          kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                own_namespace: true
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name, __meta_kubernetes_pod_container_port_name]
+              regex: dcgm-exporter;metrics
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_node_name]
+              target_label: host
+            - target_label: collector
+              replacement: dcgm
+          metric_relabel_configs:
+            # Pod label the exporter copies from the pod using the GPU.
+            - action: labelmap
+              regex: inference_cedana_ai_profile_id
+              replacement: profile_id
+            - action: labeldrop
+              regex: inference_cedana_ai_profile_id
+        # Dynamo frontends serve request, token and latency metrics on their HTTP port.
+        - job_name: inference-frontend
+          kubernetes_sd_configs:
+            - role: pod
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_labelpresent_inference_cedana_ai_profile_id, __meta_kubernetes_pod_label_inference_cedana_ai_role, __meta_kubernetes_pod_container_port_name]
+              regex: true;frontend;http
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_label_inference_cedana_ai_profile_id]
+              target_label: profile_id
+          metric_relabel_configs:
+            - source_labels: [__name__]
+              regex: dynamo_frontend_(output_tokens_total|input_sequence_tokens_sum|requests_total|inflight_requests|queued_requests|time_to_first_token_seconds_bucket)
+              action: keep
+        # Worker system ports, scraped for `up` (cedana:inference_replicas).
+        - job_name: inference
+          kubernetes_sd_configs:
+            - role: pod
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_labelpresent_inference_cedana_ai_profile_id, __meta_kubernetes_pod_container_port_name]
+              regex: true;system
+              action: keep
+            - source_labels: [__meta_kubernetes_pod_label_inference_cedana_ai_profile_id]
+              target_label: profile_id
+            - source_labels: [__meta_kubernetes_pod_name]
+              target_label: pod
+            - target_label: collector
+              replacement: inference
 
-# Subchart: Vector configuration overrides when clusterMetrics are enabled
+# Subchart: Vector, one agent per node (config in templates/metrics/vector-config.yaml).
 vector:
   fullnameOverride: vector
   role: "Agent"
+  # host_metrics must run on every node, GPU nodes included.
+  tolerations:
+    - operator: Exists
   env:
-    - name: CEDANA_URL
-      value: "{{ .Values.config.url }}"
     - name: SPEC_NODE_NAME
       valueFrom:
         fieldRef:
           fieldPath: spec.nodeName
-    - name: AWS_ACCESS_KEY_ID
+    - name: CEDANA_AUTH_TOKEN
       valueFrom:
         secretKeyRef:
-          name: vector-aws-credentials
-          key: awsAccessKeyId
-    - name: AWS_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: vector-aws-credentials
-          key: awsSecretAccessKey
+          name: vector-credentials
+          key: cedanaAuthToken
   existingConfigMaps:
     - vector-config
   dataDir: "/vector-data"
+  containerPorts:
+    - name: prom-write
+      containerPort: 9090
+      protocol: TCP
   service:
     enabled: true
     ports:
-      - name: api
-        port: 8686
+      - name: prom-write
+        port: 9090
         protocol: TCP
-        targetPort: 8686
+        targetPort: 9090
   defaultVolumes:
     - name: var-lib
       hostPath:
@@ -452,10 +589,25 @@ vector:
       enabled: true
       path: "/var/lib/vector"
 
-# Subchart: DCGM Exporter configuration overrides
+# Subchart: DCGM exporter, on nodes labeled by GPU feature discovery or the GPU operator.
 dcgm-exporter:
   fullnameOverride: dcgm-exporter
   serviceMonitor:
     enabled: false
-  nodeSelector:
-    nvidia.com/gpu.present: "true"
+  tolerations:
+    - operator: Exists
+  kubernetes:
+    enablePodLabels: true
+    podLabelAllowlistRegex:
+      - "^inference\\.cedana\\.ai/profile-id$"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: nvidia.com/gpu.present
+                operator: In
+                values: ["true"]
+          - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: Exists
