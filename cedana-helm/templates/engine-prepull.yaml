@@ -1,0 +1,48 @@
+{{- if and .Values.dynamo.enabled .Values.enginePrepull.images }}
+# Pre-pulls engine images onto GPU nodes; each image is an init container that exits at once.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cedana-engine-prepull
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: cedana-engine-prepull
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cedana-engine-prepull
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cedana-engine-prepull
+    spec:
+      {{- with .Values.enginePrepull.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- else }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.product
+                    operator: Exists
+      {{- end }}
+      {{- with .Values.enginePrepull.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- range $i, $image := .Values.enginePrepull.images }}
+        - name: pull-{{ $i }}
+          image: {{ $image }}
+          command: ["true"]
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+        {{- end }}
+      containers:
+        - name: pause
+          image: registry.k8s.io/pause:3.10
+          resources:
+            requests: { cpu: 1m, memory: 8Mi }
+{{- end }}

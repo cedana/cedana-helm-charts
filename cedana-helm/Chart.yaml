@@ -2,21 +2,31 @@ apiVersion: v2
 name: cedana-helm
 description: Helm chart for Cedana k8s system
 type: application
-version: 0.9.411
+version: 0.9.412
 # The appVersion is the version of the Cedana API (cedana/cedana-propagator,
 # without the v) this chart should best work with. Pinned by cedana-marshal.
-appVersion: main   # last release v2.0.4.8
+appVersion: main   # last release v2.0.4.9
 
 dependencies:
   - name: prometheus
     version: "25.21.0"
     repository: "https://prometheus-community.github.io/helm-charts"
-    condition: clusterMetrics.prometheus.enabled
+    condition: clusterMetrics.enabled
   - name: vector
     version: "0.34.0"
     repository: "https://helm.vector.dev"
-    condition: clusterMetrics.vector.enabled
+    condition: clusterMetrics.enabled
   - name: dcgm-exporter
-    version: "3.4.0"
+    version: "4.8.4"
     repository: "https://nvidia.github.io/dcgm-exporter/helm-charts"
-    condition: clusterMetrics.gpu.enabled
+    condition: clusterMetrics.enabled
+  - name: dynamo-platform
+    alias: dynamo
+    version: "1.6.2"
+    repository: "oci://nvcr.io/nvidia/ai-dynamo"
+    condition: dynamo.enabled
+  - name: nvidia-device-plugin
+    alias: nvidiaDevicePlugin
+    version: "0.20.1"
+    repository: "https://nvidia.github.io/k8s-device-plugin"
+    condition: nvidiaDevicePlugin.enabled

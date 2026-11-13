@@ -7,6 +7,12 @@ dependencies:
   version: 0.34.0
 - name: dcgm-exporter
   repository: https://nvidia.github.io/dcgm-exporter/helm-charts
-  version: 3.4.0
-digest: sha256:666836b9cef15f67e751189dd90a57c0a4f80bf1b9d66a2a18c09d618f2b3f51
-generated: "2026-08-05T17:30:07.067408265+05:30"
+  version: 4.8.4
+- name: dynamo-platform
+  repository: oci://nvcr.io/nvidia/ai-dynamo
+  version: 1.6.2
+- name: nvidia-device-plugin
+  repository: https://nvidia.github.io/k8s-device-plugin
+  version: 0.20.1
+digest: sha256:81082207a367f32b18e22581cf9ba0226e032821eea59eeea64fcff5a6cd5c0a
+generated: "2026-11-09T18:29:16.328508567-05:00"
