@@ -57,6 +57,7 @@ config:
   gpuProfilingEnabled: false # Enable CUDA call profiling.
   gpuComputeSanitizer: false # Run restored GPU workers under compute-sanitizer (debug).
   gpuDirectIO: true # Read and write GPU checkpoints with O_DIRECT. Bypasses page cache for faster checkpoint/restore.
+  gpuDirectIOBtrfsNocow: true # Mark GPU checkpoint files on btrfs NOCOW so O_DIRECT works there. Turns off btrfs data checksums for those files; set false to keep checksums (writes fall back to buffered).
   gpuMemRingBufSize: 8 # Number of staging buffers for GPU memory restore with O_DIRECT. Minimum 2.
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
