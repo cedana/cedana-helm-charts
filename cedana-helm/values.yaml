@@ -61,13 +61,13 @@ config:
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
   # for the plugins can be specified. If pluginsBuilds is "alpha", then specify the branch name.
-  pluginsBuilds: release
-  pluginsCriuVersion: v4.3-cedana.00
+  pluginsBuilds: alpha
+  pluginsCriuVersion: criu-dev              # last release v4.3-cedana.00
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
-  pluginsContainerdRuntimeVersion: v0.8.9
-  pluginsGpuVersion: v0.8.12
-  pluginsStreamerVersion: v0.1.5
+  pluginsContainerdRuntimeVersion: cedana   # last release v0.8.9
+  pluginsGpuVersion: main                   # last release v0.8.12
+  pluginsStreamerVersion: main              # last release v0.1.5
 
   profiling: true
   metrics: true
@@ -118,8 +118,8 @@ daemonHelper:
     automount: false
     annotations: {}
   image:
-    repository: cedana/cedana-helper
-    tag: v0.9.412
+    repository: cedana/cedana-helper-test
+    tag: main   # last release v0.9.412
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -183,8 +183,8 @@ controllerManager:
         drop:
           - ALL
     image:
-      repository: cedana/cedana-controller
-      tag: v0.7.8
+      repository: cedana/cedana-controller-test
+      tag: main   # last release v0.7.8
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -246,9 +246,9 @@ dynamoWatcher:
   replicaCount: 1
   podAnnotations: {}
   image:
-    repository: cedana/cedana-dynamo-watcher
+    repository: cedana/cedana-dynamo-watcher-test
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: v0.7.8
+    tag: main   # last release v0.7.8
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:
@@ -321,8 +321,8 @@ nvidiaDevicePlugin:
 
 csx:
   image:
-    repository: cedana/cedana-csx
-    tag: v0.2.3
+    repository: cedana/cedana-csx-test
+    tag: main   # last release v0.2.3
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
