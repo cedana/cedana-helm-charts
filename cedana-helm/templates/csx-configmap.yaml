@@ -21,4 +21,9 @@ data:
   csx-read-timeout: "{{ .Values.csx.readTimeout }}"
   csx-write-timeout: "{{ .Values.csx.writeTimeout }}"
   csx-initialization-timeout: "{{ .Values.csx.initializationTimeout }}"
+  csx-enable-huge-pages: "{{ .Values.csx.enableHugePages }}"
+  csx-max-io-goroutines: "{{ .Values.csx.maxIOGoroutines }}"
+  csx-direct-io: "{{ .Values.csx.directIO }}"
+  csx-direct-io-buf-size: "{{ .Values.csx.directIOBufSize }}"
+  csx-direct-io-buf-count: "{{ .Values.csx.directIOBufCount }}"
 {{- end }}

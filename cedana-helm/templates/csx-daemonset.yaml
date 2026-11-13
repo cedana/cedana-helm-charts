@@ -147,6 +147,31 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-initialization-timeout
+            - name: CEDANA_CSX_ENABLE_HUGE_PAGES
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-enable-huge-pages
+            - name: CEDANA_CSX_MAX_IO_GOROUTINES
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-max-io-goroutines
+            - name: CEDANA_CSX_DIRECT_IO
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-direct-io
+            - name: CEDANA_CSX_DIRECT_IO_BUF_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-direct-io-buf-size
+            - name: CEDANA_CSX_DIRECT_IO_BUF_COUNT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-direct-io-buf-count
             - name: CEDANA_CSX_ENABLE_RMQ
               value: "true"
       volumes:
