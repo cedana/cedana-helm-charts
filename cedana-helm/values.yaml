@@ -339,13 +339,14 @@ csx:
   logLevel: info
   # Path to Dir inside a NFS where CSX can store persistent checkpoints on the cluster.
   nfsPath:
-  # Percentage of system RAM CSX can use to cache checkpoints (1-100).
-  # CSX creates a tmpfs of this size at memoryCachePath.
+  # Percentage of system RAM CSX can use to cache checkpoints (0-100).
+  # CSX creates a tmpfs of this size at memoryCachePath. Set to 0 to disable the memory cache.
   memoryCachePercent: 25
   # Path where CSX mounts the tmpfs used to cache checkpoints in RAM.
   # CSX creates the path if it does not exist.
   memoryCachePath: /cedana/memstore/
   # Amount of local disk space, in GiB, CSX can use to cache checkpoints.
+  # Set to 0 to disable the local disk cache.
   localDiskCacheLimit: 1000
   # Path on the local disk where CSX caches checkpoints.
   # CSX creates the path if it does not exist.
