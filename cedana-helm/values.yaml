@@ -57,6 +57,7 @@ config:
   gpuProfilingEnabled: false # Enable CUDA call profiling.
   gpuComputeSanitizer: false # Run restored GPU workers under compute-sanitizer (debug).
   gpuDirectIO: true # Read and write GPU checkpoints with O_DIRECT. Bypasses page cache for faster checkpoint/restore.
+  gpuDirectIOBtrfsNocow: true # Mark GPU checkpoint files on btrfs NOCOW so O_DIRECT works there. Turns off btrfs data checksums for those files; set false to keep checksums (writes fall back to buffered).
   gpuMemRingBufSize: 8 # Number of staging buffers for GPU memory restore with O_DIRECT. Minimum 2.
 
   # Specify the plugin versions to use. If pluginsBuilds is "release", then any release version
@@ -65,8 +66,8 @@ config:
   pluginsCriuVersion: criu-dev              # last release v4.3-cedana.00
   pluginsCriuNvidiaDev: true
   pluginsCriuInfiniband: true
-  pluginsContainerdRuntimeVersion: cedana   # last release v0.8.8
-  pluginsGpuVersion: main                   # last release v0.8.11
+  pluginsContainerdRuntimeVersion: cedana   # last release v0.8.9
+  pluginsGpuVersion: main                   # last release v0.8.12
   pluginsStreamerVersion: main              # last release v0.1.5
 
   profiling: true
@@ -119,7 +120,7 @@ daemonHelper:
     annotations: {}
   image:
     repository: cedana/cedana-helper-test
-    tag: main   # last release v0.9.411
+    tag: main   # last release v0.9.412
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   updateStrategy:
@@ -184,7 +185,7 @@ controllerManager:
           - ALL
     image:
       repository: cedana/cedana-controller-test
-      tag: main   # last release v0.7.7
+      tag: main   # last release v0.7.8
       digest: # ignores tag if set
       imagePullPolicy: IfNotPresent
     resources:
@@ -248,7 +249,7 @@ dynamoWatcher:
   image:
     repository: cedana/cedana-dynamo-watcher-test
     # Keep in lockstep with controllerManager.manager.image.tag (same repo release).
-    tag: main   # last release v0.7.7
+    tag: main   # last release v0.7.8
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
   containerSecurityContext:

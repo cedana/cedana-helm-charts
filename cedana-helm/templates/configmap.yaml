@@ -29,6 +29,7 @@ data:
   gpu-profiling-enabled: "{{ .Values.config.gpuProfilingEnabled }}"
   gpu-compute-sanitizer: "{{ .Values.config.gpuComputeSanitizer }}"
   gpu-direct-io: "{{ .Values.config.gpuDirectIO }}"
+  gpu-direct-io-btrfs-nocow: "{{ .Values.config.gpuDirectIOBtrfsNocow }}"
   gpu-mem-ring-buf-size: "{{ .Values.config.gpuMemRingBufSize }}"
   plugins-builds: "{{ .Values.config.pluginsBuilds }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
