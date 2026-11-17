@@ -368,6 +368,21 @@ csx:
   # Maximum duration, in milliseconds, that CSX waits for an initial checkpoint
   # list before caching random checkpoints from NFS.
   initializationTimeout: 10000
+  # Mount the memory cache and tmpDir tmpfs with huge=within_size.
+  # Disable on kernels without transparent hugepage support.
+  enableHugePages: true
+  # Maximum number of files a single copy or move works on concurrently.
+  # The cap is per copy or move, not global. Must be at least 1.
+  maxIOGoroutines: 16
+  # Copy and move files larger than 1 MiB with direct IO (O_DIRECT), bypassing the page cache.
+  # CSX falls back to buffered IO where direct IO is not possible.
+  directIO: true
+  # Size, in MiB, of a single direct IO buffer. Must be at least 1.
+  directIOBufSize: 64
+  # Total number of direct IO buffers CSX can allocate. Must be at least 2.
+  # Every file being copied uses a pair of buffers; further copies wait for a pair to be freed.
+  # The defaults result in 1 GiB of buffers in total.
+  directIOBufCount: 16
 
 kubernetesClusterDomain: cluster.local
 
