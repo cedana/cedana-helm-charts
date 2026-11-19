@@ -112,6 +112,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-tmp-dir-object-limit
+            - name: CEDANA_CSX_TMP_DIR_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-tmp-dir-type
             - name: CEDANA_CSX_ENABLE_METRICS
               valueFrom:
                 configMapKeyRef:
@@ -172,6 +177,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-direct-io-buf-count
+            - name: CEDANA_CSX_EAGER_CACHE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-eager-cache
             - name: CEDANA_CSX_ENABLE_RMQ
               value: "true"
       volumes:
