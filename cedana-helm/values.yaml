@@ -355,11 +355,17 @@ csx:
   # Interval, in seconds, at which CSX checks NFS for checkpoints from other nodes.
   nfsPollInterval: 1
   # Path where CSX temporarily stores objects while they are being written or
-  # have not yet been copied to NFS. CSX creates a tmpfs at this path.
+  # have not yet been copied to NFS. See tmpDirType for what CSX creates at this path.
   tmpDir: /cedana/tmpdir
   # Maximum number of objects allowed in tmpDir at once. Once reached, new
   # checkpoints are written straight to NFS.
   tmpDirObjectLimit: 1
+  # What backs tmpDir. One of:
+  # - "tmpfs": CSX mounts a tmpfs at tmpDir, so in-flight checkpoints are held in RAM.
+  # - "disk": CSX only creates a directory at tmpDir, so in-flight checkpoints are
+  #   written to whatever filesystem backs that path.
+  # CSX removes everything under tmpDir on shutdown, so the path must be dedicated to CSX.
+  tmpDirType: tmpfs
   enableMetrics: false
   # Maximum duration, in seconds, that a read can remain open.
   readTimeout: 3600
@@ -368,7 +374,7 @@ csx:
   # Maximum duration, in milliseconds, that CSX waits for an initial checkpoint
   # list before caching random checkpoints from NFS.
   initializationTimeout: 10000
-  # Mount the memory cache and tmpDir tmpfs with huge=within_size.
+  # Mount the memory cache tmpfs, and tmpDir when tmpDirType is tmpfs, with huge=within_size.
   # Disable on kernels without transparent hugepage support.
   enableHugePages: true
   # Maximum number of files a single copy or move works on concurrently.
