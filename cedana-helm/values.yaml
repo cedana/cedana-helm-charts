@@ -389,6 +389,10 @@ csx:
   # Every file being copied uses a pair of buffers; further copies wait for a pair to be freed.
   # The defaults result in 1 GiB of buffers in total.
   directIOBufCount: 16
+  # When a read is served from the local disk cache or NFS, start caching the checkpoint
+  # as soon as the read opens, alongside it, instead of waiting for the read to close.
+  # The checkpoint is cached sooner, at the cost of the copy sharing IO with the read.
+  eagerCache: true
 
 kubernetesClusterDomain: cluster.local
 

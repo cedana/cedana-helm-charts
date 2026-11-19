@@ -27,4 +27,5 @@ data:
   csx-direct-io: "{{ .Values.csx.directIO }}"
   csx-direct-io-buf-size: "{{ .Values.csx.directIOBufSize }}"
   csx-direct-io-buf-count: "{{ .Values.csx.directIOBufCount }}"
+  csx-eager-cache: "{{ .Values.csx.eagerCache }}"
 {{- end }}

@@ -177,6 +177,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-direct-io-buf-count
+            - name: CEDANA_CSX_EAGER_CACHE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cedana-helm.csxConfigMapName" . }}
+                  key: csx-eager-cache
             - name: CEDANA_CSX_ENABLE_RMQ
               value: "true"
       volumes:
