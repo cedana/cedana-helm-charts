@@ -127,11 +127,6 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-write-timeout
-            {{- if .Values.tokenFactory.enabled }}
-            # No broker in a Token Factory cluster.
-            - name: CEDANA_CSX_ENABLE_RMQ
-              value: "false"
-            {{- end }}
             - name: CEDANA_CSX_PROPAGATOR_URL
               valueFrom:
                 configMapKeyRef:
@@ -177,8 +172,9 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-direct-io-buf-count
+            # No broker in a Token Factory cluster.
             - name: CEDANA_CSX_ENABLE_RMQ
-              value: "true"
+              value: {{ not .Values.tokenFactory.enabled | quote }}
       volumes:
         - name: host-volume
           hostPath:
