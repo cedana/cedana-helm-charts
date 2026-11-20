@@ -236,8 +236,6 @@ controllerManager:
 tokenFactory:
   enabled: false
   namespace: cedana-token-factory
-  service: tokenfactory
-  port: 8090
 
 # dynamo-watcher: standalone component that watches DynamoGraphDeployments and
 # dynamo Services, syncs their status to the Cedana propagator, and consumes the

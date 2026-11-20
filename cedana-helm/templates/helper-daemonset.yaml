@@ -313,20 +313,13 @@ spec:
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
             - name: CEDANA_DB_REMOTE
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: db-remote
-            - name: CEDANA_PLUGINS_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: plugins-url
+              value: {{ not .Values.tokenFactory.enabled | quote }}
+            {{- if .Values.tokenFactory.enabled }}
             - name: CEDANA_TRANSPORT
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ template "cedana-helm.configMapName" . }}
-                  key: transport
+              value: poll
+            - name: CEDANA_PLUGINS_URL
+              value: {{ .Values.config.url | quote }}
+            {{- end }}
             - name: CEDANA_AWS_CREDENTIALS_MODE
               value: {{ include "cedana-helm.awsCredentialsMode" . | quote }}
             {{- if eq (include "cedana-helm.awsCredentialsMode" .) "static" }}

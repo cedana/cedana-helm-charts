@@ -10,6 +10,8 @@ tokenFactory:
 
 config:
   gpuDedupEnabled: true
+  # Cluster metrics ship to the hosted propagator.
+  metrics: false
   # Checkpoints go through CSX so any node can restore them.
   checkpointDir: "csx://"
 
@@ -17,7 +19,8 @@ csx:
   # The 1000 GiB default outgrows GPU nodes' boot disks; past it kubelet evicts Cedana itself.
   localDiskCacheLimit: 100
 
-# Re-registers restored workers with Dynamo discovery; without it a woken model's frontend sees no workers.
+# Re-registers restored workers with Dynamo discovery (a woken model's frontend sees none without it).
+# Only this loop: the others need RabbitMQ.
 dynamoWatcher:
   enabled: true
   loops: "worker-metadata"

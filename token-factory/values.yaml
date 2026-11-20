@@ -22,8 +22,6 @@ spoke:
   resources:
     requests: {cpu: 50m, memory: 64Mi}
     limits: {memory: 256Mi}
-  nodeSelector: {}
-  tolerations: []
 
 # Switchyard: the OpenAI-compatible gateway; it routes and wakes models from the spoke.
 switchyard:
@@ -33,8 +31,6 @@ switchyard:
     tag: main
     digest: # ignores tag if set
     imagePullPolicy: IfNotPresent
-  # Appended verbatim to config.toml.
-  extraConfig: ""
   service:
     type: ClusterIP
     port: 4000
@@ -42,8 +38,6 @@ switchyard:
   resources:
     requests: {cpu: 100m, memory: 128Mi}
     limits: {memory: 512Mi}
-  nodeSelector: {}
-  tolerations: []
 
 # Subchart: NVIDIA Dynamo platform (operator; it applies the nvidia.com CRDs itself at start).
 # 1.6.x discovers workers through the Kubernetes API and uses TCP/ZMQ planes, so neither NATS

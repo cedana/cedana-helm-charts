@@ -9,9 +9,6 @@ data:
 
     [token_factory]
     url = "http://tokenfactory.{{ .Release.Namespace }}.svc:8090"
-{{- with .Values.switchyard.extraConfig }}
-{{ . | indent 4 }}
-{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -29,8 +26,6 @@ spec:
       labels:
         app: switchyard
         {{- include "token-factory.labels" . | nindent 8 }}
-      annotations:
-        checksum/config: {{ .Values.switchyard.extraConfig | sha256sum | quote }}
     spec:
       {{- if gt (int .Values.switchyard.replicaCount) 1 }}
       # Replicas on different nodes, so losing one node never takes the gateway down.
@@ -71,12 +66,6 @@ spec:
         - name: config
           configMap:
             name: switchyard-config
-      {{- with .Values.switchyard.nodeSelector }}
-      nodeSelector: {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.switchyard.tolerations }}
-      tolerations: {{- toYaml . | nindent 8 }}
-      {{- end }}
 {{- if gt (int .Values.switchyard.replicaCount) 1 }}
 ---
 apiVersion: policy/v1

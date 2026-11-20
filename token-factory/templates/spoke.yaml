@@ -140,12 +140,6 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             capabilities: {drop: [ALL]}
-      {{- with .Values.spoke.nodeSelector }}
-      nodeSelector: {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.spoke.tolerations }}
-      tolerations: {{- toYaml . | nindent 8 }}
-      {{- end }}
 ---
 # Nodes reach this by address (cedana-helm's tokenFactory.service), so keep its name stable.
 apiVersion: v1
