@@ -39,8 +39,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Upload helm chart
         uses: actions/upload-artifact@v4
@@ -60,8 +58,6 @@ jobs:
       streamer_version: ${{ steps.extract_version.outputs.streamer_version }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install yq
         run: |
