@@ -10,7 +10,15 @@ metadata:
     heritage: "{{ .Release.Service }}"
 data:
   cluster-id: "{{ required "Please provide --set config.clusterId=<cluster-id>" .Values.config.clusterId }}"
+  {{- $tf := .Values.tokenFactory.enabled }}
+  {{- if $tf }}
+  # The host can't resolve cluster DNS; the helper resolves this name before writing the node's config.
+  url: "http://{{ .Values.tokenFactory.service }}.{{ .Values.tokenFactory.namespace }}.svc:{{ .Values.tokenFactory.port }}"
+  {{- else }}
   url: "{{ required "Please provide --set config.url=<cedana-url>" .Values.config.url }}"
+  {{- end }}
+  transport: "{{ if $tf }}poll{{ else }}rmq{{ end }}"
+  db-remote: "{{ not $tf }}"
   address: "{{ required "Please provide --set config.address=<daemon-address>" .Values.config.address }}"
   protocol: "{{ required "Please provide --set config.protocol=<daemon-protocol>" .Values.config.protocol }}"
   sqs-queue-url: "{{ .Values.config.sqsQueueUrl }}"
@@ -31,14 +39,16 @@ data:
   gpu-direct-io: "{{ .Values.config.gpuDirectIO }}"
   gpu-direct-io-btrfs-nocow: "{{ .Values.config.gpuDirectIOBtrfsNocow }}"
   gpu-mem-ring-buf-size: "{{ .Values.config.gpuMemRingBufSize }}"
-  plugins-builds: "{{ .Values.config.pluginsBuilds }}"
+  # Token Factory downloads plugins from config.url when set; without it (airgapped) they come from the helper image.
+  plugins-builds: "{{ if and $tf (not .Values.config.url) }}local{{ else }}{{ .Values.config.pluginsBuilds }}{{ end }}"
+  plugins-url: "{{ .Values.config.url }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"
   plugins-gpu-version: "{{ .Values.config.pluginsGpuVersion }}"
   plugins-streamer-version: "{{ .Values.config.pluginsStreamerVersion }}"
   plugins-criu-nvidia-dev: "{{ .Values.config.pluginsCriuNvidiaDev }}"
   plugins-criu-infiniband: "{{ .Values.config.pluginsCriuInfiniband }}"
-  metrics: "{{ .Values.config.metrics }}"
+  metrics: "{{ and .Values.config.metrics (not $tf) }}"
   profiling: "{{ .Values.config.profiling }}"
   log-level: "{{ .Values.config.logLevel }}"
 

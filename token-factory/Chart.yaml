@@ -1,0 +1,13 @@
+apiVersion: v2
+name: token-factory
+description: Cedana Token Factory - the in-cluster spoke, the Switchyard gateway and the Dynamo platform
+type: application
+version: 0.1.0
+appVersion: main
+
+dependencies:
+  - name: dynamo-platform
+    alias: dynamo
+    version: "1.6.2"
+    repository: "oci://nvcr.io/nvidia/ai-dynamo"
+    condition: dynamo.enabled

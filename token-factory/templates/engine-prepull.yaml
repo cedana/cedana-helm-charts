@@ -1,10 +1,9 @@
-{{- if and .Values.dynamo.enabled .Values.enginePrepull.images }}
+{{- if .Values.enginePrepull.images }}
 # Pre-pulls engine images onto GPU nodes; each image is an init container that exits at once.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: cedana-engine-prepull
-  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: cedana-engine-prepull
 spec:
