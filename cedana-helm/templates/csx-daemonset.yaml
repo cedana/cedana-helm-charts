@@ -32,6 +32,7 @@ spec:
       hostPID: true
       hostIPC: true
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       {{- with .Values.csx.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -172,9 +173,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "cedana-helm.csxConfigMapName" . }}
                   key: csx-direct-io-buf-count
-            # No broker in a Token Factory cluster.
+            # No broker in a Token Factory cluster: events go to the spoke over HTTP.
             - name: CEDANA_CSX_ENABLE_RMQ
               value: {{ not .Values.tokenFactory.enabled | quote }}
+            - name: CEDANA_CSX_ENABLE_HTTP_EVENTS
+              value: {{ .Values.tokenFactory.enabled | quote }}
       volumes:
         - name: host-volume
           hostPath:
