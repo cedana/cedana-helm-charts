@@ -1,5 +1,5 @@
-{{- if and .Values.dynamoWatcher.enabled .Values.tokenFactory.enabled }}
-{{- fail "dynamoWatcher needs RabbitMQ through the hosted propagator; disable it with tokenFactory.enabled" }}
+{{- if and .Values.dynamoWatcher.enabled .Values.tokenFactory.enabled (ne .Values.dynamoWatcher.loops "worker-metadata") }}
+{{- fail "with tokenFactory.enabled, dynamoWatcher.loops must be \"worker-metadata\": the other loops need RabbitMQ" }}
 {{- end }}
 {{- if .Values.dynamoWatcher.enabled }}
 apiVersion: apps/v1

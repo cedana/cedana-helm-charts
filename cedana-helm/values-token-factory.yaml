@@ -16,3 +16,8 @@ config:
 csx:
   # The 1000 GiB default outgrows GPU nodes' boot disks; past it kubelet evicts Cedana itself.
   localDiskCacheLimit: 100
+
+# Re-registers restored workers with Dynamo discovery; without it a woken model's frontend sees no workers.
+dynamoWatcher:
+  enabled: true
+  loops: "worker-metadata"
