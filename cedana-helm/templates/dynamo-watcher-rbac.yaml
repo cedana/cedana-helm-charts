@@ -85,6 +85,20 @@ rules:
   - update
   - patch
   - delete
+# Deployments: the create-workload consumer server-side applies (patch) the Deployment
+# of a container inference profile, and the delete-workload consumer removes it.
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 # PersistentVolumeClaims: the dynamo create-workload consumer creates, then server-side
 # applies, rendered PVCs (needs patch).
 - apiGroups:
