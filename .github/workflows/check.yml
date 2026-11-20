@@ -28,6 +28,8 @@ jobs:
       - name: Lint helm chart
         run: |
           helm lint cedana-helm
+          helm dependency build token-factory
+          helm lint token-factory --set clusterId=ci --set agentToken=ci
 
   version:
     name: Version
