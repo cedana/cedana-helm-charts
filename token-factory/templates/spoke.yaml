@@ -99,6 +99,8 @@ spec:
     matchLabels: {app: tokenfactory}
   template:
     metadata:
+      annotations:
+        checksum/agent-token: {{ .Values.agentToken | sha256sum | quote }} # restart on rotation
       labels:
         app: tokenfactory
         {{- include "token-factory.labels" . | nindent 8 }}
