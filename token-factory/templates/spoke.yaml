@@ -50,11 +50,14 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["create", "patch"]
-  # API keys, in the spoke's own namespace only.
+  # API keys, in the spoke's own namespace only. It adds its own `ui` key (create can't name a Secret).
   - apiGroups: [""]
     resources: ["secrets"]
     resourceNames: ["tokenfactory-keys"]
-    verbs: ["get"]
+    verbs: ["get", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
