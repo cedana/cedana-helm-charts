@@ -2,7 +2,6 @@
 # (node components in cedana-system), whose setup looks up this chart's spoke Service:
 #   helm install token-factory ./token-factory -n cedana-token-factory --create-namespace \
 #     --set clusterId=$CLUSTER_ID --set agentToken=$TOKEN
-# clusterId and agentToken must match cedana-helm's config.clusterId and config.authToken.
 
 # Scopes checkpoint names; the same ID as cedana-helm's config.clusterId.
 clusterId:

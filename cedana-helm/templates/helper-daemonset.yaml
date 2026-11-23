@@ -317,6 +317,10 @@ spec:
             {{- if .Values.tokenFactory.enabled }}
             - name: CEDANA_TRANSPORT
               value: poll
+            - name: NODE_NAME # the spoke queues checkpoint requests by node name
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             - name: CEDANA_PLUGINS_URL
               value: {{ .Values.config.url | quote }}
             {{- end }}

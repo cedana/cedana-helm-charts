@@ -230,9 +230,8 @@ controllerManager:
     #               - "cedana-manager"
   nodeSelector: {}
 
-# Token Factory: nodes use the in-cluster spoke (the token-factory chart) instead of config.url:
-# they poll it for checkpoint requests, keep the daemon's records locally and take plugins from the
-# helper image. See values-token-factory.yaml.
+# Token Factory: nodes poll the in-cluster spoke (the token-factory chart) instead of config.url and
+# keep the daemon's records locally. See values-token-factory.yaml.
 tokenFactory:
   enabled: false
   namespace: cedana-token-factory

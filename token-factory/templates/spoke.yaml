@@ -141,7 +141,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities: {drop: [ALL]}
 ---
-# Nodes reach this by address (cedana-helm's tokenFactory.service), so keep its name stable.
+# cedana-helm's configmap hardcodes this Service's name and port.
 apiVersion: v1
 kind: Service
 metadata:
