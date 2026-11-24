@@ -17,6 +17,7 @@ data:
   csx-nfs-poll-interval: "{{ .Values.csx.nfsPollInterval }}"
   csx-tmp-dir: "{{ .Values.csx.tmpDir }}"
   csx-tmp-dir-object-limit: "{{ .Values.csx.tmpDirObjectLimit }}"
+  csx-tmp-dir-type: "{{ .Values.csx.tmpDirType }}"
   csx-enable-metrics: "{{ .Values.csx.enableMetrics }}"
   csx-read-timeout: "{{ .Values.csx.readTimeout }}"
   csx-write-timeout: "{{ .Values.csx.writeTimeout }}"
@@ -26,4 +27,5 @@ data:
   csx-direct-io: "{{ .Values.csx.directIO }}"
   csx-direct-io-buf-size: "{{ .Values.csx.directIOBufSize }}"
   csx-direct-io-buf-count: "{{ .Values.csx.directIOBufCount }}"
+  csx-eager-cache: "{{ .Values.csx.eagerCache }}"
 {{- end }}
