@@ -1,11 +1,9 @@
 nameOverride: cedana
 fullnameOverride: cedana
 
-# Pull Cedana's private images through the Cedana registry, logging in with config.url's host
-# and config.authToken.
-imageRegistry:
-  enabled: false
-  host: registry.cedana.ai
+# Cedana's images are private and pulled through this registry, logging in with config.url's
+# host and config.authToken.
+imageRegistry: registry.cedana.ai
 # Extra pull secrets for every Cedana pod, e.g. for a mirror: [{name: my-registry}].
 imagePullSecrets: []
 

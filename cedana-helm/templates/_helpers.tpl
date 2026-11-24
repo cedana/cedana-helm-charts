@@ -108,15 +108,12 @@ cedana-csx-config
 {{- end -}}
 
 {{/*
-Image reference for a {repository, tag, digest} value, served through imageRegistry.host when enabled.
+Image reference for a {repository, tag, digest} value, served through imageRegistry.
 */}}
 {{- define "cedana-helm.image" -}}
 {{- $root := index . 0 -}}
 {{- $img := index . 1 -}}
-{{- $repo := $img.repository -}}
-{{- if $root.Values.imageRegistry.enabled -}}
-{{- $repo = printf "%s/%s" $root.Values.imageRegistry.host $repo -}}
-{{- end -}}
+{{- $repo := printf "%s/%s" $root.Values.imageRegistry $img.repository -}}
 {{- if $img.digest -}}
 {{ $repo }}@{{ $img.digest }}
 {{- else -}}
@@ -129,10 +126,7 @@ Image reference for a {repository, tag, digest} value, served through imageRegis
 {{- end }}
 
 {{- define "cedana-helm.imagePullSecrets" -}}
-{{- $secrets := .Values.imagePullSecrets | default list -}}
-{{- if .Values.imageRegistry.enabled -}}
-{{- $secrets = append $secrets (dict "name" (include "cedana-helm.registrySecretName" .)) -}}
-{{- end -}}
+{{- $secrets := append (.Values.imagePullSecrets | default list) (dict "name" (include "cedana-helm.registrySecretName" .)) -}}
 {{- with $secrets }}
 imagePullSecrets:
 {{- toYaml . | nindent 2 }}
