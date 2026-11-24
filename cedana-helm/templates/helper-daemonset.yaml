@@ -26,6 +26,7 @@ spec:
       annotations:
         checksum/config: {{ include "cedana-helm.helper.config.checksum" . | sha256sum }}
     spec:
+      {{- include "cedana-helm.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: {{ include "cedana-helm.daemonHelperServiceAccountName" . }}
       hostPID: true
       hostIPC: true
@@ -49,11 +50,7 @@ spec:
       {{- end }}
       containers:
         - name: helper
-          {{- if .Values.daemonHelper.image.digest }}
-          image: {{ .Values.daemonHelper.image.repository }}@{{ .Values.daemonHelper.image.digest }}
-          {{- else }}
-          image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
-          {{- end }}
+          image: {{ include "cedana-helm.image" (list $ .Values.daemonHelper.image) }}
           imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
           securityContext:
             privileged: true

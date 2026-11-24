@@ -25,6 +25,7 @@ spec:
         app.kubernetes.io/component: dynamo-watcher
         {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
     spec:
+      {{- include "cedana-helm.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: dynamo-watcher
         command:
@@ -62,11 +63,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        {{- if .Values.dynamoWatcher.image.digest }}
-        image: {{ .Values.dynamoWatcher.image.repository }}@{{ .Values.dynamoWatcher.image.digest }}
-        {{- else }}
-        image: {{ .Values.dynamoWatcher.image.repository }}:{{ .Values.dynamoWatcher.image.tag }}
-        {{- end }}
+        image: {{ include "cedana-helm.image" (list $ .Values.dynamoWatcher.image) }}
         imagePullPolicy: {{ .Values.dynamoWatcher.image.imagePullPolicy }}
         resources: {{- toYaml .Values.dynamoWatcher.resources | nindent 10 }}
         securityContext: {{- toYaml .Values.dynamoWatcher.containerSecurityContext | nindent 10 }}

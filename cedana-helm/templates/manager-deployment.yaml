@@ -28,6 +28,7 @@ spec:
         app.kubernetes.io/component: manager
         {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
     spec:
+      {{- include "cedana-helm.imagePullSecrets" . | nindent 6 }}
       containers:
       - name: manager
         args: {{- toYaml .Values.controllerManager.manager.args | nindent 8 }}
@@ -88,11 +89,7 @@ spec:
           value: {{ quote .Chart.AppVersion }}
         - name: HELM_RELEASE
           value: {{ quote .Release.Name }}
-        {{- if .Values.controllerManager.manager.image.digest }}
-        image: {{ .Values.controllerManager.manager.image.repository }}@{{ .Values.controllerManager.manager.image.digest }}
-        {{- else }}
-        image: {{ .Values.controllerManager.manager.image.repository }}:{{ .Values.controllerManager.manager.image.tag }}
-        {{- end }}
+        image: {{ include "cedana-helm.image" (list $ .Values.controllerManager.manager.image) }}
         imagePullPolicy: {{ .Values.controllerManager.manager.image.imagePullPolicy }}
         livenessProbe:
           httpGet:
