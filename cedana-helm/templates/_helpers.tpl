@@ -106,3 +106,35 @@ Return secret name to be used based on provided values.
 {{- define "cedana-helm.csxConfigMapName" -}}
 cedana-csx-config
 {{- end -}}
+
+{{/*
+Image reference for a {repository, tag, digest} value, served through imageRegistry (Docker Hub when empty).
+*/}}
+{{- define "cedana-helm.image" -}}
+{{- $root := index . 0 -}}
+{{- $img := index . 1 -}}
+{{- $repo := $img.repository -}}
+{{- with $root.Values.imageRegistry -}}
+{{- $repo = printf "%s/%s" . $repo -}}
+{{- end -}}
+{{- if $img.digest -}}
+{{ $repo }}@{{ $img.digest }}
+{{- else -}}
+{{ $repo }}:{{ $img.tag }}
+{{- end -}}
+{{- end }}
+
+{{- define "cedana-helm.registrySecretName" -}}
+{{- printf "%s-registry" (include "cedana-helm.fullname" .) -}}
+{{- end }}
+
+{{- define "cedana-helm.imagePullSecrets" -}}
+{{- $secrets := .Values.imagePullSecrets | default list -}}
+{{- if .Values.imageRegistry -}}
+{{- $secrets = append $secrets (dict "name" (include "cedana-helm.registrySecretName" .)) -}}
+{{- end -}}
+{{- with $secrets }}
+imagePullSecrets:
+{{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}

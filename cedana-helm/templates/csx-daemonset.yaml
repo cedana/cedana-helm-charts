@@ -29,6 +29,7 @@ spec:
         checksum/csx-config: {{ include (print $.Template.BasePath "/csx-configmap.yaml") . | sha256sum }}
         checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
     spec:
+      {{- include "cedana-helm.imagePullSecrets" . | nindent 6 }}
       hostPID: true
       hostIPC: true
       hostNetwork: true
@@ -46,11 +47,7 @@ spec:
       {{- end }}
       containers:
         - name: csx
-          {{- if .Values.csx.image.digest }}
-          image: {{ .Values.csx.image.repository }}@{{ .Values.csx.image.digest }}
-          {{- else }}
-          image: {{ .Values.csx.image.repository }}:{{ .Values.csx.image.tag }}
-          {{- end }}
+          image: {{ include "cedana-helm.image" (list $ .Values.csx.image) }}
           imagePullPolicy: {{ .Values.csx.image.imagePullPolicy }}
           securityContext:
             privileged: true
