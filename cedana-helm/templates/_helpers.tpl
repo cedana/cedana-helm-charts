@@ -113,7 +113,7 @@ Image reference for a {repository, tag, digest} value, served through imageRegis
 {{- define "cedana-helm.image" -}}
 {{- $root := index . 0 -}}
 {{- $img := index . 1 -}}
-{{- $repo := printf "%s/%s" $root.Values.imageRegistry $img.repository -}}
+{{- $repo := printf "%s/%s" (required "imageRegistry is required, e.g. registry.cedana.ai or your mirror" $root.Values.imageRegistry) $img.repository -}}
 {{- if $img.digest -}}
 {{ $repo }}@{{ $img.digest }}
 {{- else -}}
