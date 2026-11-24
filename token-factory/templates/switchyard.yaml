@@ -27,6 +27,7 @@ spec:
         app: switchyard
         {{- include "token-factory.labels" . | nindent 8 }}
     spec:
+      {{- include "token-factory.imagePullSecrets" . | nindent 6 }}
       {{- if gt (int .Values.switchyard.replicaCount) 1 }}
       # Replicas on different nodes, so losing one node never takes the gateway down.
       affinity:
@@ -40,7 +41,7 @@ spec:
       {{- end }}
       containers:
         - name: switchyard
-          image: {{ include "token-factory.image" .Values.switchyard.image }}
+          image: {{ include "token-factory.image" (list $ .Values.switchyard.image) }}
           imagePullPolicy: {{ .Values.switchyard.image.imagePullPolicy }}
           args: ["--config", "/etc/switchyard/config.toml"]
           ports:

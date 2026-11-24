@@ -76,6 +76,13 @@ config:
   pluginsContainerdRuntimeVersion: cedana   # last release v0.8.9
   pluginsGpuVersion: main                   # last release v0.8.12
   pluginsStreamerVersion: main              # last release v0.1.5
+  # The node plugins (criu, GPU, shim, streamer) as one image, pulled through imageRegistry and
+  # installed from the node. Set, it overrides the plugin versions above; empty, each plugin is
+  # downloaded from config.url at its version.
+  pluginsImage:
+    repository: cedana/cedana-plugins-test
+    tag: ""
+    digest:
 
   profiling: true
   metrics: true

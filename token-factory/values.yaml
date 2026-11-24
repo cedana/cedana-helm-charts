@@ -1,12 +1,19 @@
 # Cedana Token Factory. Install this chart first, then cedana-helm with values-token-factory.yaml
 # (node components in cedana-system), whose setup looks up this chart's spoke Service:
 #   helm install token-factory ./token-factory -n cedana-token-factory --create-namespace \
-#     --set clusterId=$CLUSTER_ID --set agentToken=$TOKEN
+#     --set clusterId=$CLUSTER_ID --set agentToken=$TOKEN --set url=$CEDANA_URL
 
 # Scopes checkpoint names; the same ID as cedana-helm's config.clusterId.
 clusterId:
 # Nodes (helper, shim) send this; cedana-helm's config.authToken.
 agentToken:
+# cedana-helm's config.url; its host and agentToken log in to imageRegistry.
+url:
+
+# The spoke and Switchyard images are private and pulled through this registry. Empty pulls
+# straight from Docker Hub, which fails without your own imagePullSecrets.
+imageRegistry: registry.cedana.ai
+imagePullSecrets: []
 
 spoke:
   image:

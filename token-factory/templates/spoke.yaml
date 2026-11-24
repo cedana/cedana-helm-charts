@@ -109,6 +109,7 @@ spec:
         {{- include "token-factory.labels" . | nindent 8 }}
     spec:
       serviceAccountName: tokenfactory
+      {{- include "token-factory.imagePullSecrets" . | nindent 6 }}
       securityContext:
         runAsNonRoot: true
         fsGroup: 65532
@@ -117,7 +118,7 @@ spec:
           persistentVolumeClaim: {claimName: tokenfactory-data}
       containers:
         - name: tokenfactory
-          image: {{ include "token-factory.image" .Values.spoke.image }}
+          image: {{ include "token-factory.image" (list $ .Values.spoke.image) }}
           imagePullPolicy: {{ .Values.spoke.image.imagePullPolicy }}
           args:
             - serve

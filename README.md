@@ -45,17 +45,18 @@ Token Factory runs inference in the cluster with no hosted propagator: the `toke
 at the spoke. Install `token-factory` first: node setup looks up its spoke Service.
 
 Checkpoints go through CSX, so every GPU node needs the same shared directory (e.g. an NFS
-mount) at `$SHARED_DIR`; on a single node any local directory works. `$TOKEN` is any shared
-secret; nodes present it to the spoke.
+mount) at `$SHARED_DIR`; on a single node any local directory works. `$TOKEN` is your Cedana API
+key and `$CEDANA_URL` your Cedana URL: nodes present the key to the spoke, and the two log in to
+`registry.cedana.ai`, which serves the private images.
 
 ```bash
 helm install token-factory ./token-factory -n cedana-token-factory --create-namespace \
-  --set clusterId=$CLUSTER_ID --set agentToken=$TOKEN
+  --set clusterId=$CLUSTER_ID --set agentToken=$TOKEN --set url=$CEDANA_URL
 
 helm install cedana ./cedana-helm -n cedana-system --create-namespace \
   -f cedana-helm/values-token-factory.yaml \
   --set config.authToken=$TOKEN --set config.clusterId=$CLUSTER_ID --set csx.nfsPath=$SHARED_DIR \
-  --set config.url=$CEDANA_URL  # plugin downloads; omit when the helper image carries them
+  --set config.url=$CEDANA_URL
 ```
 
 On k3s add `-f cedana-helm/values-k3s.yaml` to cedana-helm and
