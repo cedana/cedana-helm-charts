@@ -21,16 +21,13 @@ spec:
         app.kubernetes.io/component: uninstaller
 {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
     spec:
+      {{- include "cedana-helm.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: {{ include "cedana-helm.fullname" . }}-uninstaller-sa
       hostPID: true
       hostIPC: true
       initContainers:
         - name: uninstaller
-          {{- if .Values.daemonHelper.image.digest }}
-          image: {{ .Values.daemonHelper.image.repository }}@{{ .Values.daemonHelper.image.digest }}
-          {{- else }}
-          image: {{ .Values.daemonHelper.image.repository }}:{{ .Values.daemonHelper.image.tag }}
-          {{- end }}
+          image: {{ include "cedana-helm.image" (list $ .Values.daemonHelper.image) }}
           imagePullPolicy: {{ .Values.daemonHelper.image.imagePullPolicy }}
           securityContext:
             privileged: true
@@ -43,11 +40,7 @@ spec:
           args: ["cedana k8s destroy"]
         {{- if eq .Values.config.checkpointDir "csx://" }}
         - name: csx-uninstaller
-          {{- if .Values.csx.image.digest }}
-          image: {{ .Values.csx.image.repository }}@{{ .Values.csx.image.digest }}
-          {{- else }}
-          image: {{ .Values.csx.image.repository }}:{{ .Values.csx.image.tag }}
-          {{- end }}
+          image: {{ include "cedana-helm.image" (list $ .Values.csx.image) }}
           imagePullPolicy: {{ .Values.csx.image.imagePullPolicy }}
           securityContext:
             privileged: true
