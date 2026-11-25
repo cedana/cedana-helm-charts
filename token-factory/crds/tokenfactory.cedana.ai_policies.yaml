@@ -17,14 +17,17 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.precedence
-      name: Precedence
+    - jsonPath: .spec.order
+      name: Order
       type: integer
     - jsonPath: .status.matchedModels
       name: Models
       type: integer
-    - jsonPath: .spec.maxGPUs
-      name: Max GPUs
+    - jsonPath: .spec.park.after
+      name: Park after
+      type: string
+    - jsonPath: .spec.gpus.budget
+      name: GPU budget
       type: integer
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -52,100 +55,91 @@ spec:
             type: object
           spec:
             description: |-
-              PolicySpec governs how the models it selects scale, park and share GPUs.
+              PolicySpec says how the models it governs scale, wake, park and share GPUs.
 
-              A model's settings come from its matching policies in precedence order (highest first, ties
-              by name); a field unset there falls through to the next, then to built-in defaults. Every
-              matching GPU cap applies.
+              Each model is governed by one policy: the first in its namespace, by order (then name), whose
+              match it fits. What that policy leaves unset uses the built-in defaults.
             properties:
-              idleSeconds:
-                description: Idle time before parking; 0 never parks.
-                format: int32
-                minimum: 0
-                type: integer
-              maxGPUs:
-                description: GPUs all selected models may hold together.
-                format: int32
-                minimum: 0
-                type: integer
-              maxQueueDepth:
-                description: Requests held while a model wakes; more are refused.
-                format: int32
-                minimum: 0
-                type: integer
-              maxReplicas:
-                format: int32
-                minimum: 1
-                type: integer
-              minReplicas:
-                description: 0 lets a model park when idle.
-                format: int32
-                minimum: 0
-                type: integer
-              modelSelector:
-                description: Models in this namespace with these labels; empty selects
-                  all of them.
+              gpus:
                 properties:
-                  matchExpressions:
-                    description: matchExpressions is a list of label selector requirements.
-                      The requirements are ANDed.
-                    items:
-                      description: |-
-                        A label selector requirement is a selector that contains values, a key, and an operator that
-                        relates the key and values.
-                      properties:
-                        key:
-                          description: key is the label key that the selector applies
-                            to.
-                          type: string
-                        operator:
-                          description: |-
-                            operator represents a key's relationship to a set of values.
-                            Valid operators are In, NotIn, Exists and DoesNotExist.
-                          type: string
-                        values:
-                          description: |-
-                            values is an array of string values. If the operator is In or NotIn,
-                            the values array must be non-empty. If the operator is Exists or DoesNotExist,
-                            the values array must be empty. This array is replaced during a strategic
-                            merge patch.
-                          items:
-                            type: string
-                          type: array
-                          x-kubernetes-list-type: atomic
-                      required:
-                      - key
-                      - operator
-                      type: object
-                    type: array
-                    x-kubernetes-list-type: atomic
-                  matchLabels:
+                  budget:
+                    description: GPUs all the policy's models may hold together.
+                    format: int32
+                    minimum: 0
+                    type: integer
+                  priority:
+                    description: Higher takes GPUs from idle lower-priority models.
+                    format: int32
+                    type: integer
+                type: object
+              match:
+                description: Empty matches every model in the namespace.
+                properties:
+                  labels:
                     additionalProperties:
                       type: string
-                    description: |-
-                      matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-                      map is equivalent to an element of matchExpressions, whose key field is "key", the
-                      operator is "In", and the values array contains only "value". The requirements are ANDed.
+                    description: Every label must match.
+                    type: object
+                  models:
+                    description: Model names in the namespace.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              order:
+                description: Position in the namespace's list; lower comes first.
+                format: int32
+                type: integer
+              park:
+                description: A string the spoke can't decode as a duration would stop
+                  its policy watch, so it never gets in.
+                properties:
+                  after:
+                    description: Idle time before parking, as a Go duration (90s,
+                      5m, 1h30m).
+                    type: string
+                  never:
+                    description: Keep the model up however long it idles.
+                    type: boolean
+                type: object
+                x-kubernetes-validations:
+                - message: set after or never, not both
+                  rule: '!(has(self.after) && has(self.never) && self.never)'
+                - message: park.after must be a duration like 90s, 5m or 1h30m
+                  rule: '!has(self.after) || self.after.matches(''^(0|([0-9]+([.][0-9]+)?(ns|us|µs|ms|s|m|h))+)$'')'
+              scale:
+                properties:
+                  perReplica:
+                    description: In-flight requests per replica before adding one.
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  replicas:
+                    properties:
+                      max:
+                        format: int32
+                        minimum: 1
+                        type: integer
+                      min:
+                        description: 0 lets the model park.
+                        format: int32
+                        minimum: 0
+                        type: integer
                     type: object
                 type: object
-                x-kubernetes-map-type: atomic
-              precedence:
-                format: int32
-                type: integer
-              priority:
-                description: Higher takes GPUs from lower-priority idle models.
-                format: int32
-                type: integer
-              targetConcurrency:
-                description: In-flight requests per replica before scaling out.
-                format: int32
-                minimum: 1
-                type: integer
+                x-kubernetes-validations:
+                - message: replicas.min must not exceed replicas.max
+                  rule: '!has(self.replicas) || !has(self.replicas.min) || !has(self.replicas.max)
+                    || self.replicas.min <= self.replicas.max'
+              wake:
+                properties:
+                  queue:
+                    description: Requests held while the model wakes; more are refused.
+                    format: int32
+                    minimum: 0
+                    type: integer
+                type: object
             type: object
-            x-kubernetes-validations:
-            - message: minReplicas must not exceed maxReplicas
-              rule: '!has(self.minReplicas) || !has(self.maxReplicas) || self.minReplicas
-                <= self.maxReplicas'
           status:
             properties:
               conditions:

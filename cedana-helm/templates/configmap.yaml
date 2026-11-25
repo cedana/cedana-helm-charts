@@ -36,7 +36,7 @@ data:
   gpu-direct-io: "{{ .Values.config.gpuDirectIO }}"
   gpu-direct-io-btrfs-nocow: "{{ .Values.config.gpuDirectIOBtrfsNocow }}"
   gpu-mem-ring-buf-size: "{{ .Values.config.gpuMemRingBufSize }}"
-  # Airgapped Token Factory (no config.url) takes plugins from the helper image.
+  # Airgapped Token Factory (no config.url) installs plugins only from config.pluginsImage.
   plugins-builds: "{{ if and .Values.tokenFactory.enabled (not .Values.config.url) }}local{{ else }}{{ .Values.config.pluginsBuilds }}{{ end }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"

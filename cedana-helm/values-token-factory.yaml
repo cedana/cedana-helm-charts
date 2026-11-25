@@ -2,9 +2,9 @@
 # Install the token-factory chart first: node setup looks up its spoke Service. Then:
 #   helm install cedana ./cedana-helm -n cedana-system --create-namespace \
 #     -f cedana-helm/values-token-factory.yaml \
-#     --set config.authToken=$TOKEN --set config.clusterId=$CLUSTER_ID --set csx.nfsPath=$SHARED_DIR
-# $TOKEN is shared with the token-factory chart (its agentToken). Add --set config.url=<cedana-url>
-# to download plugins from Cedana; without it (airgapped) the helper image must carry them.
+#     --set config.authToken=$TOKEN --set config.clusterId=$CLUSTER_ID --set config.url=$CEDANA_URL \
+#     --set csx.nfsPath=$SHARED_DIR
+# $TOKEN and $CEDANA_URL are shared with the token-factory chart (its agentToken and url).
 tokenFactory:
   enabled: true
 

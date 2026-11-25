@@ -67,7 +67,8 @@ jobs:
           fail=0
 
           images=$(for f in "$VALUES" token-factory/values.yaml; do
-            yq -r '.. | select(tag == "!!map" and has("repository") and has("tag")) | select(.repository | test("^cedana/")) | .repository + ":" + .tag' "$f"
+            # An empty tag is an optional image left off (e.g. config.pluginsImage); the chart won't pull it.
+            yq -r '.. | select(tag == "!!map" and has("repository") and has("tag")) | select(.repository | test("^cedana/")) | select(.tag != "" and .tag != null) | .repository + ":" + .tag' "$f"
           done)
           images="$images cedana/cedana-propagator:v$(yq -r .appVersion cedana-helm/Chart.yaml)"
           for image in $images; do
