@@ -44,6 +44,11 @@ switchyard:
   resources:
     requests: {cpu: 100m, memory: 128Mi}
     limits: {memory: 512Mi}
+  # Outside providers a Route can send requests to, by name. format: openai_chat,
+  # openai_responses or anthropic_messages. Keys come from an existing Secret.
+  providers: {}
+  #  openai: {format: openai_chat, baseURL: https://api.openai.com/v1, secret: {name: provider-keys, key: openai}}
+  #  anthropic: {format: anthropic_messages, baseURL: https://api.anthropic.com/v1, secret: {name: provider-keys, key: anthropic}}
 
 # Subchart: NVIDIA Dynamo platform (operator; it applies the nvidia.com CRDs itself at start).
 # 1.6.x discovers workers through the Kubernetes API and uses TCP/ZMQ planes, so neither NATS
