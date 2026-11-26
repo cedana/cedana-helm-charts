@@ -1,5 +1,5 @@
 apiVersion: v2
-name: token-factory
+name: cedana-token-factory
 description: Cedana Token Factory - the in-cluster spoke, the Switchyard gateway and the Dynamo platform
 type: application
 version: 0.1.0

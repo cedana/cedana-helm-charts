@@ -39,10 +39,10 @@ helm install cedana oci://registry-1.docker.io/cedana/cedana-helm --create-names
 
 ### Token Factory
 
-Token Factory runs inference in the cluster with no hosted propagator: the `token-factory` chart
+Token Factory runs inference in the cluster with no hosted propagator: the `cedana-token-factory` chart
 (the spoke with its UI, the Switchyard gateway and the NVIDIA Dynamo platform) in
 `cedana-token-factory`, and `cedana-helm` with `values-token-factory.yaml`, which points the nodes
-at the spoke. Install `token-factory` first: node setup looks up its spoke Service.
+at the spoke. Install `cedana-token-factory` first: node setup looks up its spoke Service.
 
 Checkpoints go through CSX, so every GPU node needs the same shared directory (e.g. an NFS
 mount) at `$SHARED_DIR`; on a single node any local directory works. `$TOKEN` is your Cedana API
@@ -50,7 +50,7 @@ key and `$CEDANA_URL` your Cedana URL: nodes present the key to the spoke, and t
 `registry.cedana.ai`, which serves the private images.
 
 ```bash
-helm install token-factory ./token-factory -n cedana-token-factory --create-namespace \
+helm install cedana-token-factory ./cedana-token-factory -n cedana-token-factory --create-namespace \
   --set clusterId=$CLUSTER_ID --set agentToken=$TOKEN --set url=$CEDANA_URL
 
 helm install cedana ./cedana-helm -n cedana-system --create-namespace \
@@ -61,7 +61,7 @@ helm install cedana ./cedana-helm -n cedana-system --create-namespace \
 
 On k3s add `-f cedana-helm/values-k3s.yaml` to cedana-helm and
 `--set switchyard.service.type=NodePort --set switchyard.service.nodePort=30400` to
-token-factory; the gateway then listens on `http://<node IP>:30400`.
+cedana-token-factory; the gateway then listens on `http://<node IP>:30400`.
 
 ### Configuration Options
 

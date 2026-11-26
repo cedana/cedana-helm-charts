@@ -58,7 +58,7 @@ jobs:
     if: inputs.dockerhub
     strategy:
       matrix:
-        chart: [cedana-helm, token-factory]
+        chart: [cedana-helm, cedana-token-factory]
     steps:
       - uses: actions/checkout@v4
 

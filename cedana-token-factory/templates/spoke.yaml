@@ -2,13 +2,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: tokenfactory
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: tokenfactory
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
 rules:
   - apiGroups: ["tokenfactory.cedana.ai"]
     resources: ["models", "models/status", "policies", "policies/status"]
@@ -28,7 +28,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: tokenfactory
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -42,7 +42,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: tokenfactory
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
 rules:
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
@@ -63,7 +63,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: tokenfactory
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -77,7 +77,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: tokenfactory-data
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
   annotations:
     # History outlives an uninstall; delete the claim to drop it.
     helm.sh/resource-policy: keep
@@ -93,7 +93,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tokenfactory
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
 spec:
   replicas: 1
   # One pod owns the SQLite volume at a time.
@@ -106,10 +106,10 @@ spec:
         checksum/agent-token: {{ .Values.agentToken | sha256sum | quote }} # restart on rotation
       labels:
         app: tokenfactory
-        {{- include "token-factory.labels" . | nindent 8 }}
+        {{- include "cedana-token-factory.labels" . | nindent 8 }}
     spec:
       serviceAccountName: tokenfactory
-      {{- include "token-factory.imagePullSecrets" . | nindent 6 }}
+      {{- include "cedana-token-factory.imagePullSecrets" . | nindent 6 }}
       securityContext:
         runAsNonRoot: true
         fsGroup: 65532
@@ -118,7 +118,7 @@ spec:
           persistentVolumeClaim: {claimName: tokenfactory-data}
       containers:
         - name: tokenfactory
-          image: {{ include "token-factory.image" (list $ .Values.spoke.image) }}
+          image: {{ include "cedana-token-factory.image" (list $ .Values.spoke.image) }}
           imagePullPolicy: {{ .Values.spoke.image.imagePullPolicy }}
           args:
             - serve
@@ -152,7 +152,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: tokenfactory
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
 spec:
   selector: {app: tokenfactory}
   ports:

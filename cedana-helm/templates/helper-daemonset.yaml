@@ -25,11 +25,6 @@ spec:
         {{- include "cedana-helm.selectorLabels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include "cedana-helm.helper.config.checksum" . | sha256sum }}
-        # The GPU plugin the node runs; Token Factory names checkpoints after it, since a checkpoint
-        # restores only under the plugin it was taken with.
-        {{- with .Values.config.pluginsImage }}
-        cedana.ai/gpu-plugin: {{ if or .digest .tag }}{{ printf "image:%s" (.digest | default .tag) | quote }}{{ else }}{{ printf "%s:%s" $.Values.config.pluginsBuilds $.Values.config.pluginsGpuVersion | quote }}{{ end }}
-        {{- end }}
     spec:
       {{- include "cedana-helm.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: {{ include "cedana-helm.daemonHelperServiceAccountName" . }}
@@ -325,17 +320,16 @@ spec:
               value: "cg_none"
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
+            # Token Factory has no propagator, so no remote DB.
             - name: CEDANA_DB_REMOTE
               value: {{ not .Values.tokenFactory.enabled | quote }}
             {{- if .Values.tokenFactory.enabled }}
-            - name: CEDANA_TRANSPORT
+            - name: CEDANA_K8S_TRANSPORT
               value: poll
             - name: NODE_NAME # the spoke queues checkpoint requests by node name
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: CEDANA_PLUGINS_URL
-              value: {{ .Values.config.url | quote }}
             {{- end }}
             {{- if or $plugins.tag $plugins.digest }}
             # install-plugins.sh runs chrooted on the node: the plugins volume's host path.

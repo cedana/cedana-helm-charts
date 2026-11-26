@@ -1,10 +1,10 @@
 # Token Factory: Cedana's node components wired to the in-cluster spoke, with no hosted propagator.
-# Install the token-factory chart first: node setup looks up its spoke Service. Then:
+# Install the cedana-token-factory chart first: node setup looks up its spoke Service. Then:
 #   helm install cedana ./cedana-helm -n cedana-system --create-namespace \
 #     -f cedana-helm/values-token-factory.yaml \
 #     --set config.authToken=$TOKEN --set config.clusterId=$CLUSTER_ID --set config.url=$CEDANA_URL \
 #     --set csx.nfsPath=$SHARED_DIR
-# $TOKEN and $CEDANA_URL are shared with the token-factory chart (its agentToken and url).
+# $TOKEN and $CEDANA_URL are shared with the cedana-token-factory chart (its agentToken and url).
 tokenFactory:
   enabled: true
 

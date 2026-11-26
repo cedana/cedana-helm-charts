@@ -1,6 +1,6 @@
 # k3s. k3s must start after the NVIDIA container toolkit is installed, with
 # --default-runtime nvidia (see README). Add to cedana-helm's values; for Token Factory, give the
-# token-factory chart --set switchyard.service.type=NodePort --set switchyard.service.nodePort=30400.
+# cedana-token-factory chart --set switchyard.service.type=NodePort --set switchyard.service.nodePort=30400.
 hostConfig:
   containerdAddress: /run/k3s/containerd/containerd.sock
 

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: switchyard-config
-  labels: {{- include "token-factory.labels" . | nindent 4 }}
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
 data:
   config.toml: |
     schema_version = 1
@@ -16,7 +16,7 @@ metadata:
   name: switchyard
   labels:
     app: switchyard
-    {{- include "token-factory.labels" . | nindent 4 }}
+    {{- include "cedana-token-factory.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.switchyard.replicaCount }}
   selector:
@@ -25,9 +25,9 @@ spec:
     metadata:
       labels:
         app: switchyard
-        {{- include "token-factory.labels" . | nindent 8 }}
+        {{- include "cedana-token-factory.labels" . | nindent 8 }}
     spec:
-      {{- include "token-factory.imagePullSecrets" . | nindent 6 }}
+      {{- include "cedana-token-factory.imagePullSecrets" . | nindent 6 }}
       {{- if gt (int .Values.switchyard.replicaCount) 1 }}
       # Replicas on different nodes, so losing one node never takes the gateway down.
       affinity:
@@ -41,7 +41,7 @@ spec:
       {{- end }}
       containers:
         - name: switchyard
-          image: {{ include "token-factory.image" (list $ .Values.switchyard.image) }}
+          image: {{ include "cedana-token-factory.image" (list $ .Values.switchyard.image) }}
           imagePullPolicy: {{ .Values.switchyard.image.imagePullPolicy }}
           args: ["--config", "/etc/switchyard/config.toml"]
           ports:
@@ -85,7 +85,7 @@ metadata:
   name: switchyard
   labels:
     app: switchyard
-    {{- include "token-factory.labels" . | nindent 4 }}
+    {{- include "cedana-token-factory.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.switchyard.service.type }}
   selector: {app: switchyard}
