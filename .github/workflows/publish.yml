@@ -26,11 +26,6 @@ on:
         description: "Publish images to Docker Hub"
         required: false
         default: false
-      chart_name:
-        type: string
-        description: "Name of the chart to publish"
-        required: false
-        default: cedana-helm
       post_summary:
         type: boolean
         description: "Post summary to Slack"
@@ -61,8 +56,14 @@ jobs:
     name: DockerHub
     runs-on: ubuntu-latest
     if: inputs.dockerhub
+    strategy:
+      matrix:
+        chart: [cedana-helm, cedana-token-factory]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Build chart dependencies
+        run: helm dependency build ${{ matrix.chart }}
 
       - name: Write release version
         id: version
@@ -75,11 +76,11 @@ jobs:
       - name: Push helm chart
         uses: appany/helm-oci-chart-releaser@v0.4.2
         with:
-          name: cedana-helm
+          name: ${{ matrix.chart }}
           repository: cedana
           tag: ${{ steps.version.outputs.VERSION }}
           registry: registry.hub.docker.com
-          path: ${{ inputs.chart_name }}
+          path: ${{ matrix.chart }}
           registry_username: ${{ vars.DOCKER_USERNAME }}
           registry_password: ${{ secrets.DOCKER_TOKEN }}
 

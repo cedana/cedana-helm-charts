@@ -1,16 +1,8 @@
-# k3s on top of values-inference-box.yaml. k3s must start after the NVIDIA container toolkit is
-# installed, with --default-runtime nvidia (see README).
-#   helm install cedana ./cedana-helm -n cedana-system --create-namespace \
-#     -f cedana-helm/values-inference-box.yaml -f cedana-helm/values-k3s.yaml \
-#     --set config.url=$CEDANA_URL --set config.authToken=$CEDANA_AUTH_TOKEN --set config.clusterId=$CLUSTER_ID \
-#     --set csx.nfsPath=$SHARED_DIR
+# k3s. k3s must start after the NVIDIA container toolkit is installed, with
+# --default-runtime nvidia (see README). Add to cedana-helm's values; for Token Factory, give the
+# cedana-token-factory chart --set switchyard.service.type=NodePort --set switchyard.service.nodePort=30400.
 hostConfig:
   containerdAddress: /run/k3s/containerd/containerd.sock
 
 nvidiaDevicePlugin:
   enabled: true
-
-switchyard:
-  service:
-    type: NodePort
-    nodePort: 30400

@@ -1,0 +1,68 @@
+# Cedana Token Factory. Install this chart first, then cedana-helm with values-token-factory.yaml
+# (node components in cedana-system), whose setup looks up this chart's spoke Service:
+#   helm install cedana-token-factory ./cedana-token-factory -n cedana-token-factory --create-namespace \
+#     --set clusterId=$CLUSTER_ID --set agentToken=$TOKEN --set url=$CEDANA_URL
+
+# Scopes checkpoint names; the same ID as cedana-helm's config.clusterId.
+clusterId:
+# Nodes (helper, shim) send this; cedana-helm's config.authToken.
+agentToken:
+# cedana-helm's config.url; its host and agentToken log in to imageRegistry.
+url:
+
+# The spoke and Switchyard images are private and pulled through this registry. Empty pulls
+# straight from Docker Hub, which fails without your own imagePullSecrets.
+imageRegistry: registry.cedana.ai
+imagePullSecrets: []
+
+spoke:
+  image:
+    repository: cedana/cedana-token-factory-test
+    tag: main
+    digest: # ignores tag if set
+    imagePullPolicy: IfNotPresent
+  # The SQLite file of usage rollups, decisions, starts and GPU history; every table has a retention.
+  storage:
+    size: 1Gi
+    storageClassName:
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits: {memory: 256Mi}
+
+# Switchyard: the OpenAI-compatible gateway; it routes and wakes models from the spoke.
+switchyard:
+  replicaCount: 2 # one replica made killing the gateway pod an 18 s outage
+  image:
+    repository: cedana/cedana-switchyard-test
+    tag: main
+    digest: # ignores tag if set
+    imagePullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 4000
+    nodePort: # only used when type is NodePort
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {memory: 512Mi}
+
+# Subchart: NVIDIA Dynamo platform (operator; it applies the nvidia.com CRDs itself at start).
+# 1.6.x discovers workers through the Kubernetes API and uses TCP/ZMQ planes, so neither NATS
+# nor etcd is installed.
+dynamo:
+  enabled: true
+  global:
+    grove:
+      # Runs every DGD as a Grove PodCliqueSet unless annotated nvidia.com/enable-grove=false.
+      install: false
+
+# Pulls these onto GPU nodes at install so a first model start skips the pull.
+# Nodes are those with nvidia.com/gpu.product (GPU feature discovery) unless nodeSelector is set.
+enginePrepull:
+  images:
+    - nvcr.io/nvidia/ai-dynamo/sglang-runtime:1.6.2
+  nodeSelector: {}
+  # Only the standard GPU taint: tolerating everything parks pods Pending on dead or tainted nodes.
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule

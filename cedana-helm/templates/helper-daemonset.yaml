@@ -48,6 +48,17 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- $plugins := .Values.config.pluginsImage }}
+      {{- if or $plugins.tag $plugins.digest }}
+      initContainers:
+        # Fresh copy each start, so plugins dropped from the image don't linger on the node.
+        - name: plugins
+          image: {{ include "cedana-helm.image" (list $ $plugins) }}
+          command: ["/bin/sh", "-c", "rm -rf /out/* && cp -a /plugins/. /out/"]
+          volumeMounts:
+            - name: plugins
+              mountPath: /out
+      {{- end }}
       containers:
         - name: helper
           image: {{ include "cedana-helm.image" (list $ .Values.daemonHelper.image) }}
@@ -309,8 +320,22 @@ spec:
               value: "cg_none"
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
+            # Token Factory has no propagator, so no remote DB.
             - name: CEDANA_DB_REMOTE
-              value: "true"
+              value: {{ not .Values.tokenFactory.enabled | quote }}
+            {{- if .Values.tokenFactory.enabled }}
+            - name: CEDANA_K8S_TRANSPORT
+              value: poll
+            - name: NODE_NAME # the spoke queues checkpoint requests by node name
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- end }}
+            {{- if or $plugins.tag $plugins.digest }}
+            # install-plugins.sh runs chrooted on the node: the plugins volume's host path.
+            - name: CEDANA_PLUGINS_LOCAL_SEARCH_PATH
+              value: /var/lib/cedana/plugins
+            {{- end }}
             - name: CEDANA_AWS_CREDENTIALS_MODE
               value: {{ include "cedana-helm.awsCredentialsMode" . | quote }}
             {{- if eq (include "cedana-helm.awsCredentialsMode" .) "static" }}
@@ -367,6 +392,12 @@ spec:
         - name: host-volume
           hostPath:
             path: /
+        {{- if or $plugins.tag $plugins.digest }}
+        - name: plugins
+          hostPath:
+            path: /var/lib/cedana/plugins
+            type: DirectoryOrCreate
+        {{- end }}
         {{- with include "cedana-helm.daemonSocketDir" . }}
         - name: daemon-socket
           hostPath:

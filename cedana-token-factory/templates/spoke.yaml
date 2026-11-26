@@ -1,0 +1,161 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tokenfactory
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tokenfactory
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["tokenfactory.cedana.ai"]
+    resources: ["models", "models/status", "policies", "policies/status"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # GPU capacity: every GPU pod counts, whoever owns it.
+  - apiGroups: [""]
+    resources: ["nodes", "pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["nvidia.com"]
+    resources: ["dynamographdeployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tokenfactory
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tokenfactory
+subjects:
+  - kind: ServiceAccount
+    name: tokenfactory
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tokenfactory
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  # API keys, in the spoke's own namespace only. It adds its own `ui` key (create can't name a Secret).
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["tokenfactory-keys"]
+    verbs: ["get", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tokenfactory
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tokenfactory
+subjects:
+  - kind: ServiceAccount
+    name: tokenfactory
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tokenfactory-data
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+  annotations:
+    # History outlives an uninstall; delete the claim to drop it.
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with .Values.spoke.storage.storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests: {storage: {{ .Values.spoke.storage.size }}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokenfactory
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  # One pod owns the SQLite volume at a time.
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: tokenfactory}
+  template:
+    metadata:
+      annotations:
+        checksum/agent-token: {{ .Values.agentToken | sha256sum | quote }} # restart on rotation
+      labels:
+        app: tokenfactory
+        {{- include "cedana-token-factory.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: tokenfactory
+      {{- include "cedana-token-factory.imagePullSecrets" . | nindent 6 }}
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 65532
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: tokenfactory-data}
+      containers:
+        - name: tokenfactory
+          image: {{ include "cedana-token-factory.image" (list $ .Values.spoke.image) }}
+          imagePullPolicy: {{ .Values.spoke.image.imagePullPolicy }}
+          args:
+            - serve
+            - --cluster-id={{ required "Please provide --set clusterId=<cedana-helm's config.clusterId>" .Values.clusterId }}
+            - --namespace={{ .Release.Namespace }}
+          env:
+            - name: TOKENFACTORY_GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef: {name: tokenfactory-gateway, key: token}
+            - name: TOKENFACTORY_AGENT_TOKEN
+              valueFrom:
+                secretKeyRef: {name: tokenfactory-agent, key: token}
+          ports:
+            - name: health
+              containerPort: 8081
+            - name: api
+              containerPort: 8090
+          livenessProbe:
+            httpGet: {path: /healthz, port: health}
+          readinessProbe:
+            httpGet: {path: /readyz, port: health}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+          resources: {{- toYaml .Values.spoke.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+---
+# cedana-helm's configmap hardcodes this Service's name and port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: tokenfactory
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+spec:
+  selector: {app: tokenfactory}
+  ports:
+    - name: api
+      port: 8090
+      targetPort: api

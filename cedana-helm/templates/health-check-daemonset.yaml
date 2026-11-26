@@ -250,8 +250,9 @@ spec:
               value: "cg_none"
             - name: CEDANA_CLIENT_WAIT_FOR_READY
               value: "true"
+            # Token Factory has no propagator, so no remote DB.
             - name: CEDANA_DB_REMOTE
-              value: "true"
+              value: {{ not .Values.tokenFactory.enabled | quote }}
             - name: CEDANA_AWS_CREDENTIALS_MODE
               value: {{ include "cedana-helm.awsCredentialsMode" . | quote }}
             {{- if eq (include "cedana-helm.awsCredentialsMode" .) "static" }}

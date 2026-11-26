@@ -10,7 +10,12 @@ metadata:
     heritage: "{{ .Release.Service }}"
 data:
   cluster-id: "{{ required "Please provide --set config.clusterId=<cluster-id>" .Values.config.clusterId }}"
+  {{- if .Values.tokenFactory.enabled }}
+  # The in-cluster spoke; the helper resolves it for the host, which can't use cluster DNS.
+  url: "http://tokenfactory.{{ .Values.tokenFactory.namespace }}.svc:8090"
+  {{- else }}
   url: "{{ required "Please provide --set config.url=<cedana-url>" .Values.config.url }}"
+  {{- end }}
   address: "{{ required "Please provide --set config.address=<daemon-address>" .Values.config.address }}"
   protocol: "{{ required "Please provide --set config.protocol=<daemon-protocol>" .Values.config.protocol }}"
   sqs-queue-url: "{{ .Values.config.sqsQueueUrl }}"
@@ -31,7 +36,12 @@ data:
   gpu-direct-io: "{{ .Values.config.gpuDirectIO }}"
   gpu-direct-io-btrfs-nocow: "{{ .Values.config.gpuDirectIOBtrfsNocow }}"
   gpu-mem-ring-buf-size: "{{ .Values.config.gpuMemRingBufSize }}"
-  plugins-builds: "{{ .Values.config.pluginsBuilds }}"
+  # Token Factory's helper URL is the spoke, which serves no plugins: they come from config.pluginsImage.
+  {{- $p := .Values.config.pluginsImage }}
+  {{- if and .Values.tokenFactory.enabled .Values.config.url (not (or $p.tag $p.digest)) }}
+  {{- fail "tokenFactory.enabled needs config.pluginsImage" }}
+  {{- end }}
+  plugins-builds: "{{ if and .Values.tokenFactory.enabled (not .Values.config.url) }}local{{ else }}{{ .Values.config.pluginsBuilds }}{{ end }}"
   plugins-criu-version: "{{ .Values.config.pluginsCriuVersion }}"
   plugins-containerd-runtime-version: "{{ .Values.config.pluginsContainerdRuntimeVersion }}"
   plugins-gpu-version: "{{ .Values.config.pluginsGpuVersion }}"

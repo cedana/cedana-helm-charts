@@ -1,0 +1,6 @@
+dependencies:
+- name: dynamo-platform
+  repository: oci://nvcr.io/nvidia/ai-dynamo
+  version: 1.6.2
+digest: sha256:4b8153c8bbc658a94c7854c284cdca5d157fea99772bd626941f37736855b67d
+generated: "2026-11-20T12:45:12.486254378-05:00"

@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: switchyard-config
+  labels: {{- include "cedana-token-factory.labels" . | nindent 4 }}
+data:
+  config.toml: |
+    schema_version = 1
+
+    [token_factory]
+    url = "http://tokenfactory.{{ .Release.Namespace }}.svc:8090"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: switchyard
+  labels:
+    app: switchyard
+    {{- include "cedana-token-factory.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.switchyard.replicaCount }}
+  selector:
+    matchLabels: {app: switchyard}
+  template:
+    metadata:
+      labels:
+        app: switchyard
+        {{- include "cedana-token-factory.labels" . | nindent 8 }}
+    spec:
+      {{- include "cedana-token-factory.imagePullSecrets" . | nindent 6 }}
+      {{- if gt (int .Values.switchyard.replicaCount) 1 }}
+      # Replicas on different nodes, so losing one node never takes the gateway down.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels: {app: switchyard}
+      {{- end }}
+      containers:
+        - name: switchyard
+          image: {{ include "cedana-token-factory.image" (list $ .Values.switchyard.image) }}
+          imagePullPolicy: {{ .Values.switchyard.image.imagePullPolicy }}
+          args: ["--config", "/etc/switchyard/config.toml"]
+          ports:
+            - name: http
+              containerPort: 4000
+          env:
+            - name: TOKENFACTORY_GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef: {name: tokenfactory-gateway, key: token}
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources: {{- toYaml .Values.switchyard.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/switchyard
+      volumes:
+        - name: config
+          configMap:
+            name: switchyard-config
+{{- if gt (int .Values.switchyard.replicaCount) 1 }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: switchyard
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: switchyard}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: switchyard
+  labels:
+    app: switchyard
+    {{- include "cedana-token-factory.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.switchyard.service.type }}
+  selector: {app: switchyard}
+  ports:
+    - name: http
+      port: {{ .Values.switchyard.service.port }}
+      targetPort: http
+      {{- if and (eq .Values.switchyard.service.type "NodePort") .Values.switchyard.service.nodePort }}
+      nodePort: {{ .Values.switchyard.service.nodePort }}
+      {{- end }}
