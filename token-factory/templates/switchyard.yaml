@@ -9,6 +9,15 @@ data:
 
     [token_factory]
     url = "http://tokenfactory.{{ .Release.Namespace }}.svc:8090"
+    {{- range $name, $p := .Values.switchyard.providers }}
+
+    [llm_clients.{{ $name }}]
+    format = {{ $p.format | quote }}
+    base_url = {{ $p.baseURL | quote }}
+    {{- if $p.secret }}
+    api_key_env = "PROVIDER_KEY_{{ $name | upper | replace "-" "_" }}"
+    {{- end }}
+    {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -51,6 +60,13 @@ spec:
             - name: TOKENFACTORY_GATEWAY_TOKEN
               valueFrom:
                 secretKeyRef: {name: tokenfactory-gateway, key: token}
+            {{- range $name, $p := .Values.switchyard.providers }}
+            {{- if $p.secret }}
+            - name: PROVIDER_KEY_{{ $name | upper | replace "-" "_" }}
+              valueFrom:
+                secretKeyRef: {name: {{ $p.secret.name }}, key: {{ $p.secret.key }}}
+            {{- end }}
+            {{- end }}
           readinessProbe:
             httpGet: {path: /health, port: http}
             initialDelaySeconds: 3

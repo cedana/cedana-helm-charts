@@ -11,7 +11,7 @@ metadata:
   labels: {{- include "token-factory.labels" . | nindent 4 }}
 rules:
   - apiGroups: ["tokenfactory.cedana.ai"]
-    resources: ["models", "models/status", "policies", "policies/status"]
+    resources: ["models", "models/status", "policies", "policies/status", "routes"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   # GPU capacity: every GPU pod counts, whoever owns it.
   - apiGroups: [""]
@@ -124,6 +124,9 @@ spec:
             - serve
             - --cluster-id={{ required "Please provide --set clusterId=<cedana-helm's config.clusterId>" .Values.clusterId }}
             - --namespace={{ .Release.Namespace }}
+            {{- with .Values.switchyard.providers }}
+            - --providers={{ keys . | sortAlpha | join "," }}
+            {{- end }}
           env:
             - name: TOKENFACTORY_GATEWAY_TOKEN
               valueFrom:
