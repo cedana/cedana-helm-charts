@@ -13,6 +13,14 @@ rules:
   - apiGroups: ["tokenfactory.cedana.ai"]
     resources: ["models", "models/status", "policies", "policies/status", "routes"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # The spoke applies its own CRDs at startup. Create can't be narrowed by name.
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    resourceNames: ["models.tokenfactory.cedana.ai", "policies.tokenfactory.cedana.ai", "routes.tokenfactory.cedana.ai"]
+    verbs: ["get", "patch"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["create"]
   # GPU capacity: every GPU pod counts, whoever owns it.
   - apiGroups: [""]
     resources: ["nodes", "pods"]
